@@ -14,6 +14,9 @@ The components in this project are:
 * **heketi** (https://github.com/heketi/heketi), Gluster's volume management service interface, running in a pod inside kubernetes.
 
 
+[Click here for a demo of the
+technology!](https://drive.google.com/file/d/0B667S2caJiy7QVpzVVFNQVdyaVE/view?usp=sharing)
+
 Resources:
 
 * [Documentation](./docs/index.md)
