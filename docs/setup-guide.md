@@ -1,6 +1,6 @@
 # Setup Guide
 
-This guide contains the setup instructions for *gluster4kube*.
+This guide contains the setup instructions for *gluster-kubernetes*.
 
 
 ## Infrastructure Requirements
