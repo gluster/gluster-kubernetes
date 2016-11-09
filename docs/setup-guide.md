@@ -142,8 +142,6 @@ Wait until the job is complete then delete the bootstrap Heketi:
 `# kubectl delete all,service,jobs,deployment,secret --selector="deploy-heketi" `
 
 Install Heketi service:
-
-```
 * Deploy heketi.  Before deploying you will need to determine the Kubernetes API endpoint and namespace.  
 In this example, we will use `https://1.1.1.1:443` as our Kubernetes API endpoint  
 ```
