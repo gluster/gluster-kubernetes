@@ -1,8 +1,8 @@
-# gluster4kube
+# gluster-kubernetes
 
 ## persistent storage for kubernetes with gluster
 
-This is the home of the **gluster4kube** project (working name),
+This is the home of the **gluster-kubernetes** project,
 a new project which brings dynamically provisioned persistent
 storage volumes to kubernetes, using a hyperconverged Gluster
 deployment scheme.
