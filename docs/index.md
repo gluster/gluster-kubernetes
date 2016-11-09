@@ -1,3 +1,3 @@
-#gluster4kube Documentation
+#gluster-kubernetes Documentation
 
 * [Setup Guide](./setup-guide.md)
