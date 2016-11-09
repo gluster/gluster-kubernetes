@@ -1,6 +1,6 @@
 # gluster-kubernetes
 
-## persistent storage for kubernetes with gluster
+## Dynamic, persistent storage for Kubernetes with GlusterFS
 
 This is the home of the **gluster-kubernetes** project,
 a new project which brings dynamically provisioned persistent
@@ -9,10 +9,11 @@ deployment scheme.
 
 ### The components in this project are:
 
-* **kubernetes** (https://github.com/kubernetes/kubernetes/), the container management system.
-* **Glusterfs** (https://www.gluster.org/), the scale-out storage system, running as pods inside the kubernetes cluster.
+* **Kubernetes** (https://github.com/kubernetes/kubernetes/), the container management system.
+* **GlusterFS** (https://www.gluster.org/), the scale-out storage system, running as pods inside the kubernetes cluster.
 * **heketi** (https://github.com/heketi/heketi), Gluster's volume management service interface, running in a pod inside kubernetes.
 
+**>>> [Click here for a demo of the technology!](https://drive.google.com/file/d/0B667S2caJiy7QVpzVVFNQVdyaVE/view?usp=sharing) <<<**
 
 ### Demo
 
@@ -20,6 +21,6 @@ deployment scheme.
 technology!](https://drive.google.com/file/d/0B667S2caJiy7QVpzVVFNQVdyaVE/view?usp=sharing) <<<**
 
 
-### Resources
+### Documentation
 
 * [Setup Guide](./docs/setup-guide.md)
