@@ -81,22 +81,20 @@ glusterfs-ip-172-20-0-218.ec2.internal   1         1         1            1     
 glusterfs-ip-172-20-0-219.ec2.internal   1         1         1            1           3m
 ```
 
-3) Next we need to deploy the Pod and Service Heketi Service Interface to the GlusterFS cluster. In the repo you cloned, there will be a deploy-heketi-deployment.json file. Edit the file and change the following JSON parameters.
-```
-* Kubernetes API Server URL. Example below:
-{
-  "name": "HEKETI_KUBE_APIHOST",
-  "value": "https://172.20.0.9"
-}
+3) Next we need to deploy the Pod and Service Heketi Service Interface to the GlusterFS cluster. Edit deploy-heketi-deployment.json file and change the following JSON parameters.
+* Note the secret for the service account 
 
-* The name of the secret for the serviceaccount created. Example below:
-{
-  "name": "secret",
-  "secret": {
-      "secretName": "heketi-token-vyfzs"
-   }
-}
 ```
+$ heketi_secret=$(kubectl get sa heketi -o="go-template" --template="{{(index .secrets 0).name}}")
+```
+
+* Deploy deploy-heketi.  Before deploying you will need to determine the Kubernetes API endpoint and namespace.
+
+In this example, we will use `https://1.1.1.1:443` as our Kubernetes API endpoint
+
+```
+$ sed -e "s#<HEKETI_KUBE_SECRETNAME>#\"$heketi_secret\"#" \
+      -e "s#<HEKETI_KUBE_APIHOST>#\"http://1.1.1.1:443\"#" deploy-heketi-deployment.json | kubectl create -f -
 
 Once you've saved your changes, go ahead and submit the file and verify everything is running properly as demonstrated below:
 
@@ -189,60 +187,3 @@ $ heketi-cli volume create --size=100 \
 ```
 
 http://kubernetes.io/docs/user-guide/persistent-volumes/#claims-as-volumes
-
-
-
-
-
-## New Stuff from Luis...
-
-
-
-to deploy the containers in Kubernetes.  It is not a full setup.  For full
-documentation, please visit the Heketi wiki page.
-
-# Usage
-
-## Deploy Gluster
-
-* Get node name by running:
-
-```
-$ kubectl get nodes
-```
-
-* Deploy gluster container onto specified node:
-
-```
-$ sed -e \
-   's#<GLUSTERFS_NODE>#..type your node name here..#' \
-   glusterfs-deployment.json | kubectl create -f -
-```
-
-Repeat as needed.
-
-## Deploy Heketi
-
-* Create a service account for Heketi
-
-```
-$ kubectl create -f heketi-service-account.json
-```
-
-* Note the secret for the service account 
-
-```
-$ heketi_secret=$(kubectl get sa heketi-service-account -o="go-template" --template="{{(index .secrets 0).name}}")
-```
-
-* Deploy deploy-heketi.  Before deploying you will need to determine the Kubernetes API endpoint and namespace.
-
-In this example, we will use `https://1.1.1.1:443` as our Kubernetes API endpoint
-
-```
-$ sed -e "s#<HEKETI_KUBE_SECRETNAME>#\"$heketi_secret\"#" \
-      -e "s#<HEKETI_KUBE_APIHOST>#\"http://1.1.1.1:443\"#" deploy-heketi-deployment.json | kubectl create -f -
-```
-
-Please refer to the wiki Kubernetes Deployment page for more information
-
