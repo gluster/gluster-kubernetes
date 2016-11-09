@@ -22,4 +22,4 @@ technology!](https://drive.google.com/file/d/0B667S2caJiy7QVpzVVFNQVdyaVE/view?u
 
 ### Resources
 
-* [Documentation](./docs/index.md)
+* [Setup Guide](./docs/setup-guide.md)
