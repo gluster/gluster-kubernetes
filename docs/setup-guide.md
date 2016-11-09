@@ -27,29 +27,23 @@ Heketi provides a CLI that provides users with a means to administer the deploym
 Create the serviceaccount file as demonstrated below
 
 ```
-# vi heketi-serviceaccount.yaml 
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: heketi
-
-# kubectl create -f heketi-serviceaccount.yaml
+# kubectl create -f heketi-service-account.yaml
 ```
 
 Verify the serviceaccount was created successfully
 ```
 # kubectl get serviceaccount
-NAME       SECRETS   AGE
-default    1         27d
-heketi     1         15s
+NAME                       SECRETS   AGE
+default                    1         27d
+heketi-service-account     1         15s
 ```
 
 Verify the appropriate secrets were created with the serviceaccount
 ```
 # kubectl get secrets
-NAME                   TYPE                                  DATA      AGE
-default-token-4wtpz    kubernetes.io/service-account-token   3         27d
-heketi-token-dz077     kubernetes.io/service-account-token   3         25s
+NAME                                   TYPE                                  DATA      AGE
+default-token-4wtpz                    kubernetes.io/service-account-token   3         27d
+heketi-service-account-token-dz077     kubernetes.io/service-account-token   3         25s
 ```
 
 2) Deploy the GlusterFS ReplicaSets
@@ -86,7 +80,7 @@ glusterfs-ip-172-20-0-219.ec2.internal   1         1         1            1     
 3) Next we need to deploy the Pod and Service Heketi Service Interface to the GlusterFS cluster.
 * Note the secret for the service account  
 ```
-$ heketi_secret=$(kubectl get sa heketi -o="go-template" --template="{{(index .secrets 0).name}}")
+$ heketi_secret=$(kubectl get sa heketi-service-account -o="go-template" --template="{{(index .secrets 0).name}}")
 ```
 
 * Deploy deploy-heketi.  Before deploying you will need to determine the Kubernetes API endpoint and namespace.  
@@ -94,15 +88,11 @@ In this example, we will use `https://1.1.1.1:443` as our Kubernetes API endpoin
 ```
 $ sed -e "s#<HEKETI_KUBE_SECRETNAME>#\"$heketi_secret\"#" \
       -e "s#<HEKETI_KUBE_APIHOST>#\"http://1.1.1.1:443\"#" deploy-heketi-deployment.json | kubectl create -f -
-```
-
-Once you've saved your changes, go ahead and submit the file and verify everything is running properly as demonstrated below:
-
-```
-# kubectl create -f deploy-heketi-deployment.json 
 service "deploy-heketi" created
 deployment "deploy-heketi" created
-
+```
+verify everything is running properly as demonstrated below:
+```
 # kubectl get pods
 NAME                                                      READY     STATUS    RESTARTS   AGE
 deploy-heketi-1211581626-2jotm                            1/1       Running   0          35m
@@ -153,23 +143,12 @@ Wait until the job is complete then delete the bootstrap Heketi:
 
 Install Heketi service:
 
-In heketi-deployment.json, change the following as required.
 ```
-* <User Key> - Heketi User Key (Leave it empty if not set)
-* <Admin Key> - Heketi Admin Key (Leave it empty if not set)
-* <Bool to use Secret> - Use kubernetes secrets for Authentication (y or n)
-* <Path to ca.crt> - Path to ca.crt (absolute path)
-* <Bool to enable Insecure connection> - Use Insecure connection (y or n)
-* <Kube username> - Kubernetes Username 
-* <Kube password> - Kubernetes Password
-* <Kube namespace> - Kubernetes namespace
-* <Kube ApiHost> - Kubernetes APIHost
-* <name of the secret> - Name of the secret for the serviceaccount created
+* Deploy heketi.  Before deploying you will need to determine the Kubernetes API endpoint and namespace.  
+In this example, we will use `https://1.1.1.1:443` as our Kubernetes API endpoint  
 ```
-> Username and Password must not be specified, if you are using secrets.
-
-```
-# kubectl create -f heketi-deployment.json 
+$ sed -e "s#<HEKETI_KUBE_SECRETNAME>#\"$heketi_secret\"#" \
+      -e "s#<HEKETI_KUBE_APIHOST>#\"http://1.1.1.1:443\"#" heketi-deployment.json | kubectl create -f -
 service "heketi" created
 deployment "heketi" created
 ```
