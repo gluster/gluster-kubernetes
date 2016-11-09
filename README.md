@@ -13,8 +13,6 @@ deployment scheme.
 * **GlusterFS** (https://www.gluster.org/), the scale-out storage system, running as pods inside the kubernetes cluster.
 * **heketi** (https://github.com/heketi/heketi), Gluster's volume management service interface, running in a pod inside kubernetes.
 
-**>>> [Click here for a demo of the technology!](https://drive.google.com/file/d/0B667S2caJiy7QVpzVVFNQVdyaVE/view?usp=sharing) <<<**
-
 ### Demo
 
 **>>> [Click here for a demo of the
