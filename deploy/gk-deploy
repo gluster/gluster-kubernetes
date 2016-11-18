@@ -1,0 +1,341 @@
+#!/bin/bash
+# Copyright (c) 2016 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+PROG="$(basename "${0}")"
+TOPOLOGY='topology.json'
+LOG_FILE=''
+VERBOSE=0
+CLI=''
+GLUSTER=0
+TEMPLATES="templates"
+WAIT=300
+
+usage() {
+  echo -e "USAGE: ${PROG} [-ghv] [-t <TEMPLATES>] [-w <SECONDS>] [-l <LOG_FILE>] [<TOPOLOGY>]\n"
+}
+
+help_exit() {
+  usage
+  echo "This is a utility script for deploying heketi (and optionally GlusterFS) in a
+Kubernetes environment.
+
+Arguments:
+  TOPOLOGY    Path to a JSON-formatted file containing the initial topology
+              information for the storage heketi will manage.
+              Default is '${TOPOLOGY}'.
+
+Options:
+  -g, --deploy-gluster
+              Deploy GlusterFS pods on the nodes in the topology that contain
+              brick devices. Default is to not deploy GlusterFS, thus assuming
+              that has already been done.
+
+  -t TEMPLATES, --templates_dir TEMPLATES
+              Location of directory containing the heketi templates for
+              OpenShift. Default is '${TEMPLATES}'.
+
+  -w SECONDS, --wait SECONDS
+              Wait SECONDS seconds for pods to become ready. Default is '${WAIT}'.
+
+  -l LOG_FILE, --log LOG_FILE
+              Save all output to the specified file.
+
+  --abort     Abort a failed deployment. WARNING: Deletes all related resources.
+
+  -h, --help  Output this help message.
+
+  -v, --verbose
+              Verbose output
+"
+  exit 0
+}
+
+output() {
+  opts="-e"
+  if [ "${1}" == "-n" ]; then
+    opts+="n"
+    shift
+  fi
+  echo "$opts" "${1}"
+  if [[ "${LOG_FILE}" ]]; then
+    echo $opts "${1}" > "${LOG_FILE}"
+  fi
+}
+
+debug() {
+  if [[ ${VERBOSE} -eq 1 ]]; then
+    output "${1}"
+  fi
+}
+
+abort() {
+  kubectl delete all,service,jobs,deployment,secret --selector="deploy-heketi" 
+  kubectl delete all,service,jobs,deployment,secret --selector="heketi"
+  kubectl delete svc/heketi-storage-endpoints
+  kubectl delete sa heketi-service-account
+  exit 1
+}
+
+assign() {
+  key="${1}"
+  assign=`expr index ${key} '='
+  `
+  if [[ $assign -gt 0 ]]; then
+    echo "${key:assign}"
+    return 0
+  elif [[ $assign -eq 0 ]] &&
+       [ "x${2}" != "x" ]; then
+    echo "${2}"
+    return 2
+  else
+    output "Required parameter for '-${key}' not specified.\n"
+    usage
+    exit 1
+  fi
+  keypos=$keylen
+}
+
+check_pods() {
+  local all_ready=false
+  s=0
+  while [ "${all_ready}" != "true" ]; do
+    if [[ ${s} -ge ${WAIT} ]]; then
+      output "Timed out waiting for pods matching '${1}'."
+      abort
+    fi
+    sleep 2
+    ((s+=2))
+    pods=$(kubectl get pod --no-headers --show-all --selector="${1}")
+    debug "Checking status of pods matching '${1}':"
+    debug "$pods"
+    all_ready=true
+    while read -r pod; do
+      case ${2} in
+        Completed)
+        status=$(echo "${pod}" | awk '{print $3}')
+        if [ "${status}" != "Completed" ]; then
+          all_ready=false
+        fi
+        ;;
+        *)
+        status=$(echo "${pod}" | awk '{print $2}')
+        if [ "${status}" != "1/1" ]; then
+          all_ready=false
+        fi
+        ;;
+      esac
+    done <<< "$(echo -e "$pods")"
+  done
+}
+
+while [[ $# -ge 1 ]]; do
+  key="${1}"
+
+  case $key in
+    -*)
+    keylen=${#key}
+    keypos=1
+    while [[ $keypos -lt $keylen ]]; do
+      case ${key:${keypos}} in
+        o*|-openshift)
+        CLI="oc"
+        ;;
+        g*|-deploy-gluster)
+        GLUSTER=1
+        ;;
+        t*|-templates_dir*)
+        TEMPLATES=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
+        w*|-wait*)
+        WAIT=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
+        l*|-log-file*)
+        LOG_FILE=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
+        -abort)
+        abort
+        ;;
+        h*|-help)
+        help_exit
+        ;;
+        v*|-verbose)
+        VERBOSE=1
+        ;;
+        *)
+        output "Unknown option '${key:${keypos}}'.\n"
+        usage
+        exit 1
+        ;;
+      esac
+      ((keypos++))
+    done
+    ;;
+    *)
+    TOPOLOGY="${key}"
+    ;;
+  esac
+  shift
+done
+
+if [ "x${CLI}" == "x" ]; then
+  CLI=$(type kubectl 2>/dev/null | awk '{print $3}')
+  if [ "x${CLI}" == "x" ]; then
+    output "Kubernetes CLI 'kubeadm' not found."
+    exit 1
+  else
+    oc=$(type oc 2>/dev/null | awk '{print $3}')
+    if [ "x${oc}" != "x" ]; then
+      read -rp "OpenShift CLI found. Perform an OpenShift deployment? [Y/n]: " yn
+      case $yn in
+        Y*|y*|"")
+        CLI=${oc}
+        ;;
+      esac
+    fi
+  fi
+fi
+
+if [ "${CLI}" == "oc" ]; then
+  output "Starting OpenShift deployment."
+  oc new-project heketi
+  oadm policy add-scc-to-user privileged -z default
+  oc create -f /usr/share/heketi/templates
+else
+  output "Starting Kubernetes deployment."
+fi
+
+kubectl create -f ${TEMPLATES}/heketi-service-account.yaml
+sa_secrets=$(kubectl get sa heketi-service-account -o="go-template" --template="{{range .secrets}}{{.name}}{{\"\n\"}}{{end}}" 2>&1)
+if [ "${sa_secrets}" == error* ]; then
+  output "Error getting service account secrets. Is your KUBECONFIG set correctly?"
+fi
+
+heketi_secret=""
+for secret in $sa_secrets; do
+  namespace=$(kubectl get secret/${secret} -o go-template --template="{{.metadata.namespace}}")
+  if [ "$namespace" == "default" ]; then
+    debug "Found secret '$secret' in namespace '$namespace' for heketi-service-account."
+    heketi_secret="${secret}"
+  else
+    debug "Secret '$secret' in namespace '$namespace' not valid."
+  fi
+done
+
+if [ "x$heketi_secret" == "x" ]; then
+  output "Could not find secret for heketi service account."
+  abort
+fi
+
+context=$(kubectl config current-context 2>&1)
+if [ "${context}" == error* ]; then
+  output "Error getting Kubernetes context. Is your KUBECONFIG set correctly?"
+  abort
+fi
+
+cluster=$(kubectl config view -o jsonpath="{.contexts[?(@.name==\"$context\")].context.cluster}")
+kubeapi=$(kubectl config view -o jsonpath="{.clusters[?(@.name==\"$cluster\")].cluster.server}")
+
+if [[ $GLUSTER -eq 1 ]]; then
+  gfs_nodes=$(python - <<END
+import sys
+import json
+import argparse
+
+file = open('${TOPOLOGY}', 'r')
+topo = json.load(file)
+
+for cluster in topo['clusters']:
+  for node in cluster['nodes']:
+    print node['node']['hostnames']['manage'][0]
+END
+)
+
+  while read -r node; do
+    debug "Deploying GlusterFS pods on ${node}."
+    if [ "${CLI}" == "oc" ]; then
+      oc process glusterfs GLUSTERFS_NODE=${node} NODE_NAME=${name} | oc create -f -
+    else
+      sed -e "s#<GLUSTERFS_NODE>#${node}#" ${TEMPLATES}/glusterfs-deployment.json | kubectl create -f -
+    fi
+  done <<< "$(echo -e "$gfs_nodes")"
+
+  output -n "Waiting for GlusterFS pods to start ... "
+  check_pods "glusterfs=pod"
+  output "OK"
+fi
+
+if [ "${CLI}" == "oc" ]; then
+  oc process deploy-heketi -v \
+         HEKETI_KUBE_NAMESPACE=heketi \
+         HEKETI_KUBE_INSECURE=y \
+         HEKETI_KUBE_SECRETNAME="$heketi_secret" \
+         HEKETI_KUBE_APIHOST="$kubeapi" | oc create -f -
+else
+  sed -e "s#<HEKETI_KUBE_NAMESPACE>#\"default\"#" \
+      -e "s#<HEKETI_KUBE_SECRETNAME>#\"${heketi_secret}\"#" \
+      -e "s#<HEKETI_KUBE_APIHOST>#\"${kubeapi}\"#" ${TEMPLATES}/deploy-heketi-deployment.json | kubectl create -f -
+fi
+
+output -n "Waiting for deploy-heketi pod to start ... "
+check_pods "glusterfs=heketi-pod"
+output "OK"
+
+heketi_service=$(kubectl describe svc/deploy-heketi | grep "Endpoints:" | awk '{print $2}')
+hello=$(curl http://${heketi_service}/hello)
+if [ "${hello}" != "Hello from Heketi" ]; then
+  output "Failed to communicate with deploy-heketi service."
+  abort
+fi
+
+heketi-cli -s http://${heketi_service} topology load --json=${TOPOLOGY}
+heketi-cli -s http://${heketi_service} setup-openshift-heketi-storage
+kubectl create -f heketi-storage.json
+
+check_pods "job-name=heketi-storage-copy-job" "Completed"
+
+kubectl delete all,service,jobs,deployment,secret --selector="deploy-heketi"
+
+if [ "${CLI}" == "oc" ]; then
+  oc process heketi -v \
+         HEKETI_KUBE_NAMESPACE=heketi \
+         HEKETI_KUBE_INSECURE=y \
+         HEEKTI_KUBE_SECRETNAME="${heketi_secret}" \
+         HEKETI_KUBE_APIHOST="${kubeapi}" | oc create -f -
+else
+  sed -e "s#<HEKETI_KUBE_NAMESPACE>#\"default\"#" \
+      -e "s#<HEKETI_KUBE_SECRETNAME>#\"${heketi_secret}\"#" \
+      -e "s#<HEKETI_KUBE_APIHOST>#\"${kubeapi}\"#" ${TEMPLATES}/heketi-deployment.json | kubectl create -f -
+fi
+
+output -n "Waiting for heketi pod to start ... "
+check_pods "glusterfs=heketi-pod"
+output "OK"
+
+heketi_service=$(kubectl describe svc/heketi | grep "Endpoints:" | awk '{print $2}')
+hello=$(curl http://${heketi_service}/hello)
+if [ "${hello}" != "Hello from Heketi" ]; then
+  output "Failed to communicate with heketi service."
+  abort
+else
+  output "heketi is now running."
+fi
+

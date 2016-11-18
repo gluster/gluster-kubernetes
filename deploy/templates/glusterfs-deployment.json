@@ -30,7 +30,7 @@
                 "hostNetwork": true,
                 "containers": [
                     {
-                        "image": "gluster/gluster-centos:latest",
+                        "image": "heketi/gluster:latest",
                         "imagePullPolicy": "Always",
                         "name": "glusterfs",
                         "volumeMounts": [
