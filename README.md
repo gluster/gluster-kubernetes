@@ -26,14 +26,29 @@ following installed:
 
 To spin up the cluster, simply run `./up.sh` in the `vagrant/` directory.
 
-Next, copy the `deploy/` directory to the master node of the cluster. If you
-used the provided vagrant setup, first run:
+Next, copy the `deploy/` directory to the master node of the cluster. You will
+have to provide your own topology file. A sample topology file is included in
+the `deploy/` directory (default location that gk-heketi expects) which can be
+used as the topology for the vagrant setup. If you used the provided vagrant
+setup, you can run:
+
+```bash
+$ vagrant ssh-config > ssh-config
+$ scp -rF ssh-config ../deploy master:
+$ vagrant ssh master
+[vagrant@master]$ cd deploy
+[vagrant@master]$ mv topology.json.sample topology.json
+```
+
+The following commands are meant to be run with administrative privileges.
+
+For ease of use in the the vagrant setup, we recommend you run the following:
 
 ```bash
 $ export KUBECONFIG="/etc/kubernetes/admin.conf"
 ```
 
-Next, to deploy heketi, run:
+Next, to deploy heketi, run the following:
 
 ```bash
 $ ./gk-deploy -g
