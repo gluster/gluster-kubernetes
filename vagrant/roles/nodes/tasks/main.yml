@@ -1,0 +1,23 @@
+- name: iptables key
+  command: iptables -N HEKETI
+
+- name: iptables 24007
+  command: iptables -A HEKETI -p tcp -m state --state NEW -m tcp --dport 24007 -j ACCEPT
+
+- name: iptables 24008
+  command: iptables -A HEKETI -p tcp -m state --state NEW -m tcp --dport 24008 -j ACCEPT
+
+- name: iptables 2222
+  command: iptables -A HEKETI -p tcp -m state --state NEW -m tcp --dport 2222 -j ACCEPT
+
+- name: iptables 49152
+  command: iptables -A HEKETI -p tcp -m state --state NEW -m multiport --dports 49152:49251 -j ACCEPT
+
+- name: clean up kubernetes /etc directory
+  file: path=/etc/kubernetes/manifests state=absent
+
+- name: kubeadm join with master
+  command: kubeadm join --token={{ kubernetes_token }} {{ hostvars['master'].ansible_eth1.ipv4.address }}
+
+#- name: save iptables
+#  command: service iptables save

@@ -1,0 +1,72 @@
+- name: build hosts file
+  lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_eth1.ipv4.address }} {{item}}" state=present
+  when: hostvars[item].ansible_eth1.ipv4.address is defined
+  with_items: "{{ groups['all'] }}"
+
+- name: disable selinux
+  selinux: state=disabled
+
+- name: disable of selinux - now
+  command: setenforce 0
+
+- name: install centos and epel repos
+  command: yum -y install centos-release-gluster epel-release
+
+- name: setup kubernetes repo
+  copy: src=kubernetes.repo owner=root group=root dest=/etc/yum.repos.d
+
+- name: install base packages
+  command: yum -y install {{ install_pkgs }}
+
+- name: Ensure net.bridge.bridge-nf-call-iptables is set. See kubeadm
+  copy: src=k8s.conf owner=root group=root dest=/etc/sysctl.d/k8s.conf
+
+- name: enable kube services
+  service: name={{ item }} state=started enabled=yes
+  with_items:
+    - docker
+    - kubelet
+
+#- name: save iptables
+#  command: service iptables save
+
+- name: configure dm_snapshot module
+  copy: src=dm_snapshot.conf owner=root group=root mode=644 dest=/etc/modules-load.d
+
+- name: update kubernetes
+  get_url:
+    url: https://storage.googleapis.com/kubernetes-release/release/v{{ kubernetes_version }}/bin/linux/amd64/{{ item }}
+    dest: /usr/bin
+    mode: 0755
+  with_items:
+    - kubelet
+    - kubectl
+
+- name: Ensure firewalld.service
+  service: name=firewalld state=started enabled=yes
+
+# Equivalent of `firewall-cmd --permanent --zone=trusted --add-interface=eth1`
+- firewalld: zone=trusted interface=eth1 permanent=true state=enabled immediate=true
+
+# Equivalent of `firewall-cmd --permanent --zone=trusted --add-interface=weave`
+- firewalld: zone=trusted interface=weave permanent=true state=enabled immediate=true
+
+# Equivalent of `firewall-cmd --permanent --zone=trusted --add-source=172.42.42.0/24`
+- firewalld: source=172.42.42.0/24 zone=trusted permanent=true state=enabled immediate=true
+
+# 10.32.0.0/12 is the default pod CIDR for Weave Net
+# you will need to update this if you are using a different
+# network provider, or a different CIDR for whatever reason
+# Equivalent of `firewall-cmd --permanent --zone=trusted --add-source=10.32.0.0/12`
+- firewalld: source=10.32.0.0/12 zone=trusted permanent=true state=enabled
+
+# Equivalent of `firewall-cmd --permanent --zone=trusted --add-port=10250`
+- firewalld: port=10250/tcp zone=trusted permanent=true state=enabled immediate=true
+
+# Equivalent of `firewall-cmd --permanent --zone=trusted --add-port=9898`
+- firewalld: port=6443/tcp zone=trusted permanent=true state=enabled immediate=true
+
+# Equivalent of `firewall-cmd --permanent --zone=trusted --add-port=9898`
+- firewalld: port=9898/tcp zone=trusted permanent=true state=enabled immediate=true
+
+- command: firewall-cmd --reload

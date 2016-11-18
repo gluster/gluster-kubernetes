@@ -1,0 +1,18 @@
+- name: kubeadm init
+  command: kubeadm init --token={{ kubernetes_token }} --use-kubernetes-version=v{{ kubernetes_version }}  --api-advertise-addresses={{ ansible_eth1.ipv4.address }}
+
+- name: Set --cluster-cidr flag in kube-proxy daemonset (workaround for https://github.com/kubernetes/kubernetes/issues/34101)
+  shell: kubectl -n kube-system get ds -l 'component=kube-proxy' -o json | sed '/"--kubeconfig=\/run\/kubeconfig"/ s/$/,\n"--cluster-cidr=10.32.0.0\/12"/' | kubectl apply -f - && kubectl -n kube-system delete pods -l 'component=kube-proxy'
+
+- name: create weave network
+  command: kubectl apply -f https://git.io/weave-kube
+
+- name: get dns service address
+  shell: kubectl get services --all-namespaces | grep kube-dns | awk "{print \$3}"
+  register: kubednsaddress
+
+- name: wait for dns to be ready
+  wait_for: host={{ kubednsaddress.stdout }} port=53 state=started timeout=1800
+
+#- name: save iptables
+#  command: service iptables save
