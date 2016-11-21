@@ -22,6 +22,7 @@ CLI=''
 GLUSTER=0
 TEMPLATES="templates"
 WAIT=300
+ABORT=0
 
 usage() {
   echo -e "USAGE: ${PROG} [-ghv] [-t <TEMPLATES>] [-w <SECONDS>] [-l <LOG_FILE>] [<TOPOLOGY>]\n"
@@ -40,8 +41,10 @@ Arguments:
 Options:
   -g, --deploy-gluster
               Deploy GlusterFS pods on the nodes in the topology that contain
-              brick devices. Default is to not deploy GlusterFS, thus assuming
-              that has already been done.
+              brick devices. If the --abort flag is also specified, this flag
+              indicates that all GlusterFS pods and deployments should be
+              deleted as well. Default is to not handle GlusterFS deployment
+              or removal.
 
   -t TEMPLATES, --templates_dir TEMPLATES
               Location of directory containing the heketi templates for
@@ -53,7 +56,7 @@ Options:
   -l LOG_FILE, --log LOG_FILE
               Save all output to the specified file.
 
-  --abort     Abort a failed deployment. WARNING: Deletes all related resources.
+  --abort     Abort a deployment. WARNING: Deletes all related resources.
 
   -h, --help  Output this help message.
 
@@ -86,6 +89,9 @@ abort() {
   kubectl delete all,service,jobs,deployment,secret --selector="heketi"
   kubectl delete svc/heketi-storage-endpoints
   kubectl delete sa heketi-service-account
+  if [[ ${GLUSTER} -eq 1 ]]; then
+    kubectl delete all,service,jobs,deployment,secret --selector="glusterfs"
+  fi
   exit 1
 }
 
@@ -152,9 +158,11 @@ while [[ $# -ge 1 ]]; do
       case ${key:${keypos}} in
         o*|-openshift)
         CLI="oc"
+        if [ "$key" == "--openshift" ]; then keypos=$keylen; fi
         ;;
         g*|-deploy-gluster)
         GLUSTER=1
+        if [ "$key" == "--deploy-gluster" ]; then keypos=$keylen; fi
         ;;
         t*|-templates_dir*)
         TEMPLATES=$(assign "${key:${keypos}}" "${2}")
@@ -172,13 +180,15 @@ while [[ $# -ge 1 ]]; do
         keypos=$keylen
         ;;
         -abort)
-        abort
+        ABORT=1
+        keypos=$keylen
         ;;
         h*|-help)
         help_exit
         ;;
         v*|-verbose)
         VERBOSE=1
+        if [ "$key" == "--verbose" ]; then keypos=$keylen; fi
         ;;
         *)
         output "Unknown option '${key:${keypos}}'.\n"
@@ -199,22 +209,27 @@ done
 if [ "x${CLI}" == "x" ]; then
   CLI=$(type kubectl 2>/dev/null | awk '{print $3}')
   if [ "x${CLI}" == "x" ]; then
-    output "Kubernetes CLI 'kubeadm' not found."
+    output "Kubernetes CLI 'kubectl' not found."
     exit 1
-  else
-    oc=$(type oc 2>/dev/null | awk '{print $3}')
-    if [ "x${oc}" != "x" ]; then
-      read -rp "OpenShift CLI found. Perform an OpenShift deployment? [Y/n]: " yn
-      case $yn in
-        Y*|y*|"")
-        CLI=${oc}
-        ;;
-      esac
-    fi
+# TODO: Properly test OpenShift deployment first.
+#  else
+#    oc=$(type oc 2>/dev/null | awk '{print $3}')
+#    if [ "x${oc}" != "x" ]; then
+#      read -rp "OpenShift CLI found. Perform an OpenShift deployment? [Y/n]: " yn
+#      case $yn in
+#        Y*|y*|"")
+#        CLI=${oc}
+#        ;;
+#      esac
+#    fi
   fi
 fi
 
-if [ "${CLI}" == "oc" ]; then
+if [ ${ABORT} -eq 1 ]; then
+  abort
+fi
+
+if [ "${CLI}" == *oc* ]; then
   output "Starting OpenShift deployment."
   oc new-project heketi
   oadm policy add-scc-to-user privileged -z default
@@ -227,6 +242,7 @@ kubectl create -f ${TEMPLATES}/heketi-service-account.yaml
 sa_secrets=$(kubectl get sa heketi-service-account -o="go-template" --template="{{range .secrets}}{{.name}}{{\"\n\"}}{{end}}" 2>&1)
 if [ "${sa_secrets}" == error* ]; then
   output "Error getting service account secrets. Is your KUBECONFIG set correctly?"
+  abort
 fi
 
 heketi_secret=""
@@ -265,7 +281,7 @@ topo = json.load(file)
 
 for cluster in topo['clusters']:
   for node in cluster['nodes']:
-    print node['node']['hostnames']['manage'][0]
+    print(str(node['node']['hostnames']['manage'][0]))
 END
 )
 
