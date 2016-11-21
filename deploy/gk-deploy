@@ -21,11 +21,13 @@ VERBOSE=0
 CLI=''
 GLUSTER=0
 TEMPLATES="templates"
+NAMESPACE="default"
 WAIT=300
 ABORT=0
 
 usage() {
-  echo -e "USAGE: ${PROG} [-ghv] [-t <TEMPLATES>] [-w <SECONDS>] [-l <LOG_FILE>] [<TOPOLOGY>]\n"
+  echo -e "USAGE: ${PROG} [-ghv] [-t <TEMPLATES>] [-n NAMESPACE] [-w <SECONDS>]
+       [-l <LOG_FILE>] [<TOPOLOGY>]\n"
 }
 
 help_exit() {
@@ -49,6 +51,10 @@ Options:
   -t TEMPLATES, --templates_dir TEMPLATES
               Location of directory containing the heketi templates for
               OpenShift. Default is '${TEMPLATES}'.
+
+  -n NAMESPACE, --namespace NAMESPACE
+              The namespace to use for creating resources.
+              Defaults is '${NAMESPACE}'.
 
   -w SECONDS, --wait SECONDS
               Wait SECONDS seconds for pods to become ready. Default is '${WAIT}'.
@@ -85,12 +91,12 @@ debug() {
 }
 
 abort() {
-  kubectl delete all,service,jobs,deployment,secret --selector="deploy-heketi" 
-  kubectl delete all,service,jobs,deployment,secret --selector="heketi"
-  kubectl delete svc/heketi-storage-endpoints
-  kubectl delete sa heketi-service-account
+  ${CLI} delete all,service,jobs,deployment,secret --selector="deploy-heketi"
+  ${CLI} delete all,service,jobs,deployment,secret --selector="heketi"
+  ${CLI} delete svc/heketi-storage-endpoints
+  ${CLI} delete sa heketi-service-account
   if [[ ${GLUSTER} -eq 1 ]]; then
-    kubectl delete all,service,jobs,deployment,secret --selector="glusterfs"
+    ${CLI} delete all,service,jobs,deployment,secret --selector="glusterfs"
   fi
   exit 1
 }
@@ -124,7 +130,7 @@ check_pods() {
     fi
     sleep 2
     ((s+=2))
-    pods=$(kubectl get pod --no-headers --show-all --selector="${1}")
+    pods=$(${CLI} get pod --no-headers --show-all --selector="${1}")
     debug "Checking status of pods matching '${1}':"
     debug "$pods"
     all_ready=true
@@ -225,21 +231,28 @@ if [ "x${CLI}" == "x" ]; then
   fi
 fi
 
+if ${CLI} get namespaces | grep -qi ${NAMESPACE}; then
+  CLI="${CLI} -n ${NAMESPACE}"
+else
+  output "Namespace '${NAMESPACE}' not found."
+  exit 1
+fi
+
 if [ ${ABORT} -eq 1 ]; then
   abort
 fi
 
 if [ "${CLI}" == *oc* ]; then
   output "Starting OpenShift deployment."
-  oc new-project heketi
+  ${CLI} new-project heketi
   oadm policy add-scc-to-user privileged -z default
-  oc create -f /usr/share/heketi/templates
+  ${CLI} create -f /usr/share/heketi/templates
 else
   output "Starting Kubernetes deployment."
 fi
 
-kubectl create -f ${TEMPLATES}/heketi-service-account.yaml
-sa_secrets=$(kubectl get sa heketi-service-account -o="go-template" --template="{{range .secrets}}{{.name}}{{\"\n\"}}{{end}}" 2>&1)
+${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml
+sa_secrets=$(${CLI} get sa heketi-service-account -o="go-template" --template="{{range .secrets}}{{.name}}{{\"\n\"}}{{end}}" 2>&1)
 if [ "${sa_secrets}" == error* ]; then
   output "Error getting service account secrets. Is your KUBECONFIG set correctly?"
   abort
@@ -247,7 +260,7 @@ fi
 
 heketi_secret=""
 for secret in $sa_secrets; do
-  namespace=$(kubectl get secret/${secret} -o go-template --template="{{.metadata.namespace}}")
+  namespace=$(${CLI} get secret/${secret} -o go-template --template="{{.metadata.namespace}}")
   if [ "$namespace" == "default" ]; then
     debug "Found secret '$secret' in namespace '$namespace' for heketi-service-account."
     heketi_secret="${secret}"
@@ -261,14 +274,14 @@ if [ "x$heketi_secret" == "x" ]; then
   abort
 fi
 
-context=$(kubectl config current-context 2>&1)
+context=$(${CLI} config current-context 2>&1)
 if [ "${context}" == error* ]; then
   output "Error getting Kubernetes context. Is your KUBECONFIG set correctly?"
   abort
 fi
 
-cluster=$(kubectl config view -o jsonpath="{.contexts[?(@.name==\"$context\")].context.cluster}")
-kubeapi=$(kubectl config view -o jsonpath="{.clusters[?(@.name==\"$cluster\")].cluster.server}")
+cluster=$(${CLI} config view -o jsonpath="{.contexts[?(@.name==\"$context\")].context.cluster}")
+kubeapi=$(${CLI} config view -o jsonpath="{.clusters[?(@.name==\"$cluster\")].cluster.server}")
 
 if [[ $GLUSTER -eq 1 ]]; then
   gfs_nodes=$(python - <<END
@@ -287,10 +300,10 @@ END
 
   while read -r node; do
     debug "Deploying GlusterFS pods on ${node}."
-    if [ "${CLI}" == "oc" ]; then
-      oc process glusterfs GLUSTERFS_NODE=${node} NODE_NAME=${name} | oc create -f -
+    if [ "${CLI}" == *oc* ]; then
+      ${CLI} process glusterfs GLUSTERFS_NODE=${node} NODE_NAME=${name} | ${CLI} create -f -
     else
-      sed -e "s#<GLUSTERFS_NODE>#${node}#" ${TEMPLATES}/glusterfs-deployment.json | kubectl create -f -
+      sed -e "s#<GLUSTERFS_NODE>#${node}#" ${TEMPLATES}/glusterfs-deployment.json | ${CLI} create -f -
     fi
   done <<< "$(echo -e "$gfs_nodes")"
 
@@ -299,23 +312,23 @@ END
   output "OK"
 fi
 
-if [ "${CLI}" == "oc" ]; then
-  oc process deploy-heketi -v \
+if [ "${CLI}" == *oc* ]; then
+  ${CLI} process deploy-heketi -v \
          HEKETI_KUBE_NAMESPACE=heketi \
          HEKETI_KUBE_INSECURE=y \
          HEKETI_KUBE_SECRETNAME="$heketi_secret" \
-         HEKETI_KUBE_APIHOST="$kubeapi" | oc create -f -
+         HEKETI_KUBE_APIHOST="$kubeapi" | ${CLI} create -f -
 else
   sed -e "s#<HEKETI_KUBE_NAMESPACE>#\"default\"#" \
       -e "s#<HEKETI_KUBE_SECRETNAME>#\"${heketi_secret}\"#" \
-      -e "s#<HEKETI_KUBE_APIHOST>#\"${kubeapi}\"#" ${TEMPLATES}/deploy-heketi-deployment.json | kubectl create -f -
+      -e "s#<HEKETI_KUBE_APIHOST>#\"${kubeapi}\"#" ${TEMPLATES}/deploy-heketi-deployment.json | ${CLI} create -f -
 fi
 
 output -n "Waiting for deploy-heketi pod to start ... "
 check_pods "glusterfs=heketi-pod"
 output "OK"
 
-heketi_service=$(kubectl describe svc/deploy-heketi | grep "Endpoints:" | awk '{print $2}')
+heketi_service=$(${CLI} describe svc/deploy-heketi | grep "Endpoints:" | awk '{print $2}')
 hello=$(curl http://${heketi_service}/hello)
 if [ "${hello}" != "Hello from Heketi" ]; then
   output "Failed to communicate with deploy-heketi service."
@@ -324,29 +337,29 @@ fi
 
 heketi-cli -s http://${heketi_service} topology load --json=${TOPOLOGY}
 heketi-cli -s http://${heketi_service} setup-openshift-heketi-storage
-kubectl create -f heketi-storage.json
+${CLI} create -f heketi-storage.json
 
 check_pods "job-name=heketi-storage-copy-job" "Completed"
 
-kubectl delete all,service,jobs,deployment,secret --selector="deploy-heketi"
+${CLI} delete all,service,jobs,deployment,secret --selector="deploy-heketi"
 
-if [ "${CLI}" == "oc" ]; then
-  oc process heketi -v \
+if [ "${CLI}" == *oc* ]; then
+  ${CLI} process heketi -v \
          HEKETI_KUBE_NAMESPACE=heketi \
          HEKETI_KUBE_INSECURE=y \
          HEEKTI_KUBE_SECRETNAME="${heketi_secret}" \
-         HEKETI_KUBE_APIHOST="${kubeapi}" | oc create -f -
+         HEKETI_KUBE_APIHOST="${kubeapi}" | ${CLI} create -f -
 else
   sed -e "s#<HEKETI_KUBE_NAMESPACE>#\"default\"#" \
       -e "s#<HEKETI_KUBE_SECRETNAME>#\"${heketi_secret}\"#" \
-      -e "s#<HEKETI_KUBE_APIHOST>#\"${kubeapi}\"#" ${TEMPLATES}/heketi-deployment.json | kubectl create -f -
+      -e "s#<HEKETI_KUBE_APIHOST>#\"${kubeapi}\"#" ${TEMPLATES}/heketi-deployment.json | ${CLI} create -f -
 fi
 
 output -n "Waiting for heketi pod to start ... "
 check_pods "glusterfs=heketi-pod"
 output "OK"
 
-heketi_service=$(kubectl describe svc/heketi | grep "Endpoints:" | awk '{print $2}')
+heketi_service=$(${CLI} describe svc/heketi | grep "Endpoints:" | awk '{print $2}')
 hello=$(curl http://${heketi_service}/hello)
 if [ "${hello}" != "Hello from Heketi" ]; then
   output "Failed to communicate with heketi service."
