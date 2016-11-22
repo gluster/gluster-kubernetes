@@ -7,52 +7,40 @@
             "glusterfs": "template"
         },
         "annotations": {
-            "description": "GlusterFS container deployment template",
+            "description": "GlusterFS DaemonSet template",
             "tags": "glusterfs"
         }
     },
-    "labels": {
-        "template": "glusterfs"
-    },
     "objects": [
         {
-            "kind": "DeploymentConfig",
-            "apiVersion": "v1",
+            "kind": "DaemonSet",
+            "apiVersion": "extensions/v1beta1",
             "metadata": {
-                "name": "glusterfs-dc-${GLUSTERFS_NODE}",
+                "name": "glusterfs",
                 "labels": {
-                    "glusterfs": "dc",
-                    "glusterfs-node": "${GLUSTERFS_NODE}"
+                    "glusterfs": "daemonset"
                 },
                 "annotations": {
-                    "description": "Deploys the GlusterFS container"
+                    "description": "GlusterFS DaemonSet",
+                    "tags": "glusterfs"
                 }
             },
             "spec": {
-                "replicas": 1,
                 "selector": {
-                    "name": "glusterfs"
+                    "matchLabels": {
+                        "glusterfs-node": "pod"
+                    }
                 },
                 "template": {
                     "metadata": {
                         "name": "glusterfs",
                         "labels": {
-                            "name": "glusterfs",
-                            "glusterfs": "pod",
-                            "glusterfs-node": "${GLUSTERFS_NODE}"
+                            "glusterfs-node": "pod"
                         }
-                    },
-                    "triggers": [
-                        {
-                            "type": "ConfigChange"
-                        }
-                    ],
-                    "strategy": {
-                        "type": "Recreate"
                     },
                     "spec": {
                         "nodeSelector": {
-                            "kubernetes.io/hostname": "${GLUSTERFS_NODE}"
+                            "storagenode": "glusterfs"
                         },
                         "hostNetwork": true,
                         "containers": [
@@ -107,7 +95,10 @@
                                             "-c",
                                             "systemctl status glusterd.service"
                                         ]
-                                    }
+                                    },
+                                    "periodSeconds": 10,
+                                    "successThreshold": 1,
+                                    "failureThreshold": 3
                                 },
                                 "livenessProbe": {
                                     "timeoutSeconds": 3,
@@ -118,8 +109,13 @@
                                             "-c",
                                             "systemctl status glusterd.service"
                                         ]
-                                    }
-                                }
+                                    },
+                                    "periodSeconds": 10,
+                                    "successThreshold": 1,
+                                    "failureThreshold": 3
+                                },
+                                "resources": {},
+                                "terminationMessagePath": "/dev/termination-log"
                             }
                         ],
                         "volumes": [
@@ -130,7 +126,8 @@
                                 }
                             },
                             {
-                                "name": "glusterfs-run"
+                                "name": "glusterfs-run",
+                                "emptyDir": {}
                             },
                             {
                                 "name": "glusterfs-lvm",
@@ -168,18 +165,14 @@
                                     "path": "/sys/fs/cgroup"
                                 }
                             }
-                        ]
+                        ],
+                        "restartPolicy": "Always",
+                        "terminationGracePeriodSeconds": 30,
+                        "dnsPolicy": "ClusterFirst",
+                        "securityContext": {}
                     }
                 }
             }
-        }
-    ],
-    "parameters": [
-        {
-            "name": "GLUSTERFS_NODE",
-            "displayName": "Storage node name",
-            "description": "Node name to run GlusterFS container",
-            "required": true
         }
     ]
 }
