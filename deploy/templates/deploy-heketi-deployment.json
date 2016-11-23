@@ -50,7 +50,7 @@
             "spec": {
                 "containers": [
                     {
-                        "image": "heketi/heketi:dev",
+                        "image": "heketi/heketi:latest",
                         "imagePullPolicy": "Always",
                         "name": "deploy-heketi",
                         "env": [
