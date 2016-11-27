@@ -248,7 +248,11 @@ else
 fi
 
 ${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml
-sa_secrets=$(${CLI} get sa heketi-service-account -o="go-template" --template="{{range .secrets}}{{.name}}{{\"\n\"}}{{end}}" 2>&1)
+
+sa_secrets=""
+while [[ "x${sa_secrets}" == "x" ]]; do
+  sa_secrets=$(${CLI} get sa heketi-service-account -o="go-template" --template="{{range .secrets}}{{.name}}{{\"\n\"}}{{end}}" 2>&1)
+done
 if [[ "${sa_secrets}" == error* ]]; then
   output "Error getting service account secrets. Is your KUBECONFIG set correctly?"
   abort
