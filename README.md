@@ -26,11 +26,22 @@ following installed:
 
 To spin up the cluster, simply run `./up.sh` in the `vagrant/` directory.
 
-Next, copy the `deploy/` directory to the master node of the cluster. You will
-have to provide your own topology file. A sample topology file is included in
-the `deploy/` directory (default location that gk-heketi expects) which can be
-used as the topology for the vagrant setup. If you used the provided vagrant
-setup, you can run:
+Next, copy the `deploy/` directory to the master node of the cluster.
+
+You will have to provide your own topology file. A sample topology file is
+included in the `deploy/` directory (default location that gk-heketi expects)
+which can be used as the topology for the vagrant libvirt setup. When
+creating your own topology file:
+
+ * Make sure the topology file only lists block devices intended for heketi's
+ use. heketi needs access to whole block devices (e.g. /dev/sdb, /dev/vdb)
+ which it will partition and format.
+
+ * The `hostnames` array is a bit misleading. `manage` should be a list of
+ hostnames for the node, but `storage` should be a list of IP addresses on
+ the node for backend storage communications.
+
+If you used the provided vagrant libvirt setup, you can run:
 
 ```bash
 $ vagrant ssh-config > ssh-config
