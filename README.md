@@ -29,7 +29,7 @@ To spin up the cluster, simply run `./up.sh` in the `vagrant/` directory.
 Next, copy the `deploy/` directory to the master node of the cluster.
 
 You will have to provide your own topology file. A sample topology file is
-included in the `deploy/` directory (default location that gk-heketi expects)
+included in the `deploy/` directory (default location that gk-deploy expects)
 which can be used as the topology for the vagrant libvirt setup. When
 creating your own topology file:
 
