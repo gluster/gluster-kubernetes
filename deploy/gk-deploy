@@ -74,7 +74,7 @@ Options:
 
 output() {
   opts="-e"
-  if [ "${1}" == "-n" ]; then
+  if [[ "${1}" == "-n" ]]; then
     opts+="n"
     shift
   fi
@@ -109,7 +109,7 @@ assign() {
     echo "${key:assign}"
     return 0
   elif [[ $assign -eq 0 ]] &&
-       [ "x${2}" != "x" ]; then
+       [[ "x${2}" != "x" ]]; then
     echo "${2}"
     return 2
   else
@@ -123,7 +123,7 @@ assign() {
 check_pods() {
   local all_ready=false
   s=0
-  while [ "${all_ready}" != "true" ]; do
+  while [[ "${all_ready}" != "true" ]]; do
     if [[ ${s} -ge ${WAIT} ]]; then
       output "Timed out waiting for pods matching '${1}'."
       abort
@@ -138,13 +138,13 @@ check_pods() {
       case ${2} in
         Completed)
         status=$(echo "${pod}" | awk '{print $3}')
-        if [ "${status}" != "Completed" ]; then
+        if [[ "${status}" != "Completed" ]]; then
           all_ready=false
         fi
         ;;
         *)
         status=$(echo "${pod}" | awk '{print $2}')
-        if [ "${status}" != "1/1" ]; then
+        if [[ "${status}" != "1/1" ]]; then
           all_ready=false
         fi
         ;;
@@ -162,13 +162,9 @@ while [[ $# -ge 1 ]]; do
     keypos=1
     while [[ $keypos -lt $keylen ]]; do
       case ${key:${keypos}} in
-        o*|-openshift)
-        CLI="oc"
-        if [ "$key" == "--openshift" ]; then keypos=$keylen; fi
-        ;;
         g*|-deploy-gluster)
         GLUSTER=1
-        if [ "$key" == "--deploy-gluster" ]; then keypos=$keylen; fi
+        if [[ "$key" == "--deploy-gluster" ]]; then keypos=$keylen; fi
         ;;
         t*|-templates_dir*)
         TEMPLATES=$(assign "${key:${keypos}}" "${2}")
@@ -194,7 +190,7 @@ while [[ $# -ge 1 ]]; do
         ;;
         v*|-verbose)
         VERBOSE=1
-        if [ "$key" == "--verbose" ]; then keypos=$keylen; fi
+        if [[ "$key" == "--verbose" ]]; then keypos=$keylen; fi
         ;;
         *)
         output "Unknown option '${key:${keypos}}'.\n"
@@ -212,9 +208,9 @@ while [[ $# -ge 1 ]]; do
   shift
 done
 
-if [ "x${CLI}" == "x" ]; then
+if [[ "x${CLI}" == "x" ]]; then
   CLI=$(type kubectl 2>/dev/null | awk '{print $3}')
-  if [ "x${CLI}" == "x" ]; then
+  if [[ "x${CLI}" == "x" ]]; then
     output "Kubernetes CLI 'kubectl' not found."
     exit 1
 # TODO: Properly test OpenShift deployment first.
@@ -238,11 +234,11 @@ else
   exit 1
 fi
 
-if [ ${ABORT} -eq 1 ]; then
+if [[ ${ABORT} -eq 1 ]]; then
   abort
 fi
 
-if [ "${CLI}" == *oc* ]; then
+if [[ "${CLI}" == *oc* ]]; then
   output "Starting OpenShift deployment."
   ${CLI} new-project heketi
   oadm policy add-scc-to-user privileged -z default
@@ -252,16 +248,20 @@ else
 fi
 
 ${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml
-sa_secrets=$(${CLI} get sa heketi-service-account -o="go-template" --template="{{range .secrets}}{{.name}}{{\"\n\"}}{{end}}" 2>&1)
-if [ "${sa_secrets}" == error* ]; then
+
+sa_secrets=""
+while [[ "x${sa_secrets}" == "x" ]]; do
+  sa_secrets=$(${CLI} get sa heketi-service-account -o="go-template" --template="{{range .secrets}}{{.name}}{{\"\n\"}}{{end}}" 2>&1)
+done
+if [[ "${sa_secrets}" == error* ]]; then
   output "Error getting service account secrets. Is your KUBECONFIG set correctly?"
   abort
 fi
 
 heketi_secret=""
-for secret in $sa_secrets; do
+for secret in ${sa_secrets}; do
   namespace=$(${CLI} get secret/${secret} -o go-template --template="{{.metadata.namespace}}")
-  if [ "$namespace" == "default" ]; then
+  if [[ "$namespace" == "default" ]]; then
     debug "Found secret '$secret' in namespace '$namespace' for heketi-service-account."
     heketi_secret="${secret}"
   else
@@ -269,13 +269,13 @@ for secret in $sa_secrets; do
   fi
 done
 
-if [ "x$heketi_secret" == "x" ]; then
+if [[ "x${heketi_secret}" == "x" ]]; then
   output "Could not find secret for heketi service account."
   abort
 fi
 
 context=$(${CLI} config current-context 2>&1)
-if [ "${context}" == error* ]; then
+if [[ "${context}" == error* ]]; then
   output "Error getting Kubernetes context. Is your KUBECONFIG set correctly?"
   abort
 fi
@@ -300,7 +300,7 @@ END
 
   while read -r node; do
     debug "Deploying GlusterFS pods on ${node}."
-    if [ "${CLI}" == *oc* ]; then
+    if [[ "${CLI}" == *oc* ]]; then
       ${CLI} process glusterfs GLUSTERFS_NODE=${node} NODE_NAME=${name} | ${CLI} create -f -
     else
       sed -e "s#<GLUSTERFS_NODE>#${node}#" ${TEMPLATES}/glusterfs-deployment.json | ${CLI} create -f -
@@ -312,7 +312,7 @@ END
   output "OK"
 fi
 
-if [ "${CLI}" == *oc* ]; then
+if [[ "${CLI}" == *oc* ]]; then
   ${CLI} process deploy-heketi -v \
          HEKETI_KUBE_NAMESPACE=heketi \
          HEKETI_KUBE_INSECURE=y \
@@ -330,7 +330,7 @@ output "OK"
 
 heketi_service=$(${CLI} describe svc/deploy-heketi | grep "Endpoints:" | awk '{print $2}')
 hello=$(curl http://${heketi_service}/hello)
-if [ "${hello}" != "Hello from Heketi" ]; then
+if [[ "${hello}" != "Hello from Heketi" ]]; then
   output "Failed to communicate with deploy-heketi service."
   abort
 fi
@@ -343,7 +343,7 @@ check_pods "job-name=heketi-storage-copy-job" "Completed"
 
 ${CLI} delete all,service,jobs,deployment,secret --selector="deploy-heketi"
 
-if [ "${CLI}" == *oc* ]; then
+if [[ "${CLI}" == *oc* ]]; then
   ${CLI} process heketi -v \
          HEKETI_KUBE_NAMESPACE=heketi \
          HEKETI_KUBE_INSECURE=y \
@@ -361,7 +361,7 @@ output "OK"
 
 heketi_service=$(${CLI} describe svc/heketi | grep "Endpoints:" | awk '{print $2}')
 hello=$(curl http://${heketi_service}/hello)
-if [ "${hello}" != "Hello from Heketi" ]; then
+if [[ "${hello}" != "Hello from Heketi" ]]; then
   output "Failed to communicate with heketi service."
   abort
 else
