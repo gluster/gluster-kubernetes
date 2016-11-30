@@ -261,9 +261,11 @@ fi
 heketi_secret=""
 for secret in ${sa_secrets}; do
   namespace=$(${CLI} get secret/${secret} -o go-template --template="{{.metadata.namespace}}")
-  if [[ "$namespace" == "default" ]]; then
+  stype=$(${CLI} get secret/${secret} -o="go-template" --template="{{.type}}")
+  if [[ "${namespace}" == "${NAMESPACE}" ]] && [[ "${stype}" = "kubernetes.io/service-account-token" ]]; then
     debug "Found secret '$secret' in namespace '$namespace' for heketi-service-account."
     heketi_secret="${secret}"
+    break
   else
     debug "Secret '$secret' in namespace '$namespace' not valid."
   fi
