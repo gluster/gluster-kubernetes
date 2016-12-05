@@ -8,6 +8,7 @@
 
 - name: disable of selinux - now
   command: setenforce 0
+  ignore_errors: yes
 
 - name: install centos and epel repos
   command: yum -y install centos-release-gluster epel-release
