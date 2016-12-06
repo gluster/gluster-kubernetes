@@ -59,10 +59,10 @@ For ease of use in the the vagrant setup, we recommend you run the following:
 $ export KUBECONFIG="/etc/kubernetes/admin.conf"
 ```
 
-Next, to deploy heketi, run the following:
+Next, to deploy gluster-kubernetes, run the following:
 
 ```bash
-$ ./gk-deploy -g
+$ sudo ./gk-deploy -g
 ```
 
 If you already have GlusterFS deployed in your cluster, you do not need the
