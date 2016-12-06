@@ -63,7 +63,7 @@ Within that node list you should see the servers you have identified to run Glus
 
 Example:
 
-`# sed 's/<GLUSTERFS_NODE>/ip-172-20-0-219\.ec2.internal/g' glusterfs-deployment.json | kubectl create -f -`
+`# sed 's/<GLUSTERFS_NODE>/ip-172-20-0-219\.ec2\.internal/g' glusterfs-deployment.json | kubectl create -f -`
 
 
 Verify that the deployments ran successfully by running the following command:
