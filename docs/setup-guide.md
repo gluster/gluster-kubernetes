@@ -63,7 +63,7 @@ Within that node list you should see the servers you have identified to run Glus
 
 Example:
 
-`# sed 's/<GLUSTERFS_NODE>/ip-172-20-0-219\.ec2.internal/g' glusterfs-deployment.json | kubectl create -f -`
+`# sed 's/<GLUSTERFS_NODE>/ip-172-20-0-219\.ec2\.internal/g' glusterfs-deployment.json | kubectl create -f -`
 
 
 Verify that the deployments ran successfully by running the following command:
@@ -92,7 +92,7 @@ $ heketi_secret=$(kubectl get sa heketi-service-account -o="go-template" --templ
 In this example, we will use `https://1.1.1.1:443` as our Kubernetes API endpoint  
 ```
 $ sed -e "s#<HEKETI_KUBE_SECRETNAME>#\"$heketi_secret\"#" \
-      -e "s#<HEKETI_KUBE_APIHOST>#\"http://1.1.1.1:443\"#" deploy-heketi-deployment.json | kubectl create -f -
+      -e "s#<HEKETI_KUBE_APIHOST>#\"https://1.1.1.1:443\"#" deploy-heketi-deployment.json | kubectl create -f -
 service "deploy-heketi" created
 deployment "deploy-heketi" created
 ```
@@ -166,7 +166,7 @@ We are using the shipped [heketi-deployment.json](../config/heketi-deployment.js
 
 ```
 $ sed -e "s#<HEKETI_KUBE_SECRETNAME>#\"$heketi_secret\"#" \
-      -e "s#<HEKETI_KUBE_APIHOST>#\"http://1.1.1.1:443\"#" heketi-deployment.json | kubectl create -f -
+      -e "s#<HEKETI_KUBE_APIHOST>#\"https://1.1.1.1:443\"#" heketi-deployment.json | kubectl create -f -
 service "heketi" created
 deployment "heketi" created
 ```
