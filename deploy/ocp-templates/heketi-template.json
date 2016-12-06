@@ -125,6 +125,10 @@
                     "value": "${HEKETI_KUBE_INSECURE}"
                   },
                   {
+                    "name": "HEKETI_KUBE_GLUSTER_DAEMONSET",
+                    "value": "y"
+                  },
+                  {
                     "name": "HEKETI_KUBE_NAMESPACE",
                     "value": "${HEKETI_KUBE_NAMESPACE}"
                   },

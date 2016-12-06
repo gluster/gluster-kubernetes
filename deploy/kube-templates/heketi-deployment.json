@@ -49,7 +49,7 @@
             "spec": {
                 "containers": [
                     {
-                        "image": "heketi/heketi:latest",
+                        "image": "heketi/heketi:dev",
                         "imagePullPolicy": "Always",
                         "name": "heketi",
                         "env": [
@@ -80,6 +80,14 @@
                           {
                             "name": "HEKETI_KUBE_INSECURE",
                             "value": "y"
+                          },
+                          {
+                            "name": "HEKETI_KUBE_GLUSTER_DAEMONSET",
+                            "value": "y"
+                          },
+                          {
+                            "name": "HEKETI_KUBE_NAMESPACE",
+                            "value": <HEKETI_KUBE_NAMESPACE>
                           },
                           {
                             "name": "HEKETI_KUBE_APIHOST",

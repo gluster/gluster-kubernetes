@@ -50,7 +50,7 @@
             "spec": {
                 "containers": [
                     {
-                        "image": "heketi/heketi:latest",
+                        "image": "heketi/heketi:dev",
                         "imagePullPolicy": "Always",
                         "name": "deploy-heketi",
                         "env": [
@@ -76,6 +76,10 @@
                           },
                           {
                             "name": "HEKETI_KUBE_INSECURE",
+                            "value": "y"
+                          },
+                          {
+                            "name": "HEKETI_KUBE_GLUSTER_DAEMONSET",
                             "value": "y"
                           },
                           {

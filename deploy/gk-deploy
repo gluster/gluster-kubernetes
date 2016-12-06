@@ -108,7 +108,7 @@ abort() {
     ${CLI} delete template heketi
   fi
   if [[ ${GLUSTER} -eq 1 ]]; then
-    ${CLI} delete all,service,jobs,deployment,secret --selector="glusterfs"
+    ${CLI} delete all,service,jobs,ds,secret --selector="glusterfs"
     if [[ "${CLI}" == *oc* ]]; then
       ${CLI} delete template glusterfs
     fi
@@ -308,16 +308,18 @@ END
 )
 
   while read -r node; do
-    debug "Deploying GlusterFS pods on ${node}."
-    if [[ "${CLI}" == *oc* ]]; then
-      ${CLI} process glusterfs GLUSTERFS_NODE=${node} | ${CLI} create -f -
-    else
-      sed -e "s#<GLUSTERFS_NODE>#${node}#" ${TEMPLATES}/glusterfs-deployment.json | ${CLI} create -f -
-    fi
+    debug "Marking '${node}' as a GlusterFS node."
+    ${CLI} label nodes ${node} storagenode=glusterfs
   done <<< "$(echo -e "$gfs_nodes")"
+  debug "Deploying GlusterFS pods."
+  if [[ "${CLI}" == *oc* ]]; then
+    ${CLI} process glusterfs | ${CLI} create -f -
+  else
+    ${CLI} create -f ${TEMPLATES}/glusterfs-daemonset.json
+  fi
 
   output -n "Waiting for GlusterFS pods to start ... "
-  check_pods "glusterfs=pod"
+  check_pods "glusterfs-node=pod"
   output "OK"
 fi
 
@@ -364,7 +366,7 @@ if [[ "${CLI}" == *oc* ]]; then
          HEKETI_KUBE_SECRETNAME="${heketi_secret}" \
          HEKETI_KUBE_APIHOST="${kubeapi}" | ${CLI} create -f -
 else
-  sed -e "s#<HEKETI_KUBE_NAMESPACE>#\"default\"#" \
+  sed -e "s#<HEKETI_KUBE_NAMESPACE>#\"${NAMESPACE}\"#" \
       -e "s#<HEKETI_KUBE_SECRETNAME>#\"${heketi_secret}\"#" \
       -e "s#<HEKETI_KUBE_APIHOST>#\"${kubeapi}\"#" ${TEMPLATES}/deploy-heketi-deployment.json | ${CLI} create -f -
 fi
@@ -401,12 +403,12 @@ ${CLI} delete all,service,jobs,deployment,secret --selector="deploy-heketi"
 
 if [[ "${CLI}" == *oc* ]]; then
   ${CLI} process heketi -v \
-         HEKETI_KUBE_NAMESPACE=heketi \
+         HEKETI_KUBE_NAMESPACE=${NAMESPACE} \
          HEKETI_KUBE_INSECURE=y \
          HEKETI_KUBE_SECRETNAME="${heketi_secret}" \
          HEKETI_KUBE_APIHOST="${kubeapi}" | ${CLI} create -f -
 else
-  sed -e "s#<HEKETI_KUBE_NAMESPACE>#\"default\"#" \
+  sed -e "s#<HEKETI_KUBE_NAMESPACE>#\"${NAMESPACE}\"#" \
       -e "s#<HEKETI_KUBE_SECRETNAME>#\"${heketi_secret}\"#" \
       -e "s#<HEKETI_KUBE_APIHOST>#\"${kubeapi}\"#" ${TEMPLATES}/heketi-deployment.json | ${CLI} create -f -
 fi
