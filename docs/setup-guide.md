@@ -166,7 +166,7 @@ We are using the shipped [heketi-deployment.json](../config/heketi-deployment.js
 
 ```
 $ sed -e "s#<HEKETI_KUBE_SECRETNAME>#\"$heketi_secret\"#" \
-      -e "s#<HEKETI_KUBE_APIHOST>#\"http://1.1.1.1:443\"#" heketi-deployment.json | kubectl create -f -
+      -e "s#<HEKETI_KUBE_APIHOST>#\"https://1.1.1.1:443\"#" heketi-deployment.json | kubectl create -f -
 service "heketi" created
 deployment "heketi" created
 ```
