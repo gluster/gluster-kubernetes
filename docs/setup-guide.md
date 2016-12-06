@@ -92,7 +92,7 @@ $ heketi_secret=$(kubectl get sa heketi-service-account -o="go-template" --templ
 In this example, we will use `https://1.1.1.1:443` as our Kubernetes API endpoint  
 ```
 $ sed -e "s#<HEKETI_KUBE_SECRETNAME>#\"$heketi_secret\"#" \
-      -e "s#<HEKETI_KUBE_APIHOST>#\"http://1.1.1.1:443\"#" deploy-heketi-deployment.json | kubectl create -f -
+      -e "s#<HEKETI_KUBE_APIHOST>#\"https://1.1.1.1:443\"#" deploy-heketi-deployment.json | kubectl create -f -
 service "deploy-heketi" created
 deployment "deploy-heketi" created
 ```
