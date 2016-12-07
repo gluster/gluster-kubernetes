@@ -181,6 +181,11 @@ while [[ $# -ge 1 ]]; do
         GLUSTER=1
         if [[ "$key" == "--deploy-gluster" ]]; then keypos=$keylen; fi
         ;;
+        n*|-namespace)
+        NAMESPACE=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
         c*|-cli)
         CLI=$(assign "${key:${keypos}}" "${2}")
         if [[ $? -eq 2 ]]; then shift; fi
