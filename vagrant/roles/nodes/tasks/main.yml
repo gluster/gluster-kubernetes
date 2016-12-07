@@ -13,6 +13,12 @@
 - name: iptables 49152
   command: iptables -A HEKETI -p tcp -m state --state NEW -m multiport --dports 49152:49251 -j ACCEPT
 
+- name: Pull GlusterFS Docker image
+  command: docker pull gluster/gluster-centos:latest
+
+- name: Pull heketi Docker image
+  command: docker pull heketi/heketi:dev
+
 - name: clean up kubernetes /etc directory
   file: path=/etc/kubernetes/manifests state=absent
 
