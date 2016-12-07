@@ -13,6 +13,16 @@ deployment scheme.
 * **GlusterFS** (https://www.gluster.org/), the scale-out storage system, running as pods inside the kubernetes cluster.
 * **heketi** (https://github.com/heketi/heketi), Gluster's volume management service interface, running in a pod inside kubernetes.
 
+### Demo
+
+**>>> [Video demo of the technology!](https://drive.google.com/file/d/0B667S2caJiy7QVpzVVFNQVdyaVE/view?usp=sharing) <<<**
+
+### Documentation
+
+* [Quickstart](#quickstart)
+* [Setup Guide](./docs/setup-guide.md)
+* [Hello World with GlusterFS Dynamic Provisioning](./docs/examples/hello_world/README.md)
+
 ### Quickstart
 
 You can start with your own Kubernetes installation ready to go, or you can
@@ -129,14 +139,3 @@ Hello from Heketi
 
 Alternatively, you should now also be able to use `heketi-cli` to create/manage volumes and then mount
 those volumes to verify they're working.
-
-### Demo
-
-**>>> [Video demo of the technology!](https://drive.google.com/file/d/0B667S2caJiy7QVpzVVFNQVdyaVE/view?usp=sharing) <<<**
-
-
-### Documentation
-
-* [Setup Guide](./docs/setup-guide.md)
-
-* [Hello World with GlusterFS Dynamic Provisioning](./docs/examples/hello_world/README.md)
