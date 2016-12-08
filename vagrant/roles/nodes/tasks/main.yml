@@ -1,17 +1,14 @@
-- name: iptables key
-  command: iptables -N HEKETI
+- name: Open port 24007 (GlusterFS daemon)
+  firewalld: port=24007/tcp zone=trusted permanent=true state=enabled immediate=true
 
-- name: iptables 24007
-  command: iptables -A HEKETI -p tcp -m state --state NEW -m tcp --dport 24007 -j ACCEPT
+- name: Open port 24008 (GlusterFS management)
+  firewalld: port=24008/tcp zone=trusted permanent=true state=enabled immediate=true
 
-- name: iptables 24008
-  command: iptables -A HEKETI -p tcp -m state --state NEW -m tcp --dport 24008 -j ACCEPT
+- name: Open port 2222 (GlusterFS sshd)
+  firewalld: port=2222/tcp zone=trusted permanent=true state=enabled immediate=true
 
-- name: iptables 2222
-  command: iptables -A HEKETI -p tcp -m state --state NEW -m tcp --dport 2222 -j ACCEPT
-
-- name: iptables 49152
-  command: iptables -A HEKETI -p tcp -m state --state NEW -m multiport --dports 49152:49251 -j ACCEPT
+- name: Open ports 49152-49251 (GlusterFS bricks)
+  firewalld: port=49152-49251/tcp zone=trusted permanent=true state=enabled immediate=true
 
 - name: Pull GlusterFS Docker image
   command: docker pull gluster/gluster-centos:latest
@@ -24,6 +21,3 @@
 
 - name: kubeadm join with master
   command: kubeadm join --token={{ kubernetes_token }} {{ hostvars['master'].ansible_eth1.ipv4.address }}
-
-#- name: save iptables
-#  command: service iptables save
