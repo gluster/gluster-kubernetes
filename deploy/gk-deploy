@@ -292,7 +292,7 @@ fi
 
 if [[ "${CLI}" == *oc* ]]; then
   ${CLI} create -f ${TEMPLATES}
-  ${CLI} policy add-role-to-user edit system:serviceaccount:default:heketi-service-account
+  ${CLI} policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:heketi-service-account
 else
   ${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml
 fi
