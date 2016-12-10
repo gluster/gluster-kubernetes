@@ -1,17 +1,19 @@
 # gluster-kubernetes
 
-## Dynamic, persistent storage for Kubernetes with GlusterFS
+## Hyper-converged GlusterFS + heketi on Kubernetes
 
-This is the home of the **gluster-kubernetes** project,
-a new project which brings dynamically provisioned persistent
-storage volumes to kubernetes, using a hyperconverged Gluster
-deployment scheme.
+**gluster-kubernetes** is a project to provide Kubernetes administrators a
+mechanism to easily deploy a hyper-converged GlusterFS cluster along with with
+heketi onto an existing Kubernetes cluster. This is a convenient way to unlock
+the power of dynamically provisioned, persistent GlusterFS volumes in
+Kubernetes.
 
-### The components in this project are:
+### Component Projects
 
-* **Kubernetes** (https://github.com/kubernetes/kubernetes/), the container management system.
-* **GlusterFS** (https://www.gluster.org/), the scale-out storage system, running as pods inside the kubernetes cluster.
-* **heketi** (https://github.com/heketi/heketi), Gluster's volume management service interface, running in a pod inside kubernetes.
+* **[Kubernetes](http://kubernetes.io/)**, the container management system.
+* **[GlusterFS](https://www.gluster.org/)**, the scale-out storage system.
+* **[heketi](https://github.com/heketi/heketi)**, the RESTful volume management
+  interface for GlusterFS.
 
 ### Demo
 
