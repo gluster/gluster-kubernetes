@@ -12,12 +12,20 @@
 
 - name: install centos and epel repos
   command: yum -y install centos-release-gluster epel-release
+  register: task_result
+  until: task_result.rc == 0
+  retries: 5
+  delay: 1
 
 - name: setup kubernetes repo
   copy: src=kubernetes.repo owner=root group=root dest=/etc/yum.repos.d
 
 - name: install base packages
   command: yum -y install {{ install_pkgs }}
+  register: task_result
+  until: task_result.rc == 0
+  retries: 5
+  delay: 1
 
 - name: Ensure net.bridge.bridge-nf-call-iptables is set. See kubeadm
   copy: src=k8s.conf owner=root group=root dest=/etc/sysctl.d/k8s.conf
