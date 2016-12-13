@@ -10,20 +10,8 @@
   command: setenforce 0
   ignore_errors: yes
 
-- name: reset epel repos
-  command: rm -rf /etc/yum.repos.d/epel.repo
-  ignore_errors: yes
-
 - name: install centos and epel repos
   command: yum -y install centos-release-gluster epel-release
-
-- name: delete cache
-  command: rm -rf /var/cache/yum/*
-  ignore_errors: yes
-
-- name: clean metadata and cache
-  command: yum clean all
-  ignore_errors: yes
 
 - name: setup kubernetes repo
   copy: src=kubernetes.repo owner=root group=root dest=/etc/yum.repos.d
