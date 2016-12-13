@@ -320,7 +320,7 @@ END
   if [[ "${CLI}" == *oc* ]]; then
     ${CLI} process glusterfs | ${CLI} create -f -
   else
-    ${CLI} create -f ${TEMPLATES}/glusterfs-daemonset.json
+    ${CLI} create -f ${TEMPLATES}/glusterfs-daemonset.yaml
   fi
 
   output -n "Waiting for GlusterFS pods to start ... "
@@ -373,7 +373,7 @@ if [[ "${CLI}" == *oc* ]]; then
 else
   sed -e "s#<HEKETI_KUBE_NAMESPACE>#\"${NAMESPACE}\"#" \
       -e "s#<HEKETI_KUBE_SECRETNAME>#\"${heketi_secret}\"#" \
-      -e "s#<HEKETI_KUBE_APIHOST>#\"${kubeapi}\"#" ${TEMPLATES}/deploy-heketi-deployment.json | ${CLI} create -f -
+      -e "s#<HEKETI_KUBE_APIHOST>#\"${kubeapi}\"#" ${TEMPLATES}/deploy-heketi-deployment.yaml | ${CLI} create -f -
 fi
 
 output -n "Waiting for deploy-heketi pod to start ... "
@@ -415,7 +415,7 @@ if [[ "${CLI}" == *oc* ]]; then
 else
   sed -e "s#<HEKETI_KUBE_NAMESPACE>#\"${NAMESPACE}\"#" \
       -e "s#<HEKETI_KUBE_SECRETNAME>#\"${heketi_secret}\"#" \
-      -e "s#<HEKETI_KUBE_APIHOST>#\"${kubeapi}\"#" ${TEMPLATES}/heketi-deployment.json | ${CLI} create -f -
+      -e "s#<HEKETI_KUBE_APIHOST>#\"${kubeapi}\"#" ${TEMPLATES}/heketi-deployment.yaml | ${CLI} create -f -
 fi
 
 output -n "Waiting for heketi pod to start ... "
