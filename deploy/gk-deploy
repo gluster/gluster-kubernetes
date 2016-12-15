@@ -233,6 +233,11 @@ while [[ $# -ge 1 ]]; do
   shift
 done
 
+if [[ ! -f ${TOPOLOGY} ]]; then
+  echo "Topology File not found!"
+  exit 1
+fi
+
 if [[ "x${CLI}" == "x" ]]; then
   kubectl=$(type kubectl 2>/dev/null | awk '{print $3}')
   oc=$(type oc 2>/dev/null | awk '{print $3}')
