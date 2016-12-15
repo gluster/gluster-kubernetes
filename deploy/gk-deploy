@@ -92,12 +92,9 @@ output() {
   fi
 }
 
-# dotit is used to print a dot when same status has to be printed again.
 debug() {
-  if [[ ${VERBOSE} -eq 1 ]] && [[ "dotit" == "${1}" ]]; then
-    output "-n" "."
-  elif [[ ${VERBOSE} -eq 1 ]]; then
-    output ${@}
+  if [[ ${VERBOSE} -eq 1 ]]; then
+    output "${@}"
   fi
 }
 
@@ -152,10 +149,10 @@ check_pods() {
     pods=$(${CLI} get pod --no-headers --show-all --selector="${1}" 2>&1)
     if [[ "${prestatus}" != "${pods}" ]]; then
       debug "Checking status of pods matching '${1}':"
-      debug "$pods"
+      debug "-n" "$pods"
       prestatus="${pods}"
     else
-      debug "dotit"
+      debug "-n" "."
     fi
     all_ready=true
     while read -r pod; do
