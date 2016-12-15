@@ -12,9 +12,17 @@
 
 - name: Pull GlusterFS Docker image
   command: docker pull gluster/gluster-centos:latest
+  register: task_result
+  until: task_result.rc == 0
+  retries: 5
+  delay: 1
 
 - name: Pull heketi Docker image
   command: docker pull heketi/heketi:dev
+  register: task_result
+  until: task_result.rc == 0
+  retries: 5
+  delay: 1
 
 - name: clean up kubernetes /etc directory
   file: path=/etc/kubernetes/manifests state=absent
