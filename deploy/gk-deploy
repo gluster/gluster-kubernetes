@@ -138,6 +138,7 @@ assign() {
 check_pods() {
   local all_ready=false
   s=0
+  prestatus=""
   while [[ "${all_ready}" != "true" ]]; do
     if [[ ${s} -ge ${WAIT} ]]; then
       output "Timed out waiting for pods matching '${1}'."
@@ -145,9 +146,14 @@ check_pods() {
     fi
     sleep 2
     ((s+=2))
-    pods=$(${CLI} get pod --no-headers --show-all --selector="${1}")
-    debug "Checking status of pods matching '${1}':"
-    debug "$pods"
+    pods=$(${CLI} get pod --no-headers --show-all --selector="${1}" 2>&1)
+    if [[ "${prestatus}" != "${pods}" ]]; then
+      debug "Checking status of pods matching '${1}':"
+      debug "$pods"
+      prestatus="${pods}"
+    else
+      debug -n "."
+    fi
     all_ready=true
     while read -r pod; do
       case ${2} in
