@@ -54,7 +54,7 @@ objects:
             mountPath: "/var/lib/misc/glusterfsd"
           - name: glusterfs-cgroup
             mountPath: "/sys/fs/cgroup"
-            readOnly: 'true'
+            readOnly: true
           securityContext:
             capabilities: {}
             privileged: true
