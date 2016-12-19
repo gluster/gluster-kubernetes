@@ -3,7 +3,7 @@
 ## Hyper-converged GlusterFS + heketi on Kubernetes
 
 **gluster-kubernetes** is a project to provide Kubernetes administrators a
-mechanism to easily deploy a hyper-converged GlusterFS cluster along with with
+mechanism to easily deploy a hyper-converged GlusterFS cluster along with
 heketi onto an existing Kubernetes cluster. This is a convenient way to unlock
 the power of dynamically provisioned, persistent GlusterFS volumes in
 Kubernetes.
