@@ -67,7 +67,7 @@ Options:
   -w SECONDS, --wait SECONDS
               Wait SECONDS seconds for pods to become ready. Default is '${WAIT}'.
 
-  -l LOG_FILE, --log LOG_FILE
+  -l LOG_FILE, --log-file LOG_FILE
               Save all output to the specified file.
 
   --abort     Abort a deployment. WARNING: Deletes all related resources.
@@ -88,7 +88,7 @@ output() {
   fi
   echo "$opts" "${1}"
   if [[ "${LOG_FILE}" ]]; then
-    echo $opts "${1}" > "${LOG_FILE}"
+    echo $opts "${1}" >> "${LOG_FILE}"
   fi
 }
 

@@ -67,7 +67,7 @@
 # you will need to update this if you are using a different
 # network provider, or a different CIDR for whatever reason
 # Equivalent of `firewall-cmd --permanent --zone=trusted --add-source=10.32.0.0/12`
-- firewalld: source=10.32.0.0/12 zone=trusted permanent=true state=enabled
+- firewalld: source=10.32.0.0/12 zone=trusted permanent=true state=enabled immediate=true
 
 # Equivalent of `firewall-cmd --permanent --zone=trusted --add-port=10250`
 - firewalld: port=10250/tcp zone=trusted permanent=true state=enabled immediate=true
@@ -77,5 +77,3 @@
 
 # Equivalent of `firewall-cmd --permanent --zone=trusted --add-port=9898`
 - firewalld: port=9898/tcp zone=trusted permanent=true state=enabled immediate=true
-
-- command: firewall-cmd --reload
