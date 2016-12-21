@@ -26,6 +26,7 @@ TEMPLATES=""
 NAMESPACE="default"
 WAIT=300
 ABORT=0
+NODES=""
 
 usage() {
   echo -e "USAGE: ${PROG} [-ghv] [-c CLI] [-t <TEMPLATES>] [-n NAMESPACE] [-w <SECONDS>]
@@ -108,6 +109,10 @@ abort() {
     ${CLI} delete template heketi
   fi
   if [[ ${GLUSTER} -eq 1 ]]; then
+    while read -r node; do
+      debug "Removing label from '${node}' as a GlusterFS node."
+      ${CLI} label nodes ${node} storagenode-
+    done <<< "$(echo -e "${NODES}")"
     ${CLI} delete all,service,jobs,ds,secret --selector="glusterfs"
     if [[ "${CLI}" == *oc* ]]; then
       ${CLI} delete template glusterfs
@@ -242,6 +247,20 @@ done
 if [[ ! -f ${TOPOLOGY} ]]; then
   echo "Topology File not found!"
   exit 1
+else
+  NODES=$(python - <<END
+import sys
+import json
+import argparse
+
+file = open('${TOPOLOGY}', 'r')
+topo = json.load(file)
+
+for cluster in topo['clusters']:
+  for node in cluster['nodes']:
+    print(str(node['node']['hostnames']['manage'][0]))
+END
+)
 fi
 
 if [[ "x${CLI}" == "x" ]]; then
@@ -314,24 +333,11 @@ else
 fi
 
 if [[ $GLUSTER -eq 1 ]]; then
-  gfs_nodes=$(python - <<END
-import sys
-import json
-import argparse
-
-file = open('${TOPOLOGY}', 'r')
-topo = json.load(file)
-
-for cluster in topo['clusters']:
-  for node in cluster['nodes']:
-    print(str(node['node']['hostnames']['manage'][0]))
-END
-)
 
   while read -r node; do
     debug "Marking '${node}' as a GlusterFS node."
     ${CLI} label nodes ${node} storagenode=glusterfs
-  done <<< "$(echo -e "$gfs_nodes")"
+  done <<< "$(echo -e "${NODES}")"
   debug "Deploying GlusterFS pods."
   if [[ "${CLI}" == *oc* ]]; then
     ${CLI} process glusterfs | ${CLI} create -f -
