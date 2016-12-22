@@ -419,7 +419,9 @@ debug "OK"
 hello=$(curl http://${heketi_service}/hello 2>/dev/null)
 if [[ "${hello}" != "Hello from Heketi" ]]; then
   output "Failed to communicate with deploy-heketi service."
-  output "Please verify if the router is configured. "
+  if [[ "${CLI}" == *oc* ]]; then
+    output "Please verify that a router has been properly configured."
+  fi
   abort
 fi
 
@@ -462,6 +464,9 @@ debug "OK"
 hello=$(curl http://${heketi_service}/hello 2>/dev/null)
 if [[ "${hello}" != "Hello from Heketi" ]]; then
   output "Failed to communicate with heketi service."
+  if [[ "${CLI}" == *oc* ]]; then
+    output "Please verify that a router has been properly configured."
+  fi
   abort
 else
   output "heketi is now running."
