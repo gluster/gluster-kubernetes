@@ -214,7 +214,7 @@ while [[ $# -ge 1 ]]; do
         if [[ $? -eq 2 ]]; then shift; fi
         keypos=$keylen
         ;;
-        l*|-log-file*)
+        l*|-log*)
         LOG_FILE=$(assign "${key:${keypos}}" "${2}")
         if [[ $? -eq 2 ]]; then shift; fi
         keypos=$keylen
