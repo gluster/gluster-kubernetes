@@ -33,6 +33,7 @@ spec:
         name: heketi
         glusterfs: heketi-pod
     spec:
+      serviceAccountName: heketi-service-account
       containers:
       - image: heketi/heketi:dev
         imagePullPolicy: Always
@@ -42,31 +43,17 @@ spec:
           value: kubernetes
         - name: HEKETI_KUBE_USE_SECRET
           value: "y"
-        - name: HEKETI_KUBE_TOKENFILE
-          value: "/var/lib/heketi/secret/token"
-        - name: HEKETI_KUBE_NAMESPACEFILE
-          value: "/var/lib/heketi/secret/namespace"
         - name: HEKETI_FSTAB
           value: "/var/lib/heketi/fstab"
         - name: HEKETI_SNAPSHOT_LIMIT
           value: '14'
-        - name: HEKETI_KUBE_INSECURE
-          value: "y"
         - name: HEKETI_KUBE_GLUSTER_DAEMONSET
           value: "y"
-        - name: HEKETI_KUBE_NAMESPACEFILE
-          value: "/var/lib/heketi/secret/namespace"
-        - name: HEKETI_KUBE_NAMESPACE
-          value: <HEKETI_KUBE_NAMESPACE>
-        - name: HEKETI_KUBE_APIHOST
-          value: <HEKETI_KUBE_APIHOST>
         ports:
         - containerPort: 8080
         volumeMounts:
         - name: db
           mountPath: "/var/lib/heketi"
-        - name: secret
-          mountPath: "/var/lib/heketi/secret"
         readinessProbe:
           timeoutSeconds: 3
           initialDelaySeconds: 3
@@ -84,6 +71,3 @@ spec:
         glusterfs:
           endpoints: heketi-storage-endpoints
           path: heketidbstorage
-      - name: secret
-        secret:
-          secretName: <HEKETI_KUBE_SECRETNAME>

@@ -465,9 +465,7 @@ if [[ ${LOAD} -eq 0 ]]; then
            HEKETI_KUBE_SECRETNAME="${heketi_secret}" \
            HEKETI_KUBE_APIHOST="${kubeapi}" | ${CLI} create -f -
   else
-    sed -e "s#<HEKETI_KUBE_NAMESPACE>#\"${NAMESPACE}\"#" \
-        -e "s#<HEKETI_KUBE_SECRETNAME>#\"${heketi_secret}\"#" \
-        -e "s#<HEKETI_KUBE_APIHOST>#\"${kubeapi}\"#" ${TEMPLATES}/deploy-heketi-deployment.yaml | ${CLI} create -f -
+    ${CLI} create -f ${TEMPLATES}/deploy-heketi-deployment.yaml
   fi
 fi
 
@@ -532,9 +530,7 @@ if [[ "${CLI}" == *oc* ]]; then
          HEKETI_KUBE_SECRETNAME="${heketi_secret}" \
          HEKETI_KUBE_APIHOST="${kubeapi}" | ${CLI} create -f -
 else
-  sed -e "s#<HEKETI_KUBE_NAMESPACE>#\"${NAMESPACE}\"#" \
-      -e "s#<HEKETI_KUBE_SECRETNAME>#\"${heketi_secret}\"#" \
-      -e "s#<HEKETI_KUBE_APIHOST>#\"${kubeapi}\"#" ${TEMPLATES}/heketi-deployment.yaml | ${CLI} create -f -
+  ${CLI} create -f ${TEMPLATES}/heketi-deployment.yaml
 fi
 
 output -n "Waiting for heketi pod to start ... "
