@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+set -euo pipefail 
+
 PROG="$(basename "${0}")"
 TOPOLOGY='topology.json'
 LOG_FILE=''
@@ -321,15 +324,15 @@ if [[ ${ABORT} -eq 1 ]]; then
 fi
 
 if [[ "${CLI}" == *oc* ]]; then
-  ${CLI} create -f ${TEMPLATES}/deploy-heketi-template.yaml
-  ${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml
-  ${CLI} create -f ${TEMPLATES}/heketi-template.yaml
+  ${CLI} create -f ${TEMPLATES}/deploy-heketi-template.yaml  || true
+  ${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml  || true
+  ${CLI} create -f ${TEMPLATES}/heketi-template.yaml         || true 
   if [[ $GLUSTER -eq 1 ]]; then
-    ${CLI} create -f ${TEMPLATES}/glusterfs-template.yaml
+    ${CLI} create -f ${TEMPLATES}/glusterfs-template.yaml    || true
   fi
-  ${CLI} policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:heketi-service-account
+  ${CLI} policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:heketi-service-account || true
 else
-  ${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml
+  ${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml || true
 fi
 
 if [[ $GLUSTER -eq 1 ]]; then
@@ -420,8 +423,8 @@ if [[ "${hello}" != "Hello from Heketi" ]]; then
   abort
 fi
 
-heketi-cli -s http://${heketi_service} topology load --json=${TOPOLOGY}
-heketi-cli -s http://${heketi_service} setup-openshift-heketi-storage
+heketi-cli -s http://${heketi_service} topology load --json=${TOPOLOGY} /dev/null 2>&1
+heketi-cli -s http://${heketi_service} setup-openshift-heketi-storage /dev/null 2>&1 
 ${CLI} create -f heketi-storage.json
 
 check_pods "job-name=heketi-storage-copy-job" "Completed"
@@ -463,4 +466,3 @@ if [[ "${hello}" != "Hello from Heketi" ]]; then
 else
   output "heketi is now running."
 fi
-
