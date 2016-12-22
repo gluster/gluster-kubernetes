@@ -246,7 +246,7 @@ while [[ $# -ge 1 ]]; do
   shift
 done
 
-if [[ ! -f ${TOPOLOGY} ]]; then
+if [[ ${ABORT} -ne 1 ]] && [[ ! -f ${TOPOLOGY} ]]; then
   echo "Topology File not found!"
   exit 1
 else
