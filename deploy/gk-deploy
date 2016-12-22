@@ -414,7 +414,7 @@ while [[ "x${heketi_service}" == "x" ]]; do
 done
 debug "OK"
 
-hello=$(curl http://${heketi_service}/hello)
+hello=$(curl http://${heketi_service}/hello 2>/dev/null)
 if [[ "${hello}" != "Hello from Heketi" ]]; then
   output "Failed to communicate with deploy-heketi service."
   abort
@@ -456,7 +456,7 @@ while [[ "x${heketi_service}" == "x" ]]; do
 done
 debug "OK"
 
-hello=$(curl http://${heketi_service}/hello)
+hello=$(curl http://${heketi_service}/hello 2>/dev/null)
 if [[ "${hello}" != "Hello from Heketi" ]]; then
   output "Failed to communicate with heketi service."
   abort
