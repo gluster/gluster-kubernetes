@@ -6,54 +6,48 @@
           "node": {
             "hostnames": {
               "manage": [
-                "172.16.35.11"
+                "10.163.148.196"
               ],
               "storage": [
-                "172.16.35.11"
+                "10.163.148.196"
               ]
             },
             "zone": 1
           },
           "devices": [
-            "/dev/sdc",
-            "/dev/sdd",
-            "/dev/sde"
+            "/dev/sdb"
           ]
         },
         {
           "node": {
             "hostnames": {
               "manage": [
-                "172.16.35.12"
+                "10.163.148.197"
               ],
               "storage": [
-                "172.16.35.12"
+                "10.163.148.197"
               ]
             },
             "zone": 1
           },
           "devices": [
-            "/dev/sdc",
-            "/dev/sdd",
-            "/dev/sde"
+            "/dev/sdb"
           ]
         },
         {
           "node": {
             "hostnames": {
               "manage": [
-                "172.16.35.13"
+                "10.163.148.198"
               ],
               "storage": [
-                "172.16.35.13"
+                "10.163.148.198"
               ]
             },
             "zone": 1
           },
           "devices": [
-            "/dev/sdc",
-            "/dev/sdd",
-            "/dev/sde"
+            "/dev/sdb"
           ]
         }
       ]

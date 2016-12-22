@@ -1,0 +1,22 @@
+---
+
+- name: Create gk-post directory
+  file: path=/srv/gk-post state=directory owner={{ansible_user}} group={{ansible_user}}
+  become: yes
+
+- name: Get the Heketi Server Endpoint
+  shell: kubectl describe svc/heketi | grep "Endpoints:" | awk '{print "http://"$2}'
+  register: heketi_endpoint
+
+- name: Store the Endpoint into HEKETI_CLI_SERVER
+  set_fact: HEKETI_CLI_SERVER={{heketi_endpoint.stdout}}
+
+- debug: msg="HEKETI_CLI_SERVER set to {{HEKETI_CLI_SERVER}}"
+
+- name: Copy the StorageClass template
+  template: src=gluster-storage-class.yaml dest=/srv/gk-post/
+
+- name: Add a Gluster StorageClass to kubernetes
+  command: kubectl create -f /srv/gk-post/gluster-storage-class.yaml
+  become: yes
+

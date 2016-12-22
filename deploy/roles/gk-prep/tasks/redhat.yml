@@ -1,0 +1,95 @@
+---
+# Copyright 2016, JinkIT, and it's Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+- name: Add kubernetes repository with gpg keys
+  yum_repository:
+    name: kubernetes
+    description: Repository for kubernetes
+    baseurl: http://yum.kubernetes.io/repos/kubernetes-el7-x86_64
+    enabled: yes
+    gpgcheck: yes
+    gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg
+            https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+
+- name: Add docker repository with gpg keys
+  yum_repository:
+    name: docker
+    description: Repository for docker
+    baseurl: https://yum.dockerproject.org/repo/main/centos/7/
+    enabled: yes
+    gpgcheck: yes
+    gpgkey: https://yum.dockerproject.org/gpg
+
+- name: install kubeadm and required prereqs
+  yum: name={{ item }} update_cache=yes state=present state=latest
+  with_items:
+  - docker-engine
+  - kubelet
+  - kubeadm
+  - kubectl
+  - kubernetes-cni
+
+# Currently SELinux must be turned off to allow containers to access
+# the host filesystem. This is necessary until kubelet can handle
+# SELinux better
+- name: turn off SELinux
+  command: setenforce 0
+
+- name: setting up docker unit drop-in dir
+  file: path=/etc/systemd/system/docker.service.d state=directory
+  when: docker_shared_mounts or proxy_enable
+
+- name: setting up docker shared mounts
+  template: src="10-docker-shared-mounts.conf.j2" dest="/etc/systemd/system/docker.service.d/10-docker-shared-mounts.conf" mode=0640
+  when: docker_shared_mounts
+  register: dsm
+
+# Vagrant's proxyconf plugin doesn't properly set up docker proxy and
+# even if it did, would require a vargrant reload after docker install
+# in order to take effect.
+- name: setting up docker proxy
+  template: src="20-docker-proxy.conf.j2" dest="/etc/systemd/system/docker.service.d/20-docker-proxy.conf" mode=0640
+  when: proxy_enable
+  register: docker_proxy
+
+- name: reload systemd config
+  command: systemctl daemon-reload
+  when: dsm.changed or docker_proxy.changed
+
+- name: start docker service
+  service: enabled=yes state=restarted name=docker
+
+- name: start kubelet service
+  service: enabled=yes state=started name=kubelet
+
+# There was an issue with kubejoin checks not being updated to ignore the
+# /etc/kubernetes/ empty directories. A change was submitted, but hasn't
+# been reflected in the yum repos yet. Can remove this once the repo gets
+# updated
+- name: remove /etc/kubernetes/manifests due to current issue with kubejoin checks
+  command: rm -rf /etc/kubernetes/manifests
+
+- name: add kubelet.service drop-in for hostname override
+  template: src="15-hostname-override.conf.j2" dest="/etc/systemd/system/kubelet.service.d/15-hostname-override.conf" mode=0640
+  when: kubelet_hostname_override
+  register: kho
+
+- name: reload systemd config
+  command: systemctl daemon-reload
+  when: kho.changed
+
+- name: restart kubelet
+  command: systemctl restart kubelet

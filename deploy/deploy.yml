@@ -1,0 +1,40 @@
+---
+
+- hosts: all
+  gather_facts: true
+  become: yes
+  roles:
+    - upgrade-os
+  tags:
+    - upgrade-os
+
+- hosts: kube-control
+  gather_facts: true
+  become: yes
+  roles:
+    - build-heketi
+  tags:
+    - build-heketi
+
+- hosts: all
+  gather_facts: true
+  become: yes
+  roles:
+    - gk-prep
+  tags:
+    - gk-prep
+
+- hosts: kube-control
+  gather_facts: true
+  roles:
+    - gk-deploy
+  tags:
+    - gk-deploy
+
+- hosts: kube-control
+  gather_facts: true
+  roles:
+    - gk-post
+  tags:
+    - gk-post
+

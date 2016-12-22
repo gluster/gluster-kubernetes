@@ -1,0 +1,32 @@
+---
+
+- name: Create gk-deploy directory
+  file: path=/srv/gk-deploy state=directory owner={{ansible_user}} group={{ansible_user}}
+  become: yes
+
+- name: Copy kube templates
+  copy: src=kube-templates dest=/srv/gk-deploy/
+  when: K8S_TARGET == "kubernetes"
+
+- name: Copy ocp templates
+  copy: src=ocp-templates dest=/srv/gk-deploy/
+  when: K8S_TARGET == "ocp"
+
+- name: Copy topology and gk-deploy
+  copy: src={{item}} dest=/srv/gk-deploy/ mode=0744
+  with_items:
+    - gk-deploy
+    - topology.json
+
+- name: Run gk-deploy
+  command: /srv/gk-deploy/gk-deploy -g -w 300
+  register: gk_deploy
+  become: yes
+  args:
+    chdir: /srv/gk-deploy
+  environment:
+    KUBECONFIG: "/etc/kubernetes/admin.conf"
+
+- name: gk-deploy success stdout
+  debug: var=gk_deploy.stdout_lines
+

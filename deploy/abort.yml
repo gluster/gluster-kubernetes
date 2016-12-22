@@ -1,0 +1,24 @@
+---
+
+- hosts: kube-control
+  gather_facts: true
+  tasks:
+    - name: Remove Gluster StorageClass
+      command: kubectl delete StorageClass {{STORAGE_CLASS_NAME}}
+      become: yes
+
+    - name: Run gk-deploy with abort flag
+      command: /srv/gk-deploy/gk-deploy -g -w 300 --abort
+      ignore_errors: yes  # gk-deploy will give exit status 1 on successful abort.
+      register: gk_deploy
+      become: yes
+      args:
+        chdir: /srv/gk-deploy
+      environment:
+        KUBECONFIG: "/etc/kubernetes/admin.conf"
+
+    - name: gk-deploy success stdout
+      debug: var=gk_deploy.stdout_lines
+  tags:
+    - gk-abort
+
