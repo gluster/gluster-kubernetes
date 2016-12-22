@@ -417,6 +417,7 @@ debug "OK"
 hello=$(curl http://${heketi_service}/hello)
 if [[ "${hello}" != "Hello from Heketi" ]]; then
   output "Failed to communicate with deploy-heketi service."
+  output "Please verify if the router is configured. "
   abort
 fi
 
