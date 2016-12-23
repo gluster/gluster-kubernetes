@@ -403,7 +403,7 @@ if [[ ${LOAD} -eq 0 ]]; then
   fi
 fi
 
-if [[ $GLUSTER -eq 1 ]] && [[ ${LOAD} -eq 0]]; then
+if [[ $GLUSTER -eq 1 ]] && [[ ${LOAD} -eq 0 ]]; then
 
   while read -r node; do
     debug "Marking '${node}' as a GlusterFS node."
