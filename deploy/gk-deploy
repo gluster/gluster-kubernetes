@@ -28,9 +28,10 @@ WAIT=300
 ABORT=0
 NODES=""
 SKIP_PREREQ=0
+LOAD=0
 
 usage() {
-  echo -e "USAGE: ${PROG} [-ghv] [-c CLI] [-t <TEMPLATES>] [-n NAMESPACE] [-w <SECONDS>]
+  echo -e "USAGE: ${PROG} [-ghv] [-c CLI] [-t <TEMPLATES>] [-n NAMESPACE] [-w <SECONDS>] [--load]
        [-l <LOG_FILE>] [<TOPOLOGY>]\n"
 }
 
@@ -68,6 +69,11 @@ Options:
 
   -w SECONDS, --wait SECONDS
               Wait SECONDS seconds for pods to become ready. Default is '${WAIT}'.
+
+  --load      Resumes from the Topology load. Used in case of topology load
+              failure on adding nodes or devices to heketi. Fix the issue on
+              device or node, then restart with --load to skip gluster
+              deployment and re-run topology load command.
 
   -y, --yes
               Skip the pre-requisites prompt.
@@ -232,6 +238,10 @@ while [[ $# -ge 1 ]]; do
         h*|-help)
         help_exit
         ;;
+        -load)
+        LOAD=1
+        if [[ "$key" == "--load" ]]; then keypos=$keylen; fi
+        ;;
         v*|-verbose)
         VERBOSE=1
         if [[ "$key" == "--verbose" ]]; then keypos=$keylen; fi
@@ -252,7 +262,7 @@ while [[ $# -ge 1 ]]; do
   shift
 done
 
-if [[ ${SKIP_PREREQ} -eq 0 ]]; then
+if [[ ${SKIP_PREREQ} -eq 0 ]] && [[ ${LOAD} -eq 0 ]]; then
   echo "Welcome to the deployment tool for GlusterFS on Kubernetes and OpenShift.
 
 Before getting started, this script has some requirements of the execution
@@ -379,19 +389,21 @@ if [[ ${ABORT} -eq 1 ]]; then
   abort
 fi
 
-if [[ "${CLI}" == *oc* ]]; then
-  ${CLI} create -f ${TEMPLATES}/deploy-heketi-template.yaml
-  ${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml
-  ${CLI} create -f ${TEMPLATES}/heketi-template.yaml
-  if [[ $GLUSTER -eq 1 ]]; then
-    ${CLI} create -f ${TEMPLATES}/glusterfs-template.yaml
+if [[ ${LOAD} -eq 0 ]]; then
+  if [[ "${CLI}" == *oc* ]]; then
+    ${CLI} create -f ${TEMPLATES}/deploy-heketi-template.yaml
+    ${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml
+    ${CLI} create -f ${TEMPLATES}/heketi-template.yaml
+    if [[ $GLUSTER -eq 1 ]]; then
+      ${CLI} create -f ${TEMPLATES}/glusterfs-template.yaml
+    fi
+    ${CLI} policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:heketi-service-account
+  else
+    ${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml
   fi
-  ${CLI} policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:heketi-service-account
-else
-  ${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml
 fi
 
-if [[ $GLUSTER -eq 1 ]]; then
+if [[ $GLUSTER -eq 1 ]] && [[ ${LOAD} -eq 0]]; then
 
   while read -r node; do
     debug "Marking '${node}' as a GlusterFS node."
@@ -445,16 +457,18 @@ fi
 cluster=$(${CLI} config view -o jsonpath="{.contexts[?(@.name==\"$context\")].context.cluster}")
 kubeapi=$(${CLI} config view -o jsonpath="{.clusters[?(@.name==\"$cluster\")].cluster.server}")
 
-if [[ "${CLI}" == *oc* ]]; then
-  ${CLI} process deploy-heketi -v \
-         HEKETI_KUBE_NAMESPACE=${NAMESPACE} \
-         HEKETI_KUBE_INSECURE=y \
-         HEKETI_KUBE_SECRETNAME="${heketi_secret}" \
-         HEKETI_KUBE_APIHOST="${kubeapi}" | ${CLI} create -f -
-else
-  sed -e "s#<HEKETI_KUBE_NAMESPACE>#\"${NAMESPACE}\"#" \
-      -e "s#<HEKETI_KUBE_SECRETNAME>#\"${heketi_secret}\"#" \
-      -e "s#<HEKETI_KUBE_APIHOST>#\"${kubeapi}\"#" ${TEMPLATES}/deploy-heketi-deployment.yaml | ${CLI} create -f -
+if [[ ${LOAD} -eq 0 ]]; then
+  if [[ "${CLI}" == *oc* ]]; then
+    ${CLI} process deploy-heketi -v \
+           HEKETI_KUBE_NAMESPACE=${NAMESPACE} \
+           HEKETI_KUBE_INSECURE=y \
+           HEKETI_KUBE_SECRETNAME="${heketi_secret}" \
+           HEKETI_KUBE_APIHOST="${kubeapi}" | ${CLI} create -f -
+  else
+    sed -e "s#<HEKETI_KUBE_NAMESPACE>#\"${NAMESPACE}\"#" \
+        -e "s#<HEKETI_KUBE_SECRETNAME>#\"${heketi_secret}\"#" \
+        -e "s#<HEKETI_KUBE_APIHOST>#\"${kubeapi}\"#" ${TEMPLATES}/deploy-heketi-deployment.yaml | ${CLI} create -f -
+  fi
 fi
 
 output -n "Waiting for deploy-heketi pod to start ... "
