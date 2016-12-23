@@ -109,7 +109,7 @@ objects:
             timeoutSeconds: 3
             initialDelaySeconds: 30
             httpGet:
-              path: "/hello"
+              path: /hello
               port: 8080
         volumes:
         - name: db
