@@ -137,7 +137,6 @@ parameters:
 - name: HEKETI_KUBE_NAMESPACE
   displayName: Project/Namespace
   description: OpenShift project or Kubernetes namespace containing GlusterFS
-  required: true
 - name: HEKETI_KUBE_APIHOST
   displayName: API Host Address
   description: 'Kubernetes API host, for example: https://ip:port'
