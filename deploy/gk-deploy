@@ -482,8 +482,30 @@ if [[ "${hello}" != "Hello from Heketi" ]]; then
   abort
 fi
 
-heketi-cli -s http://${heketi_service} topology load --json=${TOPOLOGY}
+tload=$(heketi-cli -s http://${heketi_service} topology load --json=${TOPOLOGY} 2>&1)
+if [[ ${?} != 0 ]]; then
+	echo $tload
+	exit 1
+else
+        check=""
+	echo $tload
+        check=$(echo $tload | grep Unable)
+	if [[ "x${check}" != "x" ]]; then
+		echo "Please Check the failed Node or Device and restart"
+		exit 1
+	fi
+fi
+
 heketi-cli -s http://${heketi_service} setup-openshift-heketi-storage
+if [[ ${?} != 0 ]]; then
+	echo "Failed on setup openshift heketi storage"
+	exit 1
+fi
+
+if [[ ! -f heketi-storage.json ]];then
+	echo "heketi-storage.json file not found"
+	exit 1
+fi
 ${CLI} create -f heketi-storage.json
 
 check_pods "job-name=heketi-storage-copy-job" "Completed"
