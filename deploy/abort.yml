@@ -6,10 +6,11 @@
     - name: Remove Gluster StorageClass
       command: kubectl delete StorageClass {{STORAGE_CLASS_NAME}}
       become: yes
+      ignore_errors: yes
 
     - name: Run gk-deploy with abort flag
       command: /srv/gk-deploy/gk-deploy -g -w 300 --abort
-      ignore_errors: yes  # gk-deploy will give exit status 1 on successful abort.
+      failed_when: "gk_deploy.rc != 1"  # gk-deploy will give exit status 1 on successful abort.
       register: gk_deploy
       become: yes
       args:
