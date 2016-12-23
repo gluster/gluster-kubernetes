@@ -23,7 +23,7 @@ GLUSTER=0
 KUBE_TEMPLATES_DEFAULT="./kube-templates"
 OCP_TEMPLATES_DEFAULT="./ocp-templates"
 TEMPLATES=""
-NAMESPACE="default"
+NAMESPACE=""
 WAIT=300
 ABORT=0
 NODES=""
@@ -356,7 +356,19 @@ if [[ "x${TEMPLATES}" == "x" ]]; then
   fi
 fi
 
+if [[ -z "$NAMESPACE" ]]; then
+  if [[ "${CLI}" == *oc* ]]; then
+    NAMESPACE=$(${CLI} config get-contexts | awk '/^\*/ {print $5}')
+  elif [[ "${CLI}" == *kubectl* ]]; then
+    NAMESPACE=$(${CLI} config current-context)
+  fi
+  if [[ -z "$NAMESPACE" ]]; then
+    NAMESPACE="default"
+  fi
+fi
+
 if ${CLI} get namespaces | grep -qi ${NAMESPACE}; then
+  output "Using namespace \"${NAMESPACE}\"."
   CLI="${CLI} -n ${NAMESPACE}"
 else
   output "Namespace '${NAMESPACE}' not found."
