@@ -29,6 +29,7 @@ NAMESPACE="default"
 WAIT=300
 ABORT=0
 NODES=""
+SKIP_PREREQ=0
 
 usage() {
   echo -e "USAGE: ${PROG} [-ghv] [-c CLI] [-t <TEMPLATES>] [-n NAMESPACE] [-w <SECONDS>]
@@ -69,6 +70,9 @@ Options:
 
   -w SECONDS, --wait SECONDS
               Wait SECONDS seconds for pods to become ready. Default is '${WAIT}'.
+
+  -y, --yes
+              Skip the pre-requisites prompt.
 
   -l LOG_FILE, --log-file LOG_FILE
               Save all output to the specified file.
@@ -214,6 +218,10 @@ while [[ $# -ge 1 ]]; do
         if [[ $? -eq 2 ]]; then shift; fi
         keypos=$keylen
         ;;
+        y*|-yes)
+        SKIP_PREREQ=1
+        if [[ "$key" == "--yes" ]]; then keypos=$keylen; fi
+        ;;
         l*|-log-file*)
         LOG_FILE=$(assign "${key:${keypos}}" "${2}")
         if [[ $? -eq 2 ]]; then shift; fi
@@ -245,6 +253,45 @@ while [[ $# -ge 1 ]]; do
   esac
   shift
 done
+
+if [[ ${SKIP_PREREQ} -eq 0 ]]; then
+  echo "Welcome to the deployment tool for GlusterFS on Kubernetes and OpenShift.
+
+Before getting started, this script has some requirements of the execution
+environment and of the container platform that you should verify.
+
+The client machine that will run this script must have:
+ * Administrative access to an existing Kubernetes or OpenShift cluster
+ * Access to a python interpreter 'python'
+ * Access to the heketi client 'heketi-cli'
+
+Each of the nodes that will host GlusterFS must also have appropriate firewall
+rules for the required GlusterFS ports:
+ * 2222  - sshd (if running GlusterFS in a pod)
+ * 24007 - GlusterFS Daemon
+ * 24008 - GlusterFS Management
+ * 49152 to 49251 - Each brick for every volume on the host requires its own
+   port. For every new brick, one new port will be used starting at 49152. We
+   recommend a default range of 49152-49251 on each host, though you can adjust
+   this to fit your needs.
+
+In addition, for an OpenShift deployment you must:
+ * Have 'cluster_admin' role on the administrative account doing the deployment
+ * Add the 'default' and 'router' Service Accounts to the 'privileged' SCC
+ * Add the 'heketi-service-account' Service Account to the 'privileged' SCC
+ * Have a router deployed that is configured to allow apps to access services
+   running in the cluster
+
+Do you wish to proceed with deployment?
+"
+
+  read -rp "[Y]es, [N]o? [Default: Y]: " ynopt
+  case $ynopt in
+    N*|n*)
+    exit
+    ;;
+  esac
+fi
 
 if [[ ! -f ${TOPOLOGY} ]]; then
   echo "Topology File not found!"
