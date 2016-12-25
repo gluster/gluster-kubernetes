@@ -19,13 +19,14 @@
     - topology.json
 
 - name: Run gk-deploy
-  command: /srv/gk-deploy/gk-deploy -g -w 300
+  command: /srv/gk-deploy/gk-deploy -g -w 300 -n "{{NAMESPACE}}" -y
   register: gk_deploy
   become: yes
   args:
     chdir: /srv/gk-deploy
   environment:
     KUBECONFIG: "/etc/kubernetes/admin.conf"
+    # NAMESPACE: "{{NAMESPACE}}"
 
 - name: gk-deploy success stdout
   debug: var=gk_deploy.stdout_lines
