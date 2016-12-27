@@ -262,7 +262,7 @@ while [[ $# -ge 1 ]]; do
   shift
 done
 
-if [[ ${LOAD} -eq 0 ]] && [[ ${SKIP_PREREQ} -eq 0 ]]; then
+if [[ ${LOAD} -eq 0 ]] && [[ ${ABORT} -eq 0 ]] && [[ ${SKIP_PREREQ} -eq 0 ]]; then
   echo "Welcome to the deployment tool for GlusterFS on Kubernetes and OpenShift.
 
 Before getting started, this script has some requirements of the execution
