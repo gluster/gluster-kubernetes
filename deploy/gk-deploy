@@ -377,7 +377,7 @@ if [[ -z "$NAMESPACE" ]]; then
   fi
 fi
 
-if ${CLI} get namespaces | grep -qi ${NAMESPACE}; then
+if ${CLI} get namespaces | grep -qw ${NAMESPACE}; then
   output "Using namespace \"${NAMESPACE}\"."
   CLI="${CLI} -n ${NAMESPACE}"
 else
