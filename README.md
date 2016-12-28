@@ -138,3 +138,15 @@ then mount those volumes to verify they're working. To see an example of how
 to use this with a Kubernetes application, see the following:
 
 [Hello World application using GlusterFS Dynamic Provisioning](./docs/examples/hello_world/README.md)
+
+### Add Kubernetes Dynamic Provisioner
+
+```
+HEKETI_SERVICE_IP=`kubectl get svc heketi --no-headers | awk '{print $2}'` envsubst < deploy/kube-templates/glusterfs-dynamic-provisioner.yaml | kubectl apply -f -
+```
+
+```bash
+$ kubectl get storageclass
+NAME      TYPE
+default   kubernetes.io/glusterfs
+```
