@@ -110,7 +110,7 @@ debug() {
 }
 
 abort() {
-  ${CLI} delete all,service,jobs,deployment,secret --selector="deploy-heketi"
+  ${CLI} delete all,service,jobs,deployment,secret --selector="template=deploy-heketi"
   ${CLI} delete all,service,jobs,deployment,secret --selector="template=heketi"
   ${CLI} delete svc/heketi-storage-endpoints
   ${CLI} delete sa heketi-service-account
