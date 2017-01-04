@@ -111,7 +111,7 @@ debug() {
 
 abort() {
   ${CLI} delete all,service,jobs,deployment,secret --selector="deploy-heketi"
-  ${CLI} delete all,service,jobs,deployment,secret --selector="heketi"
+  ${CLI} delete dc,svc,routes heketi
   ${CLI} delete svc/heketi-storage-endpoints
   ${CLI} delete sa heketi-service-account
   if [[ "${CLI}" == *oc* ]]; then
@@ -202,12 +202,12 @@ while [[ $# -ge 1 ]]; do
         GLUSTER=1
         if [[ "$key" == "--deploy-gluster" ]]; then keypos=$keylen; fi
         ;;
-        n*|-namespace)
+        n*|-namespace*)
         NAMESPACE=$(assign "${key:${keypos}}" "${2}")
         if [[ $? -eq 2 ]]; then shift; fi
         keypos=$keylen
         ;;
-        c*|-cli)
+        c*|-cli*)
         CLI=$(assign "${key:${keypos}}" "${2}")
         if [[ $? -eq 2 ]]; then shift; fi
         keypos=$keylen
@@ -377,7 +377,8 @@ if [[ -z "$NAMESPACE" ]]; then
   fi
 fi
 
-if ${CLI} get namespaces | grep -qw ${NAMESPACE}; then
+${CLI} get namespaces ${NAMESPACE} 2>/dev/null
+if [[ ${?} -eq 0 ]]; then
   output "Using namespace \"${NAMESPACE}\"."
   CLI="${CLI} -n ${NAMESPACE}"
 else
@@ -386,7 +387,15 @@ else
 fi
 
 if [[ ${ABORT} -eq 1 ]]; then
-  abort
+echo "Do you wish to proceed with aborting the deployment"
+read -rp "[Y]es, [N]o? [Default: N]: " abortopt
+  case $abortopt in
+    Y*|y*)
+    abort
+    ;;
+    N*|n*)
+    exit
+  esac
 fi
 
 if [[ ${LOAD} -eq 0 ]]; then
