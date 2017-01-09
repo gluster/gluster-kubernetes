@@ -387,13 +387,13 @@ else
 fi
 
 if [[ ${ABORT} -eq 1 ]]; then
-echo "Do you wish to proceed with aborting the deployment"
+echo "Do you wish to abort the deployment?"
 read -rp "[Y]es, [N]o? [Default: N]: " abortopt
   case $abortopt in
     Y*|y*)
     abort
     ;;
-    N*|n*)
+    *)
     exit
   esac
 fi
