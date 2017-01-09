@@ -59,6 +59,7 @@ objects:
           name: heketi
           glusterfs: heketi-pod
       spec:
+        serviceAccountName: heketi-service-account
         containers:
         - name: heketi
           image: heketi/heketi:dev
@@ -70,24 +71,16 @@ objects:
             value: ${HEKETI_ADMIN_KEY}
           - name: HEKETI_EXECUTOR
             value: kubernetes
+          - name: HEKETI_KUBE_USE_SECRET
+            value: "y"
           - name: HEKETI_FSTAB
             value: /var/lib/heketi/fstab
           - name: HEKETI_SNAPSHOT_LIMIT
             value: '14'
           - name: HEKETI_KUBE_CERTFILE
             value: ${HEKETI_KUBE_CERTFILE}
-          - name: HEKETI_KUBE_INSECURE
-            value: ${HEKETI_KUBE_INSECURE}
           - name: HEKETI_KUBE_GLUSTER_DAEMONSET
             value: "y"
-          - name: HEKETI_KUBE_USE_SECRET
-            value: "y"
-          - name: HEKETI_KUBE_TOKENFILE
-            value: /var/lib/heketi/secret/token
-          - name: HEKETI_KUBE_NAMESPACE
-            value: ${HEKETI_KUBE_NAMESPACE}
-          - name: HEKETI_KUBE_APIHOST
-            value: ${HEKETI_KUBE_APIHOST}
           ports:
           - containerPort: 8080
           volumeMounts:
@@ -112,9 +105,6 @@ objects:
           glusterfs:
             endpoints: heketi-storage-endpoints
             path: heketidbstorage
-        - name: secret
-          secret:
-            secretName: ${HEKETI_KUBE_SECRETNAME}
 parameters:
 - name: HEKETI_USER_KEY
   displayName: Heketi User Secret
@@ -125,19 +115,3 @@ parameters:
 - name: HEKETI_KUBE_CERTFILE
   displayName: Certificate file
   description: Container path to Kubernetes certificate file
-- name: HEKETI_KUBE_INSECURE
-  displayName: Insecure access
-  description: Allow insecure SSL/HTTPS access
-  value: "n"
-- name: HEKETI_KUBE_SECRETNAME
-  displayName: Kube API secret
-  description: Secret to use for accessing the Kubernetes API
-  required: true
-- name: HEKETI_KUBE_NAMESPACE
-  displayName: Project/Namespace
-  description: OpenShift project or Kubernetes namespace containing GlusterFS
-  required: true
-- name: HEKETI_KUBE_APIHOST
-  displayName: API Host Address
-  description: 'Kubernetes API host, for example: https://ip:port'
-  required: true

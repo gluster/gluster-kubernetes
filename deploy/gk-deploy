@@ -430,53 +430,11 @@ if [[ $GLUSTER -eq 1 ]] && [[ ${LOAD} -eq 0 ]]; then
   output "OK"
 fi
 
-sa_secrets=""
-while [[ "x${sa_secrets}" == "x" ]]; do
-  sa_secrets=$(${CLI} get sa heketi-service-account -o="go-template" --template="{{range .secrets}}{{.name}}{{\"\n\"}}{{end}}" 2>&1)
-done
-if [[ "${sa_secrets}" == error* ]]; then
-  output "Error getting service account secrets. Is your KUBECONFIG set correctly?"
-  abort
-fi
-
-heketi_secret=""
-for secret in ${sa_secrets}; do
-  namespace=$(${CLI} get secret/${secret} -o go-template --template="{{.metadata.namespace}}")
-  stype=$(${CLI} get secret/${secret} -o="go-template" --template="{{.type}}")
-  if [[ "${namespace}" == "${NAMESPACE}" ]] && [[ "${stype}" = "kubernetes.io/service-account-token" ]]; then
-    debug "Found secret '$secret' in namespace '$namespace' for heketi-service-account."
-    heketi_secret="${secret}"
-    break
-  else
-    debug "Secret '$secret' in namespace '$namespace' not valid."
-  fi
-done
-
-if [[ "x${heketi_secret}" == "x" ]]; then
-  output "Could not find secret for heketi service account."
-  abort
-fi
-
-context=$(${CLI} config current-context 2>&1)
-if [[ "${context}" == error* ]]; then
-  output "Error getting Kubernetes context. Is your KUBECONFIG set correctly?"
-  abort
-fi
-
-cluster=$(${CLI} config view -o jsonpath="{.contexts[?(@.name==\"$context\")].context.cluster}")
-kubeapi=$(${CLI} config view -o jsonpath="{.clusters[?(@.name==\"$cluster\")].cluster.server}")
-
 if [[ ${LOAD} -eq 0 ]]; then
   if [[ "${CLI}" == *oc* ]]; then
-    ${CLI} process deploy-heketi -v \
-           HEKETI_KUBE_NAMESPACE=${NAMESPACE} \
-           HEKETI_KUBE_INSECURE=y \
-           HEKETI_KUBE_SECRETNAME="${heketi_secret}" \
-           HEKETI_KUBE_APIHOST="${kubeapi}" | ${CLI} create -f -
+    ${CLI} process deploy-heketi | ${CLI} create -f -
   else
-    sed -e "s#<HEKETI_KUBE_NAMESPACE>#\"${NAMESPACE}\"#" \
-        -e "s#<HEKETI_KUBE_SECRETNAME>#\"${heketi_secret}\"#" \
-        -e "s#<HEKETI_KUBE_APIHOST>#\"${kubeapi}\"#" ${TEMPLATES}/deploy-heketi-deployment.yaml | ${CLI} create -f -
+    ${CLI} create -f ${TEMPLATES}/deploy-heketi-deployment.yaml
   fi
 fi
 
@@ -535,15 +493,9 @@ check_pods "job-name=heketi-storage-copy-job" "Completed"
 ${CLI} delete all,service,jobs,deployment,secret --selector="deploy-heketi"
 
 if [[ "${CLI}" == *oc* ]]; then
-  ${CLI} process heketi -v \
-         HEKETI_KUBE_NAMESPACE=${NAMESPACE} \
-         HEKETI_KUBE_INSECURE=y \
-         HEKETI_KUBE_SECRETNAME="${heketi_secret}" \
-         HEKETI_KUBE_APIHOST="${kubeapi}" | ${CLI} create -f -
+  ${CLI} process heketi | ${CLI} create -f -
 else
-  sed -e "s#<HEKETI_KUBE_NAMESPACE>#\"${NAMESPACE}\"#" \
-      -e "s#<HEKETI_KUBE_SECRETNAME>#\"${heketi_secret}\"#" \
-      -e "s#<HEKETI_KUBE_APIHOST>#\"${kubeapi}\"#" ${TEMPLATES}/heketi-deployment.yaml | ${CLI} create -f -
+  ${CLI} create -f ${TEMPLATES}/heketi-deployment.yaml
 fi
 
 output -n "Waiting for heketi pod to start ... "
