@@ -55,7 +55,7 @@ objects:
     triggers:
     - type: ConfigChange
     strategy:
-      type: Replace
+      type: Recreate
     template:
       metadata:
         name: deploy-heketi
