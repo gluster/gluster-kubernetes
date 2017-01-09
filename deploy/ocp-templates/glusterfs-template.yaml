@@ -33,7 +33,7 @@ objects:
         hostNetwork: true
         containers:
         - image: gluster/gluster-centos:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           name: glusterfs
           volumeMounts:
           - name: glusterfs-heketi
