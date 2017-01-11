@@ -6,7 +6,7 @@
           "node": {
             "hostnames": {
               "manage": [
-                "10.163.148.196"
+                "ravi-kube196"
               ],
               "storage": [
                 "10.163.148.196"
@@ -22,7 +22,7 @@
           "node": {
             "hostnames": {
               "manage": [
-                "10.163.148.197"
+                "ravi-kube197"
               ],
               "storage": [
                 "10.163.148.197"
@@ -38,7 +38,7 @@
           "node": {
             "hostnames": {
               "manage": [
-                "10.163.148.198"
+                "ravi-kube198"
               ],
               "storage": [
                 "10.163.148.198"
