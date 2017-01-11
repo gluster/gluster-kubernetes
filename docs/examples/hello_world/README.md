@@ -16,6 +16,7 @@ $ echo $HEKETI_CLI_SERVER
 http://10.42.0.0:8080
 ```
 
+#### Dynamic provisioner in Kubernetes version 1.4 ####
 Identify the Gluster EndPoints that are needed to pass in as a parameter into the StorageClass (heketi-storage-endpoints):
 
 ```
@@ -29,9 +30,13 @@ kubernetes                 192.168.10.90:6443                                   
 ***NOTE***: EndPoints define the GlusterFS cluster, for version 1.4.X this is a required parameter for the StorageClass (Parameters are likely to change in later versions)
 
 
-By default, user_authorization is disabled, but if it were enabled, you might also need to find the rest user 
-and rest user secret key (not applicable for this example as any values will work).
+#### Dynamic provisioner in Kubernetes version >= 1.5 ####
 
+The `endpoint` is no longer necessary for the gluster dynamic provisioner from version 1.5 onwards. Wheneven the dynamic provisioner create a volume, it automatically create the endpoint.
+There are other storage class parameters ( cluster, GID..etc) which are added to Gluster dynamic provisioner in Kubernetes.
+Please refer [GlusterFS Dynamic Provisioning ](https://github.com/kubernetes/kubernetes/blob/master/examples/experimental/persistent-volume-provisioning/README.md) for more details on these parameters and its usage.
+
+By default, user_authorization is disabled, but if it were enabled, you might also need to find the rest user and rest user secret key (not applicable for this example as any values will work). It is also possible to configure a `secret` and pass the credentials to the gluster dynamic provisioner via storage class parameters.
 
 ### Create a _StorageClass_ for our GlusterFS Dynamic Provisioner
 
@@ -78,7 +83,6 @@ NAME              TYPE
 gluster-heketi    kubernetes.io/glusterfs
 ```
 
-***NOTE***: This particular example is for version 1.4.X of Kubernetes, the parameters will likely change in future versions
 
 ### Create a PersistentVolumeClaim (PVC) to request storage for our HelloWorld application.
 
@@ -139,18 +143,16 @@ in a pod.  We will create a simple NGINX pod.
 apiVersion: v1
 kind: Pod
 metadata:
-  name: gluster-pod1
+  name: nginx-pod1
   labels:
-    name: gluster-pod1
+    name: nginx-pod1
 spec:
   containers:
-  - name: gluster-pod1
+  - name: nginx-pod1
     image: gcr.io/google_containers/nginx-slim:0.8
     ports:
     - name: web
       containerPort: 80
-    securityContext:
-      privileged: true
     volumeMounts:
     - name: gluster-vol1
       mountPath: /usr/share/nginx/html
@@ -167,7 +169,7 @@ Create the Pod YAML file.  Save it.  Then submit it to Kubernetes
 
 ```
 kubectl create -f nginx-pod.yaml
-pod "gluster-pod1" created
+pod "nginx-pod1" created
 ```
 
 View the Pod (Give it a few minutes, it might need to download the image if it doesn't already exist):
@@ -175,7 +177,7 @@ View the Pod (Give it a few minutes, it might need to download the image if it d
 ```
 kubectl get pods -o wide
 NAME                               READY     STATUS    RESTARTS   AGE       IP               NODE
-gluster-pod1                       1/1       Running   0          9m        10.38.0.0        node1
+nginx-pod1                       1/1       Running   0          9m        10.38.0.0        node1
 glusterfs-node0-2509304327-vpce1   1/1       Running   0          1d        192.168.10.100   node0
 glusterfs-node1-3290690057-hhq92   1/1       Running   0          1d        192.168.10.101   node1
 glusterfs-node2-4072075787-okzjv   1/1       Running   0          1d        192.168.10.102   node2
