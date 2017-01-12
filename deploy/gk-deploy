@@ -160,24 +160,22 @@ assign() {
 check_pods() {
   local all_ready=false
   s=0
-  prestatus=""
+  debug "\nChecking status of pods matching '${1}':"
   while [[ "${all_ready}" != "true" ]]; do
     if [[ ${s} -ge ${WAIT} ]]; then
       output "Timed out waiting for pods matching '${1}'."
       abort
     fi
     sleep 2
-    ((s+=2))
     pods=$(${CLI} get pod --no-headers --show-all --selector="${1}" 2>&1)
-    if [[ "${prestatus}" != "${pods}" ]]; then
-      debug "Checking status of pods matching '${1}':"
-      debug "$pods"
-      prestatus="${pods}"
-    else
-      debug -n "."
+    if [[ ${s} -ne 0 ]] && [[ ${VERBOSE} -eq 1 ]]; then
+      podlines=$(echo "$pods" | wc -l)
+      ((podlines+=1))
+      debug "\033[${podlines}A"
     fi
     all_ready=true
     while read -r pod; do
+      debug "\033[K${pod}"
       case ${2} in
         Completed)
         status=$(echo "${pod}" | awk '{print $3}')
@@ -193,6 +191,7 @@ check_pods() {
         ;;
       esac
     done <<< "$(echo -e "$pods")"
+    ((s+=2))
   done
 }
 
