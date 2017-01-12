@@ -129,18 +129,21 @@ eval_output() {
   )
 }
 abort() {
-  ${CLI} delete dc,svc,routes heketi
+  ${CLI} delete svc heketi
   ${CLI} delete sa heketi-service-account
-  ${CLI} delete secret heketi-db-backup
   if [[ "${CLI}" == *oc\ * ]]; then
+    ${CLI} delete dc,route heketi
     ${CLI} delete template heketi
+  else
+    ${CLI} delete deployment heketi
   fi
+  ${CLI} delete secret heketi-db-backup
   if [[ ${GLUSTER} -eq 1 ]]; then
     while read -r node; do
       debug "Removing label from '${node}' as a GlusterFS node."
       ${CLI} label nodes ${node} storagenode-
     done <<< "$(echo -e "${NODES}")"
-    ${CLI} delete all,service,jobs,ds,secret --selector="glusterfs"
+    ${CLI} delete ds --selector="glusterfs"
     if [[ "${CLI}" == *oc\ * ]]; then
       ${CLI} delete template glusterfs
     fi
