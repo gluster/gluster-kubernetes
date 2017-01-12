@@ -4,7 +4,7 @@ apiVersion: v1
 metadata:
   name: heketi
   labels:
-    glusterfs: heketi-template
+    heketi: template
   annotations:
     description: Heketi service deployment template
     tags: glusterfs,heketi
@@ -25,12 +25,12 @@ objects:
   metadata:
     name: heketi
     labels:
-      glusterfs: heketi-service
+      heketi: service
     annotations:
       description: Exposes Heketi service
   spec:
     ports:
-    - name: heketi
+    - name: rest-api
       port: 8080
       targetPort: 8080
     selector:
@@ -40,7 +40,7 @@ objects:
   metadata:
     name: heketi
     labels:
-      glusterfs: heketi-route
+      heketi: route
   spec:
     to:
       kind: Service
@@ -50,7 +50,7 @@ objects:
   metadata:
     name: heketi
     labels:
-      glusterfs: heketi-dc
+      heketi: dc
     annotations:
       description: Defines how to deploy Heketi
   spec:
@@ -65,8 +65,7 @@ objects:
       metadata:
         name: heketi
         labels:
-          name: heketi
-          glusterfs: heketi-pod
+          heketi: pod
       spec:
         serviceAccountName: heketi-service-account
         containers:

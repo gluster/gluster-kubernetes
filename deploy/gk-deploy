@@ -129,7 +129,7 @@ eval_output() {
   )
 }
 abort() {
-  ${CLI} delete all,service,deployment,secret --selector="heketi"
+  ${CLI} delete service,deployment,pod --selector="heketi"
   ${CLI} delete svc heketi-storage-endpoints
   ${CLI} delete sa heketi-service-account
   ${CLI} delete secret heketi-db-backup
@@ -451,7 +451,7 @@ if [[ ${LOAD} -eq 0 ]]; then
 fi
 
 output -n "Waiting for heketi pod to start ... "
-check_pods "glusterfs=heketi-pod"
+check_pods "heketi=pod"
 if [[ $? -ne 0 ]]; then
   output "pods not found."
   abort
