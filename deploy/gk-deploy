@@ -129,10 +129,12 @@ eval_output() {
   )
 }
 abort() {
-  ${CLI} delete dc,svc,routes heketi
+  ${CLI} delete all,service,deployment,secret --selector="heketi"
+  ${CLI} delete svc heketi-storage-endpoints
   ${CLI} delete sa heketi-service-account
   ${CLI} delete secret heketi-db-backup
   if [[ "${CLI}" == *oc\ * ]]; then
+    ${CLI} delete dc,route --selector="heketi"
     ${CLI} delete template heketi
   fi
   if [[ ${GLUSTER} -eq 1 ]]; then
@@ -140,7 +142,7 @@ abort() {
       debug "Removing label from '${node}' as a GlusterFS node."
       ${CLI} label nodes ${node} storagenode-
     done <<< "$(echo -e "${NODES}")"
-    ${CLI} delete all,service,jobs,ds,secret --selector="glusterfs"
+    ${CLI} delete ds,pod --selector="glusterfs"
     if [[ "${CLI}" == *oc\ * ]]; then
       ${CLI} delete template glusterfs
     fi
