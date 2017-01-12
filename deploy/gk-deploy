@@ -97,9 +97,16 @@ output() {
     opts+="n"
     shift
   fi
-  echo "$opts" "${1}"
-  if [[ "${LOG_FILE}" ]]; then
-    echo $opts "${1}" >> "${LOG_FILE}"
+  out="${1}"
+  echo "$opts" "${out}"
+  if [[ "x${LOG_FILE}" != "x" ]]; then
+    if [[ "${out}" == "\033["K* ]]; then
+      out="${out:6}"
+    fi
+    if [[ "${out}" == "\033["*A ]]; then
+      out="---"
+    fi
+    echo $opts "${out}" >> "${LOG_FILE}"
   fi
 }
 
