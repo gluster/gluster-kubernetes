@@ -1,1 +1,2 @@
+# Ansible creates .retry files for failed playbooks.
 *.retry
