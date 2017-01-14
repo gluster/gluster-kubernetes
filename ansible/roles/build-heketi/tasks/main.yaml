@@ -1,9 +1,9 @@
 ---
 
-- include: debian.yml
+- include: debian.yaml
   when: ansible_os_family == "Debian"
 
-- include: redhat.yml
+- include: redhat.yaml
   when: ansible_os_family == "RedHat"
 
 # - name: Clear the GOPATH dir

@@ -16,11 +16,13 @@ To get started, make sure [ansible is installed](http://docs.ansible.com/ansible
 
 ### inventory.ini
 
-Copy and modify the sample inventory file `inventory.ini.sample`.  This file will be referenced when running the ansible playbooks.  The command examples expect the file to be in the ansible/ directory.
+Copy and modify the sample inventory file `inventory.ini.sample`.  This file will be referenced when running the ansible playbooks.  The command examples expect the file to be in the `ansible/` directory.
+
+If you have multiple master nodes, choose one of them to be in the `kube-control` ansible group.  This will be the node used to interact with the kube-apiserver.
 
 ### topology.json
 
-See the [Setup Guide](../docs/setup-guide.md#1-create-a-topology-file) for more information on the topology file.  The `topology.json` file should still be placed in the root project's deploy directory.
+See the [Setup Guide](../docs/setup-guide.md#1-create-a-topology-file) for more information on the topology file.  The `topology.json` file should still be placed in the root project's `deploy/` directory.
 
 ## Deploy Playbook
 
@@ -39,7 +41,7 @@ The deploy.yaml playbook uses several Ansible roles:
 2. **build-heketi**: Checks out [heketi](https://github.com/heketi/heketi) project source and builds heketi on the master node. The master needs the built `heketi-cli` binary to communicate with the deployed heketi pod. TODO: Alternatively, we could grab the binary releases but building from source is useful for targets with uncommon architectures, see heketi/heketi#627.
 3. **gk-prep**: Installs glusterfs-client 3.8 and loads required dm_* kernel modules.
 4. **gk-deploy**: Copies serval files including the gk-deploy script, k8s/ocp templates, and topology file.  It then runs the gk-deploy script with the -g flag to install a GlusterFS cluster.
-5. **gk-post**: Automatically finds the HEKETI_SERVER_CLI and creates the StorageClass under a user-configured name from group_vars/all.yml.
+5. **gk-post**: Automatically finds the HEKETI_SERVER_CLI and creates the StorageClass under a user-configured name from group_vars/all.yaml.
 
 ## Abort Playbook
 
