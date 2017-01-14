@@ -4,9 +4,9 @@
   gather_facts: true
   become: yes
   roles:
-    - upgrade-os
+    - bootstrap
   tags:
-    - upgrade-os
+    - bootstrap
 
 - hosts: kube-control
   gather_facts: true
