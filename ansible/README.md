@@ -1,12 +1,14 @@
 # Ansible Deployment
 
-Ansible can help streamline the deployment of **gluster-kubernetes** to an existing OpenShift or Kubernetes cluster.  The ansible `deploy.yaml` playbook does this by installing the required package dependencies, loading the required kernel modules, and running the `gk-deploy` script.  If you do not already have a working cluster with storage added to the nodes, please refer back to the main documenation.
+Ansible can help streamline the deployment of **gluster-kubernetes** to an existing OpenShift or Kubernetes cluster.  The ansible `deploy.yaml` playbook does this by automating the [Setup Guide](../docs/setup-guide.md) which includes installing the required package dependencies, loading the required kernel modules, and running the `gk-deploy` script.  It is suggested to read through the [Setup Guide](../docs/setup-guide.md) to be familiar with the deployment procedure.
 
-## Supported Deployments
+## Supported Clusters
 
-Currently, the following Operating Systems are supported:
+Both Kubernetes and OpenShift clusters are supported.  Currently, the ansilbe playbooks support the following Operating Systems:
 
 - Ubuntu 16.04
+
+You will also need storage added to your nodes as [documented](../docs/setup-guide.md#infrastructure-requirements). 
 
 ## Setup
 
@@ -14,7 +16,7 @@ To get started, make sure [ansible is installed](http://docs.ansible.com/ansible
 
 ### inventory.ini
 
-Copy and modify the sample inventory file `inventory.ini.sample`.  This file will be referenced when running the ansible playbooks.
+Copy and modify the sample inventory file `inventory.ini.sample`.  This file will be referenced when running the ansible playbooks.  The command examples expect the file to be in the ansible/ directory.
 
 ### topology.json
 
@@ -53,4 +55,4 @@ Lists the glusterfs volume groups on each node and then after a user confirmatio
 
 Often during testing when you want to destroy the volume groups, you will likely want to do that at the same time as aborting the deployment.  You can run both abort and deploy playbooks sequentially with:
 
-`ansible-playbook -i inventory.ini abort.yaml destroy.yaml`
+`ansible-playbook -i inventory.ini abort.yaml destroy_vgs.yaml`
