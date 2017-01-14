@@ -1,5 +1,7 @@
 ---
 
+# TODO: Detect if heketi-cli is already built and at the version requested to speed up subsequent runs.
+
 - include: debian.yaml
   when: ansible_os_family == "Debian"
 
