@@ -5,15 +5,15 @@
   become: yes
 
 - name: Copy kube templates
-  copy: src=kube-templates dest=/srv/gk-deploy/
+  copy: src={{GK_DIR}}/kube-templates dest=/srv/gk-deploy/
   when: K8S_TARGET == "kubernetes"
 
 - name: Copy ocp templates
-  copy: src=ocp-templates dest=/srv/gk-deploy/
+  copy: src={{GK_DIR}}/ocp-templates dest=/srv/gk-deploy/
   when: K8S_TARGET == "ocp"
 
 - name: Copy topology and gk-deploy
-  copy: src={{item}} dest=/srv/gk-deploy/ mode=0744
+  copy: src={{GK_DIR}}/{{item}} dest=/srv/gk-deploy/ mode=0744
   with_items:
     - gk-deploy
     - topology.json
