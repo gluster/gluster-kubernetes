@@ -1,6 +1,6 @@
 # Ansible Deployment
 
-Ansible helps deploy **gluster-kubernetes** to an existing OpenShift or Kubernetes cluster.  The ansible deploy.yaml playbook does this by installing the required package dependencies, loading the required kernel modules, and running the `gk-deploy` script.  If you do not already have a working cluster with storage added to the nodes, please refer back to the main documenation.
+Ansible can help streamline the deployment of **gluster-kubernetes** to an existing OpenShift or Kubernetes cluster.  The ansible `deploy.yaml` playbook does this by installing the required package dependencies, loading the required kernel modules, and running the `gk-deploy` script.  If you do not already have a working cluster with storage added to the nodes, please refer back to the main documenation.
 
 ## Supported Deployments
 
@@ -34,7 +34,7 @@ ansible-playbook -i inventory.ini deploy.yaml
 The deploy.yaml playbook uses several Ansible roles:
 
 1. **bootstrap**: Prepares the target server for further ansible execution by installing python if needed.
-2. **build-heketi**: Checks out `heketi` project from source and builds heketi on the master node. We need the built `heketi-cli` binary on the master to communicate with the heketi pod that gets deployed. This may not be necessary when heketi posts latest release binaries, see heketi/heketi#627, although it is still useful to build for targets with uncommon architectures.
+2. **build-heketi**: Checks out [heketi](https://github.com/heketi/heketi) project source and builds heketi on the master node. The master needs the built `heketi-cli` binary to communicate with the deployed heketi pod. TODO: Alternatively, we could grab the binary releases but building from source is useful for targets with uncommon architectures, see heketi/heketi#627.
 3. **gk-prep**: Installs glusterfs-client 3.8 and loads required dm_* kernel modules.
 4. **gk-deploy**: Copies serval files including the gk-deploy script, k8s/ocp templates, and topology file.  It then runs the gk-deploy script with the -g flag to install a GlusterFS cluster.
 5. **gk-post**: Automatically finds the HEKETI_SERVER_CLI and creates the StorageClass under a user-configured name from group_vars/all.yml.
@@ -45,12 +45,12 @@ Runs gk-deploy with --abort. It also removes the StorageClass.
 
 `ansible-playbook -i inventory.ini abort.yaml`
 
-## Destroy Playbook
+## Destroy Volume Groups Playbook
 
-Lists the gluster volume groups on each node and then after a user confirmation prompt, it goes ahead and deletes them using vgremove.
+Lists the glusterfs volume groups on each node and then after a user confirmation prompt, the playbook deletes them using `vgremove`.
 
-`ansible-playbook -i inventory.ini destroy.yaml`
+`ansible-playbook -i inventory.ini destroy_vgs.yaml`
 
-Often during testing when you want to destroy the volume groups, you will likely want to do that at the same time as Abort.  You can run both playbooks sequentially with:
+Often during testing when you want to destroy the volume groups, you will likely want to do that at the same time as aborting the deployment.  You can run both abort and deploy playbooks sequentially with:
 
 `ansible-playbook -i inventory.ini abort.yaml destroy.yaml`

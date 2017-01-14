@@ -2,7 +2,6 @@
 
 GOPATH: "/opt/golang"
 HEKETI_VERSION: "v3.1.0"
-K8S_TARGET: "kubernetes"
 STORAGE_CLASS_NAME: "gluster-heketi"
 NAMESPACE: "default"
 # Location of the gk-deploy script and kube/ocp templates.
