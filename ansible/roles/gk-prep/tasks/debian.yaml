@@ -10,8 +10,3 @@
 
 - name: Install glusterfs-client
   apt: name=glusterfs-client update_cache=yes state=present state=latest
-
-- name: Install other dependencies
-  apt: name={{item}} update_cache=yes state=present state=latest
-  with_items:
-    - jq
