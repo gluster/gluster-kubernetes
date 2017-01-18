@@ -104,11 +104,10 @@ If you already have a pre-existing GlusterFS cluster, you do not need the
 
 After this completes, GlusterFS and heketi should now be installed and ready
 to go. You can set the `HEKETI_CLI_SERVER` environment variable as follows so
-that it can be read directly by `heketi-cli` or sent to something like `curl`.
-Package `jq` should be installed prior to running.
+that it can be read directly by `heketi-cli` or sent to something like `curl`:
 
 ```bash
-$ export HEKETI_CLI_SERVER=$(kubectl get svc/heketi -o json | jq -r '.spec.clusterIP + ":" + (.spec.ports[0].port | tostring)')
+$ export HEKETI_CLI_SERVER=$(kubectl get svc/heketi --template '{{.spec.clusterIP}}:{{(index .spec.ports 0).port}}')
 
 $ echo $HEKETI_CLI_SERVER
 http://10.42.0.0:8080
