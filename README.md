@@ -107,7 +107,7 @@ to go. You can set the `HEKETI_CLI_SERVER` environment variable as follows so
 that it can be read directly by `heketi-cli` or sent to something like `curl`:
 
 ```bash
-$ export HEKETI_CLI_SERVER=$(kubectl describe svc/heketi | grep "Endpoints:" | awk '{print "http://"$2}')
+$ export HEKETI_CLI_SERVER=$(kubectl get svc/heketi --template 'http://{{.spec.clusterIP}}:{{(index .spec.ports 0).port}}')
 
 $ echo $HEKETI_CLI_SERVER
 http://10.42.0.0:8080
