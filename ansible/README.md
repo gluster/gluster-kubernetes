@@ -12,7 +12,7 @@ You will also need storage added to your nodes as [documented](../docs/setup-gui
 
 ## Setup
 
-To get started, make sure [ansible is installed](http://docs.ansible.com/ansible/intro_installation.html) on your local machine and that you have SSH connectivity between your machine and each node in the cluster.  You will then need to manually create two files: `inventory.ini` and `topology.json`.
+To get started, make sure [ansible is installed](http://docs.ansible.com/ansible/intro_installation.html) on your local machine and that you have SSH connectivity between your machine and each node in the cluster.  Ansible 2.1.x or earlier is required. Ansible 2.2 will error out due to https://github.com/ansible/ansible/issues/20568.  You will then need to manually create two files: `inventory.ini` and `topology.json`.
 
 ### inventory.ini
 
