@@ -5,7 +5,7 @@
   become: yes
 
 - name: Get the Heketi Server Endpoint
-  shell: kubectl get svc/heketi --template 'http://{{.spec.clusterIP}}:{{(index .spec.ports 0).port}}'
+  shell: kubectl get svc/heketi --template {%raw%} 'http://{{.spec.clusterIP}}:{{(index .spec.ports 0).port}}' {%endraw%}
   register: heketi_endpoint
 
 - name: Store the Endpoint into HEKETI_CLI_SERVER
