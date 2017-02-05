@@ -86,8 +86,6 @@ objects:
           volumeMounts:
           - name: db
             mountPath: /var/lib/heketi
-          - name: secret
-            mountPath: /var/lib/heketi/secret
           readinessProbe:
             timeoutSeconds: 3
             initialDelaySeconds: 3
