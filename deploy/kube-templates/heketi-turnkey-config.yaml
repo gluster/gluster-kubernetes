@@ -1,0 +1,60 @@
+#
+# Sample configuration.
+# You must create your own configurgation.
+#
+# Note 1: hostnames/manage: must be the hostname of your node as in `kubectl get node`
+# Note 2: hostnames/storage: must be the IP address of your node, not a hostname
+# Note 3: the filename under the data section must be topology.json
+#
+# Alternatively, to create a ConfigMap from topology.json you may use:
+# $ kubectl create configmap heketi-turnkey-config --from-file=topology.json --output=yaml --dry-run=true
+# Remove --dry-run=true if you actually want to create the object.
+#
+# For proper function your nodes must have the dm_thin_pool module loaded:
+# $ modprobe dm_thin_pool
+# $ echo "dm_thin_pool" >>/etc/modules
+#
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: heketi-turnkey-config
+data:
+  topology.json: |
+    {
+      "clusters": [
+        {
+          "nodes": [
+            {
+              "node": {
+                "hostnames": {
+                  "manage": ["node-1"],
+                  "storage": ["192.168.10.101"]
+                },
+                "zone": 1
+              },
+              "devices": ["/dev/vdb"]
+            },
+            {
+              "node": {
+                "hostnames": {
+                  "manage": ["node-2"],
+                  "storage": ["192.168.10.102"]
+                },
+                "zone": 2
+              },
+              "devices": ["/dev/vdb"]
+            },
+            {
+              "node": {
+                "hostnames": {
+                  "manage": ["node-3"],
+                  "storage": ["192.168.10.103"]
+                },
+                "zone": 3
+              },
+              "devices": ["/dev/vdb"]
+            }
+          ]
+        }
+      ]
+    }
