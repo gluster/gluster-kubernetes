@@ -329,24 +329,8 @@ fi
 if [[ "x${CLI}" == "x" ]]; then
   kubectl=$(type kubectl 2>/dev/null | awk '{print $3}')
   oc=$(type oc 2>/dev/null | awk '{print $3}')
-  if [[ "x${kubectl}" != "x" ]] && [[ "x${oc}" != "x" ]]; then
-    output "Multiple CLI options detected. Please select a deployment option."
-    while [[ "x${CLI}" == "x" ]]; do
-      loop=false
-      read -rp "[O]penShift, [K]ubernetes? [O/o/K/k]: " cliopt
-      case $cliopt in
-        O*|o*)
-        CLI="${oc}"
-        ;;
-        K*|k*)
-        CLI="${kubectl}"
-        ;;
-        *)
-        CLI=""
-      esac
-    done
-  elif [[ "x${oc}" != "x" ]]; then
-    CLI="${oc}"
+  if [[ "x${oc}" != "x"]]; then 
+     CLI="${oc}"
   elif [[ "x${kubectl}" != "x" ]]; then
     CLI="${kubectl}"
   else
