@@ -117,12 +117,10 @@ debug() {
 }
 
 abort() {
-  ${CLI} delete all,service,jobs,deployment,secret --selector="deploy-heketi"
   ${CLI} delete dc,svc,routes heketi
-  ${CLI} delete svc/heketi-storage-endpoints
   ${CLI} delete sa heketi-service-account
   if [[ "${CLI}" == *oc ]]; then
-    ${CLI} delete template deploy-heketi
+  ${CLI} delete secret heketi-db-backup
     ${CLI} delete template heketi
   fi
   if [[ ${GLUSTER} -eq 1 ]]; then
@@ -387,7 +385,6 @@ fi
 
 if [[ ${LOAD} -eq 0 ]]; then
   if [[ "${CLI}" == *oc ]]; then
-    ${CLI} create -f ${TEMPLATES}/deploy-heketi-template.yaml
     ${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml
     ${CLI} create -f ${TEMPLATES}/heketi-template.yaml
     if [[ $GLUSTER -eq 1 ]]; then
@@ -419,70 +416,10 @@ fi
 
 if [[ ${LOAD} -eq 0 ]]; then
   if [[ "${CLI}" == *oc ]]; then
-    ${CLI} process deploy-heketi | ${CLI} create -f -
+    ${CLI} process heketi | ${CLI} create -f -
   else
-    ${CLI} create -f ${TEMPLATES}/deploy-heketi-deployment.yaml
+    ${CLI} create -f ${TEMPLATES}/heketi-deployment.yaml
   fi
-fi
-
-output -n "Waiting for deploy-heketi pod to start ... "
-check_pods "glusterfs=heketi-pod"
-output "OK"
-
-heketi_service=""
-debug -n "Determining heketi service URL ... "
-while [[ "x${heketi_service}" == "x" ]]; do
-  if [[ "${CLI}" == *oc ]]; then
-    heketi_service=$(${CLI} describe routes/deploy-heketi | grep "Requested Host:" | awk '{print $3}')
-  else
-    heketi_service=$(${CLI} describe svc/deploy-heketi | grep "Endpoints:" | awk '{print $2}')
-  fi
-  sleep 1
-done
-debug "OK"
-
-hello=$(curl http://${heketi_service}/hello 2>/dev/null)
-if [[ "${hello}" != "Hello from Heketi" ]]; then
-  output "Failed to communicate with deploy-heketi service."
-  if [[ "${CLI}" == *oc ]]; then
-    output "Please verify that a router has been properly configured."
-  fi
-  abort
-fi
-
-tload=$(heketi-cli -s http://${heketi_service} topology load --json=${TOPOLOGY} 2>&1)
-if [[ ${?} != 0 ]]; then
-  output "${tload}"
-  exit 1
-else
-  output "${tload}"
-  check=$(echo $tload | grep Unable)
-  if [[ "${check}" != "" ]]; then
-    output "Please Check the failed Node or Device and restart with --load"
-    exit 1
-  fi
-fi
-
-heketi-cli -s http://${heketi_service} setup-openshift-heketi-storage
-if [[ ${?} != 0 ]]; then
-  output "Failed on setup openshift heketi storage"
-  exit 1
-fi
-
-if [[ ! -f heketi-storage.json ]]; then
-  output "heketi-storage.json file not found"
-  exit 1
-fi
-${CLI} create -f heketi-storage.json
-
-check_pods "job-name=heketi-storage-copy-job" "Completed"
-
-${CLI} delete all,service,jobs,deployment,secret --selector="deploy-heketi"
-
-if [[ "${CLI}" == *oc ]]; then
-  ${CLI} process heketi | ${CLI} create -f -
-else
-  ${CLI} create -f ${TEMPLATES}/heketi-deployment.yaml
 fi
 
 output -n "Waiting for heketi pod to start ... "
@@ -503,11 +440,24 @@ debug "OK"
 
 hello=$(curl http://${heketi_service}/hello 2>/dev/null)
 if [[ "${hello}" != "Hello from Heketi" ]]; then
-  output "Failed to communicate with heketi service."
   if [[ "${CLI}" == *oc ]]; then
+  output "Failed to communicate with heketi service."
     output "Please verify that a router has been properly configured."
   fi
   abort
 else
   output "heketi is now running."
+fi
+
+tload=$(heketi-cli -s http://${heketi_service} topology load --json=${TOPOLOGY} 2>&1)
+if [[ ${?} != 0 ]]; then
+  output "${tload}"
+  exit 1
+else
+  output "${tload}"
+  check=$(echo $tload | grep Unable)
+  if [[ "${check}" != "" ]]; then
+    output "Please Check the failed Node or Device and restart with --load"
+    exit 1
+  fi
 fi

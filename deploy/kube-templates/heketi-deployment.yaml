@@ -1,4 +1,14 @@
 ---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: heketi-db-backup
+  labels:
+    glusterfs: heketi-db
+  data:
+    heketi.db: ''
+  type: Opaque
+---
 kind: Service
 apiVersion: v1
 metadata:
@@ -41,8 +51,6 @@ spec:
         env:
         - name: HEKETI_EXECUTOR
           value: kubernetes
-        - name: HEKETI_KUBE_USE_SECRET
-          value: "y"
         - name: HEKETI_FSTAB
           value: "/var/lib/heketi/fstab"
         - name: HEKETI_SNAPSHOT_LIMIT
@@ -54,6 +62,8 @@ spec:
         volumeMounts:
         - name: db
           mountPath: "/var/lib/heketi"
+        - name: heketi-db-secret
+          mountPath: "/backupdb"
         readinessProbe:
           timeoutSeconds: 3
           initialDelaySeconds: 3
@@ -68,6 +78,6 @@ spec:
             port: 8080
       volumes:
       - name: db
-        glusterfs:
-          endpoints: heketi-storage-endpoints
-          path: heketidbstorage
+      - name: heketi-db-secret
+        secret:
+          secretName: heketi-db-backup
