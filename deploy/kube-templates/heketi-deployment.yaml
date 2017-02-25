@@ -5,9 +5,9 @@ metadata:
   name: heketi-db-backup
   labels:
     glusterfs: heketi-db
-  data:
-    heketi.db: ''
-  type: Opaque
+data:
+  heketi.db: ''
+type: Opaque
 ---
 kind: Service
 apiVersion: v1
