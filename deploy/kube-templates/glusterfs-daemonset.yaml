@@ -41,6 +41,9 @@ spec:
           mountPath: "/var/lib/misc/glusterfsd"
         - name: glusterfs-cgroup
           mountPath: "/sys/fs/cgroup"
+        - name: glusterfs-ssl
+          mountPath: "/etc/ssl"
+          readOnly: true
         securityContext:
           capabilities: {}
           privileged: true
@@ -86,3 +89,6 @@ spec:
       - name: glusterfs-cgroup
         hostPath:
           path: "/sys/fs/cgroup"
+      - name: glusterfs-ssl
+        hostPath:
+          path: "/etc/ssl"
