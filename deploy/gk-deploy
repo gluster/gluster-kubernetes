@@ -156,14 +156,14 @@ assign() {
 }
 
 check_pods() {
-  local all_ready=false
+  local rc=1
   local wait_limit=${2:-${WAIT}}
   s=0
   debug "\nChecking status of pods matching '${1}':"
-  while [[ "${all_ready}" != "true" ]]; do
+  while [[ ${rc} -ne 0 ]]; do
     if [[ ${s} -ge ${wait_limit} ]]; then
-      output "Timed out waiting for pods matching '${1}'."
-      abort
+      debug "Timed out waiting for pods matching '${1}'."
+      break
     fi
     sleep 2
     pods=$(${CLI} get pod --no-headers --show-all --selector="${1}" 2>&1)
@@ -172,26 +172,28 @@ check_pods() {
       ((podlines+=1))
       debug "\033[${podlines}A"
     fi
-    all_ready=true
+    rc=0
     while read -r pod; do
       debug "\033[K${pod}"
       case ${2} in
         Completed)
         status=$(echo "${pod}" | awk '{print $3}')
         if [[ "${status}" != "Completed" ]]; then
-          all_ready=false
+          rc=1
         fi
         ;;
         *)
         status=$(echo "${pod}" | awk '{print $2}')
         if [[ "${status}" != "1/1" ]]; then
-          all_ready=false
+          rc=1
         fi
         ;;
       esac
     done <<< "$(echo -e "$pods")"
     ((s+=2))
   done
+
+  return ${rc}
 }
 
 while [[ $# -ge 1 ]]; do
@@ -385,11 +387,13 @@ if [[ ${ABORT} -eq 1 ]]; then
 fi
 
 if [[ ${LOAD} -eq 0 ]]; then
+  output -n "Checking that heketi pod is not running ... "
   check_pods "glusterfs=heketi-pod" 2
   if [[ $? -eq 0 ]]; then
     output "Found heketi pod running. Please destroy existing setup and try again."
     exit 1
   fi
+  output "OK"
   if [[ "${CLI}" == *oc\ * ]]; then
     tempout=$(${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml 2>&1)
     output "${tempout}"
@@ -425,6 +429,10 @@ if [[ $GLUSTER -eq 1 ]] && [[ ${LOAD} -eq 0 ]]; then
 
   output -n "Waiting for GlusterFS pods to start ... "
   check_pods "glusterfs-node=pod"
+  if [[ $? -ne 0 ]]; then
+    output "pods not found."
+    abort
+  fi
   output "OK"
 fi
 
@@ -440,6 +448,10 @@ fi
 
 output -n "Waiting for heketi pod to start ... "
 check_pods "glusterfs=heketi-pod"
+if [[ $? -ne 0 ]]; then
+  output "pods not found."
+  abort
+fi
 output "OK"
 
 heketi_service=""
