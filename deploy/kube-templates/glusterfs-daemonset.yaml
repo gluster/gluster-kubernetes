@@ -41,6 +41,8 @@ spec:
           mountPath: "/var/lib/misc/glusterfsd"
         - name: glusterfs-cgroup
           mountPath: "/sys/fs/cgroup"
+        - name: glusterfs-lib-modules
+          mountPath: "/lib/modules"
         securityContext:
           capabilities: {}
           privileged: true
@@ -86,3 +88,6 @@ spec:
       - name: glusterfs-cgroup
         hostPath:
           path: "/sys/fs/cgroup"
+      - name: glusterfs-lib-modules
+        hostPath:
+          path: "/lib/modules"
