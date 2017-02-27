@@ -155,14 +155,18 @@ assign() {
   keypos=$keylen
 }
 
-check_pods() {
-  local all_ready=false
+are_pods_running() {
+  local all_ready="no"
+  local wait_for=2
   s=0
+  if [ -n "$2" ]; then
+    wait_for="$2"
+  fi
   debug "\nChecking status of pods matching '${1}':"
-  while [[ "${all_ready}" != "true" ]]; do
-    if [[ ${s} -ge ${WAIT} ]]; then
+  while [[ "${all_ready}" != "yes" ]]; do
+    if [[ ${s} -ge $wait_for ]]; then
       output "Timed out waiting for pods matching '${1}'."
-      abort
+      break
     fi
     sleep 2
     pods=$(${CLI} get pod --no-headers --show-all --selector="${1}" 2>&1)
@@ -171,26 +175,27 @@ check_pods() {
       ((podlines+=1))
       debug "\033[${podlines}A"
     fi
-    all_ready=true
+    all_ready="yes"
     while read -r pod; do
       debug "\033[K${pod}"
       case ${2} in
         Completed)
         status=$(echo "${pod}" | awk '{print $3}')
         if [[ "${status}" != "Completed" ]]; then
-          all_ready=false
+          all_ready="no"
         fi
         ;;
         *)
         status=$(echo "${pod}" | awk '{print $2}')
         if [[ "${status}" != "1/1" ]]; then
-          all_ready=false
+          all_ready="no"
         fi
         ;;
       esac
     done <<< "$(echo -e "$pods")"
     ((s+=2))
   done
+  echo $all_ready
 }
 
 while [[ $# -ge 1 ]]; do
@@ -384,8 +389,7 @@ if [[ ${ABORT} -eq 1 ]]; then
 fi
 
 if [[ ${LOAD} -eq 0 ]]; then
-  check_pods "glusterfs=heketi-pod"
-  if [[ $? -eq 0 ]]; then
+  if [[ $(are_pods_running "glusterfs=heketi-pod") == "yes" ]]; then
     output "Found heketi pod running. Please destroy existing setup and try again."
     exit 1
   fi
@@ -415,7 +419,9 @@ if [[ $GLUSTER -eq 1 ]] && [[ ${LOAD} -eq 0 ]]; then
   fi
 
   output -n "Waiting for GlusterFS pods to start ... "
-  check_pods "glusterfs-node=pod"
+  if [[ $(are_pods_running "glusterfs-node=pod" $WAIT) == "no" ]] ; then
+    abort
+  fi
   output "OK"
 fi
 
@@ -428,7 +434,9 @@ if [[ ${LOAD} -eq 0 ]]; then
 fi
 
 output -n "Waiting for heketi pod to start ... "
-check_pods "glusterfs=heketi-pod"
+if [[ $(are_pods_running "glusterfs=heketi-pod" $WAIT) == "no" ]] ; then
+  abort
+fi
 output "OK"
 
 heketi_service=""
