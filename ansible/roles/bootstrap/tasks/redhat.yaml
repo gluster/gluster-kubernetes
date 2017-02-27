@@ -1,0 +1,13 @@
+---
+
+- name: bootstrap | check if bootstrap is needed
+  raw: which python
+  register: need_bootstrap
+  ignore_errors: True
+
+- name: bootstrap | install python 2.x
+  raw: yum install -y centos-release-SCL python-minimal
+  when: need_bootstrap | failed
+
+- set_fact:
+    ansible_python_interpreter: "/usr/bin/python"

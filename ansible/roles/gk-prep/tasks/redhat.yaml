@@ -1,0 +1,4 @@
+---
+
+- debug: msg="This role does not yet support RedHat installs, aborting ..."
+- fail:

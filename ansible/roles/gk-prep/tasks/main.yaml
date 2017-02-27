@@ -1,0 +1,17 @@
+---
+
+- include: debian.yaml
+  when: ansible_os_family == "Debian"
+
+- include: redhat.yaml
+  when: ansible_os_family == "RedHat"
+
+- name: Create a modules conf file to load dm modules at boot
+  copy: src=etc/modules-load.d/dm_snapshot.conf dest=/etc/modules-load.d/dm_snapshot.conf
+
+- name: Load modules
+  modprobe: name={{item}} state=present
+  with_items:
+    - dm_snapshot
+    - dm_mirror
+    - dm_thin_pool

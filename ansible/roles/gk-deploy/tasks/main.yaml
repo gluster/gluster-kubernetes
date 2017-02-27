@@ -1,0 +1,32 @@
+---
+
+- name: Create gk-deploy directory
+  file: path=/srv/gk-deploy state=directory owner={{ansible_user}} group={{ansible_user}}
+  become: yes
+
+# TODO: Auto-detect whether target is kubernetes or openshift and only copy the appropriate templates.
+- name: Copy kube and ocp templates
+  copy: src={{GK_DIR}}/{{item}} dest=/srv/gk-deploy/
+  with_items:
+    - kube-templates
+    - ocp-templates
+
+- name: Copy topology and gk-deploy
+  copy: src={{GK_DIR}}/{{item}} dest=/srv/gk-deploy/ mode=0744
+  with_items:
+    - gk-deploy
+    - topology.json
+
+- name: Run gk-deploy
+  command: /srv/gk-deploy/gk-deploy -g -w 300 -n "{{NAMESPACE}}" -y
+  register: gk_deploy
+  become: yes
+  args:
+    chdir: /srv/gk-deploy
+  environment:
+    KUBECONFIG: "/etc/kubernetes/admin.conf"
+    # NAMESPACE: "{{NAMESPACE}}"
+
+- name: gk-deploy success stdout
+  debug: var=gk_deploy.stdout_lines
+

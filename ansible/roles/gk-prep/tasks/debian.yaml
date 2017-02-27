@@ -1,0 +1,12 @@
+---
+
+- name: Install software-properties-common
+  apt: name=software-properties-common update_cache=yes state=present state=latest
+
+- name: Add the gluster apt repository
+  apt_repository:
+    repo: "ppa:gluster/glusterfs-3.8"
+    state: present
+
+- name: Install glusterfs-client
+  apt: name=glusterfs-client update_cache=yes state=present state=latest

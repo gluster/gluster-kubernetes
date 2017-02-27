@@ -1,0 +1,52 @@
+---
+
+# TODO: Detect if heketi-cli is already built and at the version requested to speed up subsequent runs.
+
+- include: debian.yaml
+  when: ansible_os_family == "Debian"
+
+- include: redhat.yaml
+  when: ansible_os_family == "RedHat"
+
+# - name: Clear the GOPATH dir
+#   file: path={{GOPATH}}/src/github.com/heketi state=absent
+# - file: path=/etc/profile.d/golang.sh state=absent
+# - file: path=/usr/local/bin/heketi-cli state=absent
+# - fail:
+
+- name: Create GOPATH dir
+  file: path={{GOPATH}}/src/github.com/heketi state=directory
+
+- name: Clone heketi
+  git: repo=https://github.com/heketi/heketi dest={{GOPATH}}/src/github.com/heketi/heketi version={{HEKETI_VERSION}} accept_hostkey=True force=yes
+
+- name: Setup GOPATH
+  template: src=golang.sh.j2 dest=/etc/profile.d/golang.sh
+
+- name: Fetch project dependencies
+  command: go get github.com/tools/godep
+  args:
+    chdir: "{{GOPATH}}/src/github.com/heketi/heketi"
+  environment:
+    GOPATH: "{{GOPATH}}"
+    PATH: "{{ansible_env.PATH}}:{{GOPATH}}/bin"
+
+- name: Build heketi
+  command: make
+  args:
+    chdir: "{{GOPATH}}/src/github.com/heketi/heketi"
+  environment:
+    GOPATH: "{{GOPATH}}"
+    PATH: "{{ansible_env.PATH}}:{{GOPATH}}/bin"
+
+- name: Link heketi-cli
+  file:
+    src: "{{GOPATH}}/src/github.com/heketi/heketi/client/cli/go/heketi-cli"
+    dest: /usr/local/bin/heketi-cli
+    state: link
+
+# - name: Run heketi-cli
+#   command: heketi-cli
+#   register: heketi
+
+# - debug: var=heketi

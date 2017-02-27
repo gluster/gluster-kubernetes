@@ -1,0 +1,8 @@
+---
+
+- include: debian.yaml
+  when: ansible_os_family == "Debian"
+
+- include: redhat.yaml
+  when: ansible_os_family == "RedHat"
+

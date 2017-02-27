@@ -1,0 +1,45 @@
+---
+# Notes:
+# We redirect vgs stderr to /dev/null because it's common to get the following error:
+#     /run/lvm/lvmetad.socket: connect failed: Connection refused
+#     WARNING: Failed to connect to lvmetad. Falling back to internal scanning.
+
+- hosts: all
+  gather_facts: true
+  become: yes
+  tasks:
+    - name: Get volume groups
+      shell: vgs 2>/dev/null | grep -P "^\s*VG\s+#PV|^\s*vg_[0-9a-f]+"
+      become: yes
+      register: vgs
+
+    - name: List Volume Groups to be deleted
+      vars:
+        msg: |
+          The following Volume Groups will be deleted from {{ inventory_hostname }}:
+          {{vgs.stdout}}
+      debug: msg="{{ msg.split('\n') }}"
+
+  tags:
+    - list_vgs
+
+- hosts: all
+  gather_facts: true
+  become: yes
+  tasks:
+    # - debug: var=proceed
+    # - debug: msg="{{proceed|lower}}"
+
+    - name: Deleting volume groups
+      shell: vgs 2>/dev/null | grep -Po "vg_[0-9a-f]+" | xargs vgremove -f
+      become: yes
+      when: proceed | lower == "yes" or proceed | lower == "y"
+
+    - debug: msg="aborting"
+      when: proceed | lower != "yes" and proceed | lower != "y"
+  vars_prompt:
+    - name: "proceed"
+      prompt: "Do you want to continue?"
+      default: "no"
+      private: no
+
