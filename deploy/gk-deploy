@@ -157,10 +157,11 @@ assign() {
 
 check_pods() {
   local all_ready=false
+  local wait_limit=${2:-${WAIT}}
   s=0
   debug "\nChecking status of pods matching '${1}':"
   while [[ "${all_ready}" != "true" ]]; do
-    if [[ ${s} -ge ${WAIT} ]]; then
+    if [[ ${s} -ge ${wait_limit} ]]; then
       output "Timed out waiting for pods matching '${1}'."
       abort
     fi
@@ -384,7 +385,7 @@ if [[ ${ABORT} -eq 1 ]]; then
 fi
 
 if [[ ${LOAD} -eq 0 ]]; then
-  check_pods "glusterfs=heketi-pod"
+  check_pods "glusterfs=heketi-pod" 2
   if [[ $? -eq 0 ]]; then
     output "Found heketi pod running. Please destroy existing setup and try again."
     exit 1
