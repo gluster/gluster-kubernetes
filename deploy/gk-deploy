@@ -394,14 +394,19 @@ if [[ ${LOAD} -eq 0 ]]; then
     exit 1
   fi
   if [[ "${CLI}" == *oc\ * ]]; then
-    ${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml
-    ${CLI} create -f ${TEMPLATES}/heketi-template.yaml
+    tempout=$(${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml 2>&1)
+    output "${tempout}"
+    tempout=$(${CLI} create -f ${TEMPLATES}/heketi-template.yaml 2>&1)
+    output "${tempout}"
     if [[ $GLUSTER -eq 1 ]]; then
-      ${CLI} create -f ${TEMPLATES}/glusterfs-template.yaml
+      tempout=$(${CLI} create -f ${TEMPLATES}/glusterfs-template.yaml 2>&1)
+      output "${tempout}"
     fi
-    ${CLI} policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:heketi-service-account
+    tempout=$(${CLI} policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:heketi-service-account 2>&1)
+    output "${tempout}"
   else
-    ${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml
+    tempout=$(${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml 2>&1)
+    output "${tempout}"
   fi
 fi
 
@@ -409,13 +414,16 @@ if [[ $GLUSTER -eq 1 ]] && [[ ${LOAD} -eq 0 ]]; then
 
   while read -r node; do
     debug "Marking '${node}' as a GlusterFS node."
-    ${CLI} label nodes ${node} storagenode=glusterfs
+    tempout=$(${CLI} label nodes ${node} storagenode=glusterfs 2>&1)
+    output "${tempout}"
   done <<< "$(echo -e "${NODES}")"
   debug "Deploying GlusterFS pods."
   if [[ "${CLI}" == *oc\ * ]]; then
-    ${CLI} process glusterfs | ${CLI} create -f -
+    tempout=$(${CLI} process glusterfs | ${CLI} create -f - 2>&1)
+    output "${tempout}"
   else
-    ${CLI} create -f ${TEMPLATES}/glusterfs-daemonset.yaml
+    tempout=$(${CLI} create -f ${TEMPLATES}/glusterfs-daemonset.yaml 2>&1)
+    output "${tempout}"
   fi
 
   output -n "Waiting for GlusterFS pods to start ... "
@@ -427,9 +435,11 @@ fi
 
 if [[ ${LOAD} -eq 0 ]]; then
   if [[ "${CLI}" == *oc\ * ]]; then
-    ${CLI} process heketi | ${CLI} create -f -
+    tempout=$(${CLI} process heketi | ${CLI} create -f - 2>&1)
+    output "${tempout}"
   else
-    ${CLI} create -f ${TEMPLATES}/heketi-deployment.yaml
+    tempout=$(${CLI} create -f ${TEMPLATES}/heketi-deployment.yaml 2>&1)
+    output "${tempout}"
   fi
 fi
 
