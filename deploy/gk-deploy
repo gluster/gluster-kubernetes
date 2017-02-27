@@ -116,6 +116,18 @@ debug() {
   fi
 }
 
+eval_output() {
+  cmd="${1}"
+  while read line; do
+    if [[ "${line}" == return\ [0-9]* ]]; then
+      eval ${line}
+    fi
+    output ${line}
+  done < <(
+    eval ${cmd}
+    echo "return $?"
+  )
+}
 abort() {
   ${CLI} delete dc,svc,routes heketi
   ${CLI} delete sa heketi-service-account
@@ -394,19 +406,14 @@ if [[ ${LOAD} -eq 0 ]]; then
     exit 1
   fi
   if [[ "${CLI}" == *oc\ * ]]; then
-    tempout=$(${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml 2>&1)
-    output "${tempout}"
-    tempout=$(${CLI} create -f ${TEMPLATES}/heketi-template.yaml 2>&1)
-    output "${tempout}"
+    eval_output "${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml 2>&1"
+    eval_output "${CLI} create -f ${TEMPLATES}/heketi-template.yaml 2>&1"
     if [[ $GLUSTER -eq 1 ]]; then
-      tempout=$(${CLI} create -f ${TEMPLATES}/glusterfs-template.yaml 2>&1)
-      output "${tempout}"
+      eval_output "${CLI} create -f ${TEMPLATES}/glusterfs-template.yaml 2>&1"
     fi
-    tempout=$(${CLI} policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:heketi-service-account 2>&1)
-    output "${tempout}"
+    eval_output "${CLI} policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:heketi-service-account 2>&1"
   else
-    tempout=$(${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml 2>&1)
-    output "${tempout}"
+    eval_output "${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml 2>&1"
   fi
 fi
 
@@ -414,16 +421,13 @@ if [[ $GLUSTER -eq 1 ]] && [[ ${LOAD} -eq 0 ]]; then
 
   while read -r node; do
     debug "Marking '${node}' as a GlusterFS node."
-    tempout=$(${CLI} label nodes ${node} storagenode=glusterfs 2>&1)
-    output "${tempout}"
+    eval_output "${CLI} label nodes ${node} storagenode=glusterfs 2>&1"
   done <<< "$(echo -e "${NODES}")"
   debug "Deploying GlusterFS pods."
   if [[ "${CLI}" == *oc\ * ]]; then
-    tempout=$(${CLI} process glusterfs | ${CLI} create -f - 2>&1)
-    output "${tempout}"
+    eval_output "${CLI} process glusterfs | ${CLI} create -f - 2>&1"
   else
-    tempout=$(${CLI} create -f ${TEMPLATES}/glusterfs-daemonset.yaml 2>&1)
-    output "${tempout}"
+    eval_output "${CLI} create -f ${TEMPLATES}/glusterfs-daemonset.yaml 2>&1"
   fi
 
   output -n "Waiting for GlusterFS pods to start ... "
@@ -435,11 +439,9 @@ fi
 
 if [[ ${LOAD} -eq 0 ]]; then
   if [[ "${CLI}" == *oc\ * ]]; then
-    tempout=$(${CLI} process heketi | ${CLI} create -f - 2>&1)
-    output "${tempout}"
+    eval_output "${CLI} process heketi | ${CLI} create -f - 2>&1"
   else
-    tempout=$(${CLI} create -f ${TEMPLATES}/heketi-deployment.yaml 2>&1)
-    output "${tempout}"
+    eval_output "${CLI} create -f ${TEMPLATES}/heketi-deployment.yaml 2>&1"
   fi
 fi
 
@@ -472,15 +474,7 @@ else
   output "heketi is now running."
 fi
 
-tload=$(heketi-cli -s http://${heketi_service} topology load --json=${TOPOLOGY} 2>&1)
-if [[ ${?} != 0 ]]; then
-  output "${tload}"
-  exit 1
-else
-  output "${tload}"
-  check=$(echo $tload | grep Unable)
-  if [[ "${check}" != "" ]]; then
-    output "Please Check the failed Node or Device and restart with --load"
-    exit 1
-  fi
+eval_output "heketi-cli -s http://${heketi_service} topology load --json=${TOPOLOGY} 2>&1"
+if [[ $? -ne 0 ]]; then
+  output "Please check the failed node or device and restart with --load"
 fi
