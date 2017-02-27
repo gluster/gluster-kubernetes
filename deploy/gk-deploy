@@ -384,6 +384,11 @@ if [[ ${ABORT} -eq 1 ]]; then
 fi
 
 if [[ ${LOAD} -eq 0 ]]; then
+  check_pods "glusterfs=heketi-pod"
+  if [[ $? -eq 0 ]]; then
+    output "Found heketi pod running. Please destroy existing setup and try again."
+    exit 1
+  fi
   if [[ "${CLI}" == *oc\ * ]]; then
     ${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml
     ${CLI} create -f ${TEMPLATES}/heketi-template.yaml
