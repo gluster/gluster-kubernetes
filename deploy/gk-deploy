@@ -479,7 +479,20 @@ else
   output "heketi is now running."
 fi
 
-eval_output "heketi-cli -s http://${heketi_service} topology load --json=${TOPOLOGY} 2>&1"
-if [[ $? -ne 0 ]]; then
-  output "Please check the failed node or device and restart with --load"
+load_temp=$(mktemp)
+eval_output "heketi-cli -s http://${heketi_service} topology load --json=${TOPOLOGY} 2>&1" | tee ${load_temp}
+grep -q "Unable" ${load_temp}
+unable=$?
+rm ${load_temp}
+
+if [[ ${PIPESTATUS[0]} -ne 0 ]] || [[ ${unable} -eq 0 ]]; then
+  output "Error loading the cluster topology."
+  if [[ ${unable} -eq 0 ]]; then
+    output "Please check the failed node or device and rerun this script using the --load option."
+  fi
+  exit 1
+else
+  output "heketi topology loaded."
 fi
+
+output "Ready to create and provide GlusterFS volumes."
