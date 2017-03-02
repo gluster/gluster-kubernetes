@@ -54,19 +54,19 @@ eval_output() {
 
 assign() {
   key="${1}"
+  value="${2}"
   assign=`expr index ${key} '='
   `
   if [[ $assign -gt 0 ]]; then
     echo "${key:assign}"
     return 0
-  elif [[ $assign -eq 0 ]] &&
-       [[ "x${2}" != "x" ]]; then
-    echo "${2}"
+  elif [[ "x${value}" != "x" ]] &&
+       [[ "${value}" != -* ]]; then
+    echo "${value}"
     return 2
   else
     output "Required parameter for '-${key}' not specified.\n"
     usage
     exit 1
   fi
-  keypos=$keylen
 }
