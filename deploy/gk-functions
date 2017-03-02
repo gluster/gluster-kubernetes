@@ -54,18 +54,20 @@ eval_output() {
 
 assign() {
   key="${1}"
-  value="${key#*=}"
-  if [[ "${value}" != "${key}" ]]; then
-    # key was of the form 'key=value'
-    echo "${value}"
+  kval="${key#*=}"
+  value="${2}"
+  if [[ "${kval}" != "${key}" ]]; then
+    # key was of the form 'key=kval'
+    echo "${kval}"
     return 0
-  elif [[ "x${2}" != "x" ]]; then
-    echo "${2}"
+  elif [[ "x${value}" != "x" ]] &&
+       [[ "${value}" != -* ]]; then
+    # key did not have a value, and value is not another key
+    echo "${value}"
     return 2
   else
     output "Required parameter for '-${key}' not specified.\n"
     usage
     exit 1
   fi
-  keypos=$keylen
 }
