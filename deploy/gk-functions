@@ -56,6 +56,7 @@ assign() {
   key="${1}"
   kval="${key#*=}"
   value="${2}"
+  default="${3}"
   if [[ "${kval}" != "${key}" ]]; then
     # key was of the form 'key=kval'
     echo "${kval}"
@@ -65,6 +66,10 @@ assign() {
     # key did not have a value, and value is not another key
     echo "${value}"
     return 2
+  elif [[ "x${default}" != "x" ]]; then
+    # no value found, but default specified
+    echo "${default}"
+    return 3
   else
     output "Required parameter for '-${key}' not specified.\n"
     usage
