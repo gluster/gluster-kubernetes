@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+. ./gk-functions
+
 PROG="$(basename "${0}")"
 TOPOLOGY='topology.json'
 LOG_FILE=''
@@ -91,43 +93,6 @@ Options:
   exit 0
 }
 
-output() {
-  opts="-e"
-  if [[ "${1}" == "-n" ]]; then
-    opts+="n"
-    shift
-  fi
-  out="${@}"
-  echo "$opts" "${out}"
-  if [[ "x${LOG_FILE}" != "x" ]]; then
-    if [[ "${out}" == "\033["K* ]]; then
-      out="${out:6}"
-    fi
-    if [[ "${out}" == "\033["*A ]]; then
-      out="---"
-    fi
-    echo $opts "${out}" >> "${LOG_FILE}"
-  fi
-}
-
-debug() {
-  if [[ ${VERBOSE} -eq 1 ]]; then
-    output "${@}"
-  fi
-}
-
-eval_output() {
-  cmd="${1}"
-  while read line; do
-    if [[ "${line}" == return\ [0-9]* ]]; then
-      eval ${line}
-    fi
-    output ${line}
-  done < <(
-    eval ${cmd}
-    echo "return $?"
-  )
-}
 abort() {
   ${CLI} delete dc,svc,routes heketi
   ${CLI} delete sa heketi-service-account
@@ -146,25 +111,6 @@ abort() {
     fi
   fi
   exit 1
-}
-
-assign() {
-  key="${1}"
-  assign=`expr index ${key} '='
-  `
-  if [[ $assign -gt 0 ]]; then
-    echo "${key:assign}"
-    return 0
-  elif [[ $assign -eq 0 ]] &&
-       [[ "x${2}" != "x" ]]; then
-    echo "${2}"
-    return 2
-  else
-    output "Required parameter for '-${key}' not specified.\n"
-    usage
-    exit 1
-  fi
-  keypos=$keylen
 }
 
 check_pods() {

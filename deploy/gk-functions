@@ -1,0 +1,72 @@
+#!/bin/bash
+# Copyright (c) 2016 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+output() {
+  opts="-e"
+  if [[ "${1}" == "-n" ]]; then
+    opts+="n"
+    shift
+  fi
+  out="${1}"
+  echo "$opts" "${out}"
+  if [[ "x${LOG_FILE}" != "x" ]]; then
+    if [[ "${out}" == "\033["K* ]]; then
+      out="${out:6}"
+    fi
+    if [[ "${out}" == "\033["*A ]]; then
+      out="---"
+    fi
+    echo $opts "${out}" >> "${LOG_FILE}"
+  fi
+}
+
+debug() {
+  if [[ ${VERBOSE} -eq 1 ]]; then
+    output "${@}"
+  fi
+}
+
+eval_output() {
+  cmd="${1}"
+  while read line; do
+    if [[ "${line}" == return\ [0-9]* ]]; then
+      eval ${line}
+    fi
+    output ${line}
+  done < <(
+    eval ${cmd}
+    echo "return $?"
+  )
+}
+
+assign() {
+  key="${1}"
+  assign=`expr index ${key} '='
+  `
+  if [[ $assign -gt 0 ]]; then
+    echo "${key:assign}"
+    return 0
+  elif [[ $assign -eq 0 ]] &&
+       [[ "x${2}" != "x" ]]; then
+    echo "${2}"
+    return 2
+  else
+    output "Required parameter for '-${key}' not specified.\n"
+    usage
+    exit 1
+  fi
+  keypos=$keylen
+}
