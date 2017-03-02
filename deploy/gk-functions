@@ -55,6 +55,7 @@ eval_output() {
 assign() {
   key="${1}"
   value="${2}"
+  default="${3}"
   assign=`expr index ${key} '='
   `
   if [[ $assign -gt 0 ]]; then
@@ -64,6 +65,9 @@ assign() {
        [[ "${value}" != -* ]]; then
     echo "${value}"
     return 2
+  elif [[ "x${default}" != "x" ]]; then
+    echo "${default}"
+    return 3
   else
     output "Required parameter for '-${key}' not specified.\n"
     usage
