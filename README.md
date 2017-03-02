@@ -17,7 +17,7 @@ Kubernetes.
 
 ### Presentations
 
-You can find slides and videos of community presnetations [here](.docs/presentations).
+You can find slides and videos of community presentations [here](.docs/presentations).
 
 **>>> [Video demo of the technology!](https://drive.google.com/file/d/0B667S2caJiy7QVpzVVFNQVdyaVE/view?usp=sharing) <<<**
 
