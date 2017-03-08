@@ -19,7 +19,7 @@ metadata:
     description: Exposes Heketi Service
 spec:
   selector:
-    name: heketi
+    glusterfs: heketi-pod
   ports:
   - name: heketi
     port: 8080
