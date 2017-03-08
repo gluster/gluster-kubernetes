@@ -70,7 +70,7 @@ objects:
         serviceAccountName: heketi-service-account
         containers:
         - name: heketi
-          image: heketi/heketi:dev
+          image: heketi/heketi:4
           imagePullPolicy: IfNotPresent
           env:
           - name: HEKETI_USER_KEY
