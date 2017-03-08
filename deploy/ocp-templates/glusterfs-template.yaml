@@ -32,7 +32,7 @@ objects:
           storagenode: glusterfs
         hostNetwork: true
         containers:
-        - image: gluster/gluster-centos:latest
+        - image: gluster/gluster-centos:gluster3u9_centos7
           imagePullPolicy: IfNotPresent
           name: glusterfs
           volumeMounts:
