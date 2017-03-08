@@ -65,7 +65,6 @@ objects:
       metadata:
         name: heketi
         labels:
-          name: heketi
           glusterfs: heketi-pod
       spec:
         serviceAccountName: heketi-service-account
