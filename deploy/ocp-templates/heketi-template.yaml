@@ -34,7 +34,7 @@ objects:
       port: 8080
       targetPort: 8080
     selector:
-      name: heketi
+      glusterfs: heketi-pod
 - kind: Route
   apiVersion: v1
   metadata:
