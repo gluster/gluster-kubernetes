@@ -1,4 +1,7 @@
 sudo: true
 
+before_install:
+- sudo pip install yamllint
+
 script:
 - make test
