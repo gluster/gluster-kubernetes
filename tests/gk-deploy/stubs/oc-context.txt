@@ -1,0 +1,5 @@
+CURRENT   NAME                                     CLUSTER             AUTHINFO                         NAMESPACE
+          default/192-168-90-5:8443/system:admin   192-168-90-5:8443   system:admin/192-168-90-5:8443   default
+          default/192-168-90-5:8443/test-admin     192-168-90-5:8443   test-admin/192-168-90-5:8443     default
+*         aplo/192-168-90-5:8443/test-admin        192-168-90-5:8443   test-admin/192-168-90-5:8443     aplo
+
