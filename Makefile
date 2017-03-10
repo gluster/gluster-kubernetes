@@ -1,2 +1,2 @@
 test:
-	@true
+	$(MAKE) -C tests test
