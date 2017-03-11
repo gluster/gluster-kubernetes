@@ -1,0 +1,84 @@
+- name: install packages
+  yum: name={{ item }} state=present
+  with_items:
+    - epel-release
+    - centos-release-gluster
+    - wget
+    - git
+    - net-tools
+    - bind-utils
+    - iptables-services
+    - bridge-utils
+    - bash-completion
+    - dnsmasq
+    - ncurses-term
+
+- name: Add paas SIG repository
+  yum_repository:
+    name: paas-openshift-origin
+    description: PaaS openshift-origin repo
+    baseurl: http://mirror.centos.org/centos/7/paas/x86_64/openshift-origin/
+    gpgkey: https://raw.githubusercontent.com/openshift/openshift-ansible/master/roles/openshift_repos/files/origin/gpg_keys/openshift-ansible-CentOS-SIG-PaaS
+    gpgcheck: yes
+
+- name: install ansible and Heketi utilities
+  yum: name={{ item }} state=present
+  with_items:
+    - ansible-2.2.1.0-2.el7
+    - pyOpenSSL
+    - heketi-client
+    - heketi-templates
+
+- name: get openshift-ansible (release-1.4 branch)
+  git: repo=https://github.com/openshift/openshift-ansible dest=/home/vagrant/openshift-ansible version=release-1.4
+
+- name: copy hosts.conf
+  copy: src=hosts.conf dest=/home/vagrant force=yes mode=0644
+
+- name: copy dnsmasq.conf
+  copy: src=dnsmasq.conf dest=/etc force=yes mode=0644
+
+- name: restart dnsmasq
+  service: name=dnsmasq enabled=yes state=restarted
+
+- name: setup resolv.conf
+  lineinfile: dest=/etc/rc.d/rc.local regexp="^sed" line="sed -i '1s/^/nameserver 127.0.0.1\\n/' /etc/resolv.conf"
+
+- name: make rc.local executable
+  file: path=/etc/rc.d/rc.local mode="a+x"
+
+- name: update resolv.conf
+  command: /etc/rc.local
+
+- name: get oc client
+  unarchive: src=https://github.com/openshift/origin/releases/download/v1.3.0/openshift-origin-client-tools-v1.3.0-3ab7af3d097b57f933eccef684a714f2368804e7-linux-64bit.tar.gz dest=/home/vagrant copy=no
+
+- name: copy oc to /usr/bin
+  command: cp /home/vagrant/openshift-origin-client-tools-v1.3.0-3ab7af3d097b57f933eccef684a714f2368804e7-linux-64bit/oc /usr/bin
+
+- name: install openshift this can take about 20 mins
+  command: ansible-playbook -i hosts.conf openshift-ansible/playbooks/byo/config.yml
+  args:
+      chdir: /home/vagrant
+      creates: /home/vagrant/.kube/config
+  become: yes
+  become_user: vagrant
+  environment:
+      ANSIBLE_HOST_KEY_CHECKING: False
+
+- name: login to openshift cluster
+  become: yes
+  become_user: vagrant
+  command: oc login https://192.168.10.90:8443 --insecure-skip-tls-verify=true --username=admin --password=admin
+  args:
+      chdir: /home/vagrant
+      creates: /home/vagrant/.kube/config
+
+- name: copy topology.json
+  copy: src=topology.json dest=/home/vagrant force=yes mode=0666
+
+- name: copy gk-deploy
+  copy: src=../../deploy dest=/home/vagrant force=yes
+
+- name: make gk-deploy executable
+  file: path=/home/vagrant/deploy/gk-deploy mode="a+rx"
