@@ -56,7 +56,7 @@ objects:
   spec:
     replicas: 1
     selector:
-      name: heketi
+      glusterfs: heketi-pod
     triggers:
     - type: ConfigChange
     strategy:
