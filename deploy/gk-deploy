@@ -131,8 +131,11 @@ eval_output() {
 abort() {
   ${CLI} delete svc heketi
   ${CLI} delete sa heketi-service-account
+  ${CLI} delete all,service,jobs,deployment,secret --selector="deploy-heketi"
+  ${CLI} delete svc/heketi-storage-endpoints
   if [[ "${CLI}" == *oc\ * ]]; then
     ${CLI} delete dc,route heketi
+    ${CLI} delete template deploy-heketi
     ${CLI} delete template heketi
   else
     ${CLI} delete deployment heketi
@@ -410,6 +413,7 @@ if [[ ${LOAD} -eq 0 ]]; then
   fi
   output "OK"
   if [[ "${CLI}" == *oc\ * ]]; then
+    eval_output "${CLI} create -f ${TEMPLATES}/deploy-heketi-template.yaml 2>&1"
     eval_output "${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml 2>&1"
     eval_output "${CLI} create -f ${TEMPLATES}/heketi-template.yaml 2>&1"
     if [[ $GLUSTER -eq 1 ]]; then
@@ -445,13 +449,13 @@ fi
 
 if [[ ${LOAD} -eq 0 ]]; then
   if [[ "${CLI}" == *oc\ * ]]; then
-    eval_output "${CLI} process heketi | ${CLI} create -f - 2>&1"
+    eval_output "${CLI} process deploy-heketi | ${CLI} create -f - 2>&1"
   else
-    eval_output "${CLI} create -f ${TEMPLATES}/heketi-deployment.yaml 2>&1"
+    eval_output "${CLI} create -f ${TEMPLATES}/deploy-heketi-deployment.yaml 2>&1"
   fi
 fi
 
-output -n "Waiting for heketi pod to start ... "
+output -n "Waiting for deploy-heketi pod to start ... "
 check_pods "glusterfs=heketi-pod"
 if [[ $? -ne 0 ]]; then
   output "pods not found."
@@ -463,9 +467,9 @@ heketi_service=""
 debug -n "Determining heketi service URL ... "
 while [[ "x${heketi_service}" == "x" ]]; do
   if [[ "${CLI}" == *oc\ * ]]; then
-    heketi_service=$(${CLI} describe routes/heketi | grep "Requested Host:" | awk '{print $3}')
+    heketi_service=$(${CLI} describe routes/deploy-heketi | grep "Requested Host:" | awk '{print $3}')
   else
-    heketi_service=$(${CLI} describe svc/heketi | grep "Endpoints:" | awk '{print $2}')
+    heketi_service=$(${CLI} describe svc/deploy-heketi | grep "Endpoints:" | awk '{print $2}')
   fi
   sleep 1
 done
@@ -473,13 +477,11 @@ debug "OK"
 
 hello=$(curl http://${heketi_service}/hello 2>/dev/null)
 if [[ "${hello}" != "Hello from Heketi" ]]; then
-  output "Failed to communicate with heketi service."
+  output "Failed to communicate with deploy-heketi service."
   if [[ "${CLI}" == *oc\ * ]]; then
     output "Please verify that a router has been properly configured."
   fi
   abort
-else
-  output "heketi is now running."
 fi
 
 load_temp=$(mktemp)
@@ -499,3 +501,52 @@ else
 fi
 
 output "Ready to create and provide GlusterFS volumes."
+
+heketi-cli -s http://${heketi_service} setup-openshift-heketi-storage
+if [[ ${?} != 0 ]]; then
+  output "Failed on setup openshift heketi storage"
+  exit 1
+fi
+
+if [[ ! -f heketi-storage.json ]]; then
+  output "heketi-storage.json file not found"
+  exit 1
+fi
+${CLI} create -f heketi-storage.json
+
+check_pods "job-name=heketi-storage-copy-job" "Completed"
+
+${CLI} delete all,service,jobs,deployment,secret --selector="deploy-heketi"
+
+if [[ "${CLI}" == *oc ]]; then
+  ${CLI} process heketi | ${CLI} create -f -
+else
+  ${CLI} create -f ${TEMPLATES}/heketi-deployment.yaml
+fi
+
+output -n "Waiting for heketi pod to start ... "
+check_pods "glusterfs=heketi-pod"
+output "OK"
+
+heketi_service=""
+debug -n "Determining heketi service URL ... "
+while [[ "x${heketi_service}" == "x" ]]; do
+  if [[ "${CLI}" == *oc ]]; then
+    heketi_service=$(${CLI} describe routes/heketi | grep "Requested Host:" | awk '{print $3}')
+  else
+    heketi_service=$(${CLI} describe svc/heketi | grep "Endpoints:" | awk '{print $2}')
+  fi
+  sleep 1
+done
+debug "OK"
+
+hello=$(curl http://${heketi_service}/hello 2>/dev/null)
+if [[ "${hello}" != "Hello from Heketi" ]]; then
+  output "Failed to communicate with heketi service."
+  if [[ "${CLI}" == *oc ]]; then
+    output "Please verify that a router has been properly configured."
+  fi
+  abort
+else
+  output "heketi is now running."
+fi
