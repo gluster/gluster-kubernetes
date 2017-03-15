@@ -70,14 +70,10 @@ objects:
             value: ${HEKETI_ADMIN_KEY}
           - name: HEKETI_EXECUTOR
             value: kubernetes
-          - name: HEKETI_KUBE_USE_SECRET
-            value: "y"
           - name: HEKETI_FSTAB
             value: /var/lib/heketi/fstab
           - name: HEKETI_SNAPSHOT_LIMIT
             value: '14'
-          - name: HEKETI_KUBE_CERTFILE
-            value: ${HEKETI_KUBE_CERTFILE}
           - name: HEKETI_KUBE_GLUSTER_DAEMONSET
             value: "y"
           ports:
@@ -109,6 +105,3 @@ parameters:
 - name: HEKETI_ADMIN_KEY
   displayName: Heketi Administrator Secret
   description: Set secret for administration of the Heketi service as user _admin_
-- name: HEKETI_KUBE_CERTFILE
-  displayName: Certificate file
-  description: Container path to Kubernetes certificate file
