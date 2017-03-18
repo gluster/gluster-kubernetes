@@ -68,11 +68,6 @@ $ vagrant ssh master
 The following commands are meant to be run with administrative privileges
 (e.g. `sudo su` beforehand).
 
-For ease of use in the the vagrant setup, we recommend you run the following:
-
-```bash
-$ export KUBECONFIG="/etc/kubernetes/admin.conf"
-```
 At this point, verify the Kubernetes installation by making sure all nodes are
 Ready:
 
@@ -88,12 +83,6 @@ node2     Ready     22h
 ***NOTE***: To see the version of Kubernetes (which will change based on
 latest official releases) simply do `kubectl version`. This will help in
 troubleshooting.
-
-For ease of use in the the vagrant setup, we recommend you run the following:
-
-```bash
-$ export KUBECONFIG="/etc/kubernetes/admin.conf"
-```
 
 Next, to deploy heketi and GlusterFS, run the following:
 
