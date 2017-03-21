@@ -544,7 +544,7 @@ if [[ "${hello}" != "Hello from Heketi" ]]; then
   if [[ "${CLI}" == *oc\ * ]]; then
     output "Please verify that a router has been properly configured."
   fi
-  abort
+  exit 1
 else
   output "heketi is now running."
 fi
