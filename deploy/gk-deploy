@@ -29,10 +29,12 @@ ABORT=0
 NODES=""
 SKIP_PREREQ=0
 LOAD=0
+ADMIN_KEY=""
+USER_KEY=""
 
 usage() {
   echo -e "USAGE: ${PROG} [-ghv] [-c CLI] [-t <TEMPLATES>] [-n NAMESPACE] [-w <SECONDS>] [--load]
-       [-l <LOG_FILE>] [<TOPOLOGY>]\n"
+       [--admin-key <ADMIN_KEY>] [--user-key <USER_KEY>] [-l <LOG_FILE>] [<TOPOLOGY>]\n"
 }
 
 help_exit() {
@@ -74,6 +76,16 @@ Options:
               failure on adding nodes or devices to heketi. Fix the issue on
               device or node, then restart with --load to skip gluster
               deployment and re-run topology load command.
+
+  --admin-key ADMIN_KEY
+              Secret for heketi administrator user. Heketi admin has access to all 
+	      the APIs. admin key: string, Shared secret. 
+	      Eg: MySecret
+
+  --user-key USER_KEY
+              Secret for heketi general user. Heketi user has access to only Volume 
+	      APIs. user key: string, Shared secret.
+	      Eg: MyVolumeSecret
 
   -y, --yes
               Skip the pre-requisites prompt.
@@ -250,6 +262,16 @@ while [[ $# -ge 1 ]]; do
         y*|-yes)
         SKIP_PREREQ=1
         if [[ "$key" == "--yes" ]]; then keypos=$keylen; fi
+        ;;
+        -admin-key*)
+        ADMIN_KEY=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
+        -user-key*)
+        USER_KEY=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
         ;;
         l*|-log-file*)
         LOG_FILE=$(assign "${key:${keypos}}" "${2}")
@@ -449,7 +471,7 @@ fi
 
 if [[ ${LOAD} -eq 0 ]]; then
   if [[ "${CLI}" == *oc\ * ]]; then
-    eval_output "${CLI} process deploy-heketi | ${CLI} create -f - 2>&1"
+    eval_output "${CLI} process -v HEKETI_ADMIN_KEY=${ADMIN_KEY} -v HEKETI_USER_KEY=${USER_KEY} deploy-heketi | ${CLI} create -f - 2>&1"
   else
     eval_output "${CLI} create -f ${TEMPLATES}/deploy-heketi-deployment.yaml 2>&1"
   fi
@@ -485,7 +507,7 @@ if [[ "${hello}" != "Hello from Heketi" ]]; then
 fi
 
 load_temp=$(mktemp)
-eval_output "heketi-cli -s http://${heketi_service} topology load --json=${TOPOLOGY} 2>&1" | tee ${load_temp}
+eval_output "heketi-cli -s http://${heketi_service} --user admin --secret "${ADMIN_KEY}" topology load --json=${TOPOLOGY} 2>&1" | tee ${load_temp}
 grep -q "Unable" ${load_temp}
 unable=$?
 rm ${load_temp}
@@ -500,7 +522,7 @@ else
   output "heketi topology loaded."
 fi
 
-eval_output "heketi-cli -s http://${heketi_service} setup-openshift-heketi-storage 2>&1"
+eval_output "heketi-cli -s http://${heketi_service} --user admin --secret "${ADMIN_KEY}" setup-openshift-heketi-storage 2>&1"
 if [[ ${?} != 0 ]]; then
   output "Failed on setup openshift heketi storage"
   exit 1
@@ -517,7 +539,7 @@ check_pods "job-name=heketi-storage-copy-job" "Completed"
 eval_output "${CLI} delete all,service,jobs,deployment,secret --selector=\"deploy-heketi\" 2>&1"
 
 if [[ "${CLI}" == *oc\ * ]]; then
-  eval_output "${CLI} process heketi | ${CLI} create -f - 2>&1"
+  eval_output "${CLI} process -v HEKETI_ADMIN_KEY=${ADMIN_KEY} -v HEKETI_USER_KEY=${USER_KEY} heketi | ${CLI} create -f - 2>&1"
 else
   eval_output "${CLI} create -f ${TEMPLATES}/heketi-deployment.yaml 2>&1"
 fi
