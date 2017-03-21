@@ -311,7 +311,6 @@ rules for the required GlusterFS ports:
 In addition, for an OpenShift deployment you must:
  * Have 'cluster_admin' role on the administrative account doing the deployment
  * Add the 'default' and 'router' Service Accounts to the 'privileged' SCC
- * Add the 'heketi-service-account' Service Account to the 'privileged' SCC
  * Have a router deployed that is configured to allow apps to access services
    running in the cluster
 
@@ -420,6 +419,7 @@ if [[ ${LOAD} -eq 0 ]]; then
       eval_output "${CLI} create -f ${TEMPLATES}/glusterfs-template.yaml 2>&1"
     fi
     eval_output "${CLI} policy add-role-to-user edit system:serviceaccount:${NAMESPACE}:heketi-service-account 2>&1"
+    eval_output "${CLI} adm policy add-scc-to-user privileged -z heketi-service-account"
   else
     eval_output "${CLI} create -f ${TEMPLATES}/heketi-service-account.yaml 2>&1"
   fi
