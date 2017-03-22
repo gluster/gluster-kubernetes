@@ -11,9 +11,11 @@ OTD="${DEPLOY_DIR}/ocp-templates"
 KGDY="${KTD}/glusterfs-daemonset.yaml"
 KHDY="${KTD}/heketi-deployment.yaml"
 KHSY="${KTD}/heketi-service-account.yaml"
+KDHY="${KTD}/deploy-heketi-deployment.yaml"
 OGTY="${OTD}/glusterfs-template.yaml"
 OHTY="${OTD}/heketi-template.yaml"
 OHSY="${OTD}/heketi-service-account.yaml"
+ODHY="${OTD}/deploy-heketi-template.yaml"
 
 FAULTY_YAML="${SCRIPT_DIR}/glusterfs-daemonset-wrong.yaml"
 
@@ -40,7 +42,7 @@ testit "check invalid yaml" \
 	check_invalid_yaml ${FAULTY_YAML} \
 	|| failed=$((failed + 1))
 
-for yaml in ${KGDY} ${KHDY} ${KHSY} ${OGTY} ${OHTY} ${OHSY} ; do
+for yaml in ${KGDY} ${KHDY} ${KHSY} ${KDHY} ${OGTY} ${OHTY} ${OHSY} ${ODHY} ; do
 	testit "check $(basename ${yaml})" \
 		check_yaml ${yaml} \
 		|| failed=$((failed + 1))
