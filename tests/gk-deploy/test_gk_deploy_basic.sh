@@ -97,7 +97,7 @@ Namespace 'invalid' not found."
 			expected_out="Using Kubernetes CLI.
 Namespace 'invalid' not found."
 		elif [ "x${cli}" != "xoc" ]; then
-			expected_out="Container platform CLI (e.g. kubectl, oc) not found."
+			expected_out="Unknown CLI '${cli}'."
 		fi
 		args="${args} -c ${cli}"
 	fi
@@ -152,6 +152,10 @@ testit "test namespace invalid" \
 
 testit "test namespace invalid kubectl" \
 	test_namespace_invalid kubectl \
+	|| failed=$((failed + 1))
+
+testit "test namespace invalid unknown-cli" \
+	test_namespace_invalid unknown-cli \
 	|| failed=$((failed + 1))
 
 testok $0 ${failed}
