@@ -28,7 +28,7 @@ test_missing_topology () {
 
 test_cli_not_found () {
 	local saved_path="${PATH}"
-	PATH="/usr/bin:/bin"
+	PATH="/doesnotexist"
 	local expected_out="Container platform CLI (e.g. kubectl, oc) not found."
 
 	OUT=$(${GK_DEPLOY} -y ${TOPOLOGY})
@@ -130,7 +130,7 @@ Namespace 'invalid' not found."
 
 failed=0
 
-testit "test missing toplogy" \
+testit "test missing topology" \
 	test_missing_topology \
 	|| failed=$((failed + 1))
 
