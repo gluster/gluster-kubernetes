@@ -25,3 +25,14 @@ hyper-converged GlusterFS on Kubernetes and demo the gk-deploy tool.
 
   **Lightning talk (slides and video):** [Kubernetes+GlusterFS: Lightning Ver.](https://fosdem.org/2017/schedule/event/kubegluster/)
 
+## 2017-03-23 [vault](http://events.linuxfoundation.org/events/vault/)
+
+[Michael](https://github.com/obnoxxx) presented on gluster-kubernetes at the
+vault conference in Cambride, MA.
+
+* **slides**: [Gluster in Kubernetes](2017-03-vault/Gluster-in-Kubernetes.pdf)
+* **demos**:
+  * gk-deploy: [online](https://asciinema.org/a/5apn5yv7rryqa0hpjozq0s06v) [download](2017-03-vault/demo-deploy.json)
+  * heketi: [online](https://asciinema.org/a/9cluxpf9weuyq6oqhmd3v7r0c) [download](./2017-03-vault/demo-test-heketi.json)
+  * dynamic provisioning: [online](https://asciinema.org/a/amyldm9lp8sxfqc89eogymx0x) [download](./2017-03-vault/demo-dynamic-provisioning.json)
+
