@@ -28,7 +28,7 @@ check_yaml () {
 
 check_invalid_yaml () {
 	check_yaml ${1}
-	if [ "x$?" = "x0" ]; then
+	if [[ "x$?" == "x0" ]]; then
 		echo "ERROR: parsing invalid yaml succeeded"
 		return 1
 	fi
