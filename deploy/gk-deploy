@@ -487,11 +487,10 @@ output "OK"
 
 heketi_service=""
 debug -n "Determining heketi service URL ... "
-while [[ "x${heketi_service}" == "x" ]]; do
-  if [[ "${CLI}" == *oc\ * ]]; then
-    heketi_service=$(${CLI} describe routes/deploy-heketi | grep "Requested Host:" | awk '{print $3}')
-  else
-    heketi_service=$(${CLI} describe svc/deploy-heketi | grep "Endpoints:" | awk '{print $2}')
+while [[ "x${heketi_service}" == "x" ]] || [[ "${heketi_service}" == "<none>" ]]; do
+  heketi_service=$(${CLI} describe svc/deploy-heketi | grep "Endpoints:" | awk '{print $2}')
+  if [[ "${heketi_service}" != "<none>"]] && [[ "${CLI}" == *oc\ * ]]; then
+      heketi_service=$(${CLI} describe routes/deploy-heketi | grep "Requested Host:" | awk '{print $3}')
   fi
   sleep 1
 done
@@ -550,11 +549,10 @@ output "OK"
 
 heketi_service=""
 debug -n "Determining heketi service URL ... "
-while [[ "x${heketi_service}" == "x" ]]; do
-  if [[ "${CLI}" == *oc\ * ]]; then
-    heketi_service=$(${CLI} describe routes/heketi | grep "Requested Host:" | awk '{print $3}')
-  else
-    heketi_service=$(${CLI} describe svc/heketi | grep "Endpoints:" | awk '{print $2}')
+while [[ "x${heketi_service}" == "x" ]] || [[ "${heketi_service}" == "<none>" ]]; do
+  heketi_service=$(${CLI} describe svc/heketi | grep "Endpoints:" | awk '{print $2}')
+  if [[ "${heketi_service}" != "<none>"]] && [[ "${CLI}" == *oc\ * ]]; then
+      heketi_service=$(${CLI} describe routes/heketi | grep "Requested Host:" | awk '{print $3}')
   fi
   sleep 1
 done
