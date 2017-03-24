@@ -18,7 +18,7 @@ source "${INC_DIR}/subunit.sh"
 
 test_missing_topology () {
 	${GK_DEPLOY} -y
-	if [ "x$?" = "x0" ]; then
+	if [[ "x$?" == "x0" ]]; then
 		echo "ERROR: gk_deploy without toplogoy succeeded"
 		return 1
 	fi
@@ -34,21 +34,21 @@ test_cli_not_found () {
 	OUT=$(${GK_DEPLOY} -y ${TOPOLOGY})
 	local rc=${?}
 
-	if [ "x${rc}" = "x0" ]; then
+	if [[ "x${rc}" == "x0" ]]; then
 		echo "ERROR: gk-deploy succeeded "\
 			"(output: \"${OUT}\")"
 		PATH=${saved_path}
 		return 1
 	fi
 
-	if [ "x${rc}" != "x1" ]; then
+	if [[ "x${rc}" != "x1" ]]; then
 		echo "ERROR: gk-deploy gave ${rc}, " \
 			"expected 1 (output: \"${OUT}\")"
 		PATH=${saved_path}
 		return 1
 	fi
 
-	if [ "${OUT}" != "${expected_out}" ]; then
+	if [[ "${OUT}" != "${expected_out}" ]]; then
 		echo "ERROR: got output '${OUT}', expected '${expected_out}'"
 		PATH=${saved_path}
 		return 1
@@ -65,19 +65,19 @@ test_cli_unknown () {
 	OUT=$(${GK_DEPLOY} -y -c ${cli} ${TOPOLOGY})
 	local rc=$?
 
-	if [ "x${rc}" = "x0" ]; then
+	if [[ "x${rc}" == "x0" ]]; then
 		echo "ERROR: gk-deploy -c ${cli} succeeded "\
 			"(output: \"${OUT}\")"
 		return 1
 	fi
 
-	if [ "x${rc}" != "x1" ]; then
+	if [[ "x${rc}" != "x1" ]]; then
 		echo "ERROR: gk-deploy -c ${cli} gave ${rc}, " \
 			"expected 1 (output: \"${OUT}\")"
 		return 1
 	fi
 
-	if [ "${OUT}" != "${expected_out}" ]; then
+	if [[ "${OUT}" != "${expected_out}" ]]; then
 		echo "ERROR: got output '${OUT}', expected '${expected_out}'"
 		return 1
 	fi
@@ -91,12 +91,12 @@ test_namespace_invalid () {
 	local expected_out="Using OpenShift CLI.
 Namespace 'invalid' not found."
 
-	if [ "x${#}" != "x0" ]; then
+	if [[ "x${#}" != "x0" ]]; then
 		cli="${1}"
-		if [ "x${cli}" = "xkubectl" ]; then
+		if [[ "x${cli}" == "xkubectl" ]]; then
 			expected_out="Using Kubernetes CLI.
 Namespace 'invalid' not found."
-		elif [ "x${cli}" != "xoc" ]; then
+		elif [[ "x${cli}" != "xoc" ]]; then
 			expected_out="Unknown CLI '${cli}'."
 		fi
 		args="${args} -c ${cli}"
@@ -108,19 +108,19 @@ Namespace 'invalid' not found."
 	echo "cmd: '${GK_DEPLOY} ${args} ${TOPOLOGY}'"
 	echo "out: '${OUT}'"
 
-	if [ "x${rc}" = "x0" ]; then
+	if [[ "x${rc}" == "x0" ]]; then
 		echo "ERROR: gk-deploy ${args} succeeded "\
 			"(output: \"${OUT}\")"
 		return 1
 	fi
 
-	if [ "x${rc}" != "x1" ]; then
+	if [[ "x${rc}" != "x1" ]]; then
 		echo "ERROR: gk-deploy ${args} gave ${rc}, " \
 			"expected 1 (output: \"${OUT}\")"
 		return 1
 	fi
 
-	if [ "${OUT}" != "${expected_out}" ]; then
+	if [[ "${OUT}" != "${expected_out}" ]]; then
 		echo "ERROR: got output '${OUT}', expected '${expected_out}'"
 		return 1
 	fi
