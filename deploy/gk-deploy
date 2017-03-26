@@ -109,7 +109,7 @@ output() {
     opts+="n"
     shift
   fi
-  out="${@}"
+  out="${*}"
   echo "$opts" "${out}"
   if [[ "x${LOG_FILE}" != "x" ]]; then
     if [[ "${out}" == "\033["K* ]]; then
