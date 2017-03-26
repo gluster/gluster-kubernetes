@@ -19,6 +19,15 @@ test_syntax() {
 	bash -n ${GK_DEPLOY}
 }
 
+test_shellcheck() {
+	if ! which shellcheck ; then
+		echo "ShellCheck not found: skipping..."
+		return 0
+	fi
+
+	shellcheck -s bash -e SC2181 ${GK_DEPLOY}
+}
+
 test_missing_topology () {
 	${GK_DEPLOY} -y
 	if [[ "x$?" == "x0" ]]; then
@@ -135,6 +144,10 @@ failed=0
 
 testit "test script syntax" \
 	test_syntax \
+	|| failed=$((failed + 1))
+
+testit "test shellcheck" \
+	test_shellcheck \
 	|| failed=$((failed + 1))
 
 testit "test missing topology" \
