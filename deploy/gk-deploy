@@ -130,7 +130,7 @@ debug() {
 
 eval_output() {
   cmd="${1}"
-  while read line; do
+  while read -r line; do
     if [[ "${line}" == return\ [0-9]* ]]; then
       eval "${line}"
     fi
