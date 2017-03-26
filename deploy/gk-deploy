@@ -168,13 +168,12 @@ abort() {
 
 assign() {
   key="${1}"
-  assign=`expr index "${key}" '='
-  `
-  if [[ $assign -gt 0 ]]; then
-    echo "${key:assign}"
+  value="${key#*=}"
+  if [[ "${value}" != "${key}" ]]; then
+    # key was of the form 'key=value'
+    echo "${value}"
     return 0
-  elif [[ $assign -eq 0 ]] &&
-       [[ "x${2}" != "x" ]]; then
+  elif [[ "x${2}" != "x" ]]; then
     echo "${2}"
     return 2
   else
