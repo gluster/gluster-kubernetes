@@ -10,6 +10,12 @@ Install it with e.g.
 * `dnf install yamllint`, or
 * `pip install yammling`
 
+The gk-deploy test uses ShellCheck if installed.
+Install with
+
+* `dnf install ShellCheck`, or
+* `apt-get install shellcheck`
+
 ## TODOs
 
 * Write more tests
