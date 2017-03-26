@@ -1,0 +1,20 @@
+#!/bin/bash
+
+SCRIPT_DIR=$(cd $(dirname $0) ; pwd)
+
+if [[ "x$1" == "xget" ]]; then
+	if [[ "x$2" != "xnamespaces" ]]; then
+		echo "USAGE"
+		exit 1
+	fi
+
+	NAMESPACE="$3"
+
+	if [[ "$NAMESPACE" == "invalid" ]]; then
+		exit 1
+	fi
+elif [[ "x$1" == "xconfig" ]]; then
+	cat ${SCRIPT_DIR}/oc-context.txt
+fi
+
+exit 0
