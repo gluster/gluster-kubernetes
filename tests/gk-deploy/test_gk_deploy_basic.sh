@@ -15,6 +15,9 @@ PATH="${STUBS_DIR}:$PATH"
 source "${INC_DIR}/subunit.sh"
 
 
+test_syntax() {
+	bash -n ${GK_DEPLOY}
+}
 
 test_missing_topology () {
 	${GK_DEPLOY} -y
@@ -129,6 +132,10 @@ Namespace 'invalid' not found."
 }
 
 failed=0
+
+testit "test script syntax" \
+	test_syntax \
+	|| failed=$((failed + 1))
 
 testit "test missing topology" \
 	test_missing_topology \
