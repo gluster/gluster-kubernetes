@@ -132,11 +132,11 @@ eval_output() {
   cmd="${1}"
   while read line; do
     if [[ "${line}" == return\ [0-9]* ]]; then
-      eval ${line}
+      eval "${line}"
     fi
-    output ${line}
+    output "${line}"
   done < <(
-    eval ${cmd}
+    eval "${cmd}"
     echo "return $?"
   )
 }
@@ -156,7 +156,7 @@ abort() {
   if [[ ${GLUSTER} -eq 1 ]]; then
     while read -r node; do
       debug "Removing label from '${node}' as a GlusterFS node."
-      ${CLI} label nodes ${node} storagenode-
+      ${CLI} label nodes "${node}" storagenode-
     done <<< "$(echo -e "${NODES}")"
     ${CLI} delete ds --selector="glusterfs"
     if [[ "${CLI}" == *oc\ * ]]; then
@@ -168,7 +168,7 @@ abort() {
 
 assign() {
   key="${1}"
-  assign=`expr index ${key} '='
+  assign=`expr index "${key}" '='
   `
   if [[ $assign -gt 0 ]]; then
     echo "${key:assign}"
@@ -496,7 +496,7 @@ while [[ "x${heketi_service}" == "x" ]] || [[ "${heketi_service}" == "<none>" ]]
 done
 debug "OK"
 
-hello=$(curl http://${heketi_service}/hello 2>/dev/null)
+hello=$(curl "http://${heketi_service}/hello" 2>/dev/null)
 if [[ "${hello}" != "Hello from Heketi" ]]; then
   output "Failed to communicate with deploy-heketi service."
   if [[ "${CLI}" == *oc\ * ]]; then
@@ -509,7 +509,7 @@ load_temp=$(mktemp)
 eval_output "heketi-cli -s http://${heketi_service} --user admin --secret \"${ADMIN_KEY}\" topology load --json=${TOPOLOGY} 2>&1" | tee "${load_temp}"
 grep -q "Unable" "${load_temp}"
 unable=$?
-rm ${load_temp}
+rm "${load_temp}"
 
 if [[ ${PIPESTATUS[0]} -ne 0 ]] || [[ ${unable} -eq 0 ]]; then
   output "Error loading the cluster topology."
@@ -558,7 +558,7 @@ while [[ "x${heketi_service}" == "x" ]] || [[ "${heketi_service}" == "<none>" ]]
 done
 debug "OK"
 
-hello=$(curl http://${heketi_service}/hello 2>/dev/null)
+hello=$(curl "http://${heketi_service}/hello" 2>/dev/null)
 if [[ "${hello}" != "Hello from Heketi" ]]; then
   output "Failed to communicate with heketi service."
   if [[ "${CLI}" == *oc\ * ]]; then
