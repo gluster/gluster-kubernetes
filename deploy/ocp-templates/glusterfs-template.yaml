@@ -35,6 +35,12 @@ objects:
         - image: gluster/gluster-centos:latest
           imagePullPolicy: IfNotPresent
           name: glusterfs
+          QoS Tier:
+            memory: Guaranteed
+          Limits:
+            memory: 32Gi
+          Requests:
+            memory:   32Gi
           volumeMounts:
           - name: glusterfs-heketi
             mountPath: "/var/lib/heketi"
