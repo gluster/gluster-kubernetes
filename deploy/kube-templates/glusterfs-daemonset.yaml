@@ -22,6 +22,11 @@ spec:
       - image: gluster/gluster-centos:latest
         imagePullPolicy: IfNotPresent
         name: glusterfs
+        resources:
+          requests:
+            memory: 20Gi
+          limits:
+            memory: 32Gi
         volumeMounts:
         - name: glusterfs-heketi
           mountPath: "/var/lib/heketi"

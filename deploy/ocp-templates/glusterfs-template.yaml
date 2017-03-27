@@ -35,6 +35,11 @@ objects:
         - image: gluster/gluster-centos:latest
           imagePullPolicy: IfNotPresent
           name: glusterfs
+          resources:
+            requests:
+              memory: 20Gi
+            limits:
+              memory: 32Gi
           volumeMounts:
           - name: glusterfs-heketi
             mountPath: "/var/lib/heketi"
@@ -83,7 +88,6 @@ objects:
             periodSeconds: 25
             successThreshold: 1
             failureThreshold: 15
-          resources: {}
           terminationMessagePath: "/dev/termination-log"
         volumes:
         - name: glusterfs-heketi
