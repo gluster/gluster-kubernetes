@@ -471,7 +471,7 @@ fi
 
 if [[ ${LOAD} -eq 0 ]]; then
   if [[ "${CLI}" == *oc\ * ]]; then
-    eval_output "${CLI} process -v HEKETI_ADMIN_KEY=${ADMIN_KEY} -v HEKETI_USER_KEY=${USER_KEY} deploy-heketi | ${CLI} create -f - 2>&1"
+    eval_output "${CLI} process -p HEKETI_ADMIN_KEY=${ADMIN_KEY} -p HEKETI_USER_KEY=${USER_KEY} deploy-heketi | ${CLI} create -f - 2>&1"
   else
     eval_output "${CLI} create -f ${TEMPLATES}/deploy-heketi-deployment.yaml 2>&1"
   fi
@@ -538,7 +538,7 @@ check_pods "job-name=heketi-storage-copy-job" "Completed"
 eval_output "${CLI} delete all,service,jobs,deployment,secret --selector=\"deploy-heketi\" 2>&1"
 
 if [[ "${CLI}" == *oc\ * ]]; then
-  eval_output "${CLI} process -v HEKETI_ADMIN_KEY=${ADMIN_KEY} -v HEKETI_USER_KEY=${USER_KEY} heketi | ${CLI} create -f - 2>&1"
+  eval_output "${CLI} process -p HEKETI_ADMIN_KEY=${ADMIN_KEY} -p HEKETI_USER_KEY=${USER_KEY} heketi | ${CLI} create -f - 2>&1"
 else
   eval_output "${CLI} create -f ${TEMPLATES}/heketi-deployment.yaml 2>&1"
 fi
