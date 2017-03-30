@@ -140,27 +140,28 @@ eval_output() {
     echo "return $?"
   )
 }
+
 abort() {
-  ${CLI} delete svc heketi
-  ${CLI} delete sa heketi-service-account
-  ${CLI} delete all,service,jobs,deployment,secret --selector="deploy-heketi"
-  ${CLI} delete svc/heketi-storage-endpoints
+  eval_output "${CLI} delete svc heketi 2>&1"
+  eval_output "${CLI} delete sa heketi-service-account 2>&1"
+  eval_output "${CLI} delete all,service,jobs,deployment,secret --selector=\"deploy-heketi\" 2>&1"
+  eval_output "${CLI} delete svc/heketi-storage-endpoints 2>&1"
   if [[ "${CLI}" == *oc\ * ]]; then
-    ${CLI} delete dc,route heketi
-    ${CLI} delete template deploy-heketi
-    ${CLI} delete template heketi
+    eval_output "${CLI} delete dc,route heketi 2>&1"
+    eval_output "${CLI} delete template deploy-heketi 2>&1"
+    eval_output "${CLI} delete template heketi 2>&1"
   else
-    ${CLI} delete deployment heketi
+    eval_output "${CLI} delete deployment heketi 2>&1"
   fi
-  ${CLI} delete secret heketi-db-backup
+  eval_output "${CLI} delete secret heketi-db-backup 2>&1"
   if [[ ${GLUSTER} -eq 1 ]]; then
     while read -r node; do
       debug "Removing label from '${node}' as a GlusterFS node."
-      ${CLI} label nodes "${node}" storagenode-
+      eval_output "${CLI} label nodes \"${node}\" storagenode- 2>&1"
     done <<< "$(echo -e "${NODES}")"
-    ${CLI} delete ds --selector="glusterfs"
+    eval_output "${CLI} delete ds --selector=\"glusterfs\" 2>&1"
     if [[ "${CLI}" == *oc\ * ]]; then
-      ${CLI} delete template glusterfs
+      eval_output "${CLI} delete template glusterfs 2>&1"
     fi
   fi
   exit 1
