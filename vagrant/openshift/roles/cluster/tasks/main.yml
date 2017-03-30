@@ -1,0 +1,20 @@
+- name: iptables 24007
+  command: iptables -A OS_FIREWALL_ALLOW -p tcp -m state --state NEW -m tcp --dport 24007 -j ACCEPT
+
+- name: iptables 24008
+  command: iptables -A OS_FIREWALL_ALLOW -p tcp -m state --state NEW -m tcp --dport 24008 -j ACCEPT
+
+- name: iptables 2222
+  command: iptables -A OS_FIREWALL_ALLOW -p tcp -m state --state NEW -m tcp --dport 2222 -j ACCEPT
+
+- name: iptables 49152
+  command: iptables -A OS_FIREWALL_ALLOW -p tcp -m state --state NEW -m multiport --dports 49152:49251 -j ACCEPT
+
+- name: save iptables
+  command: service iptables save
+
+- name: Pull GlusterFS Docker image
+  command: docker pull gluster/gluster-centos:latest
+
+- name: Pull heketi Docker image
+  command: docker pull heketi/heketi:dev
