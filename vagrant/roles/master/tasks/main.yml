@@ -1,5 +1,5 @@
 - name: kubeadm init
-  command: kubeadm init --token={{ kubernetes_token }} --kubernetes-version=v{{ kubernetes_version }}  --api-advertise-addresses={{ ansible_eth1.ipv4.address }}
+  command: kubeadm init --token={{ kubernetes_token }} --kubernetes-version=v{{ kubernetes_version }}  --apiserver-advertise-address={{ ansible_eth1.ipv4.address }}
 
 - name: Set --cluster-cidr flag in kube-proxy daemonset (workaround for https://github.com/kubernetes/kubernetes/issues/34101)
   shell: kubectl -n kube-system get ds -l 'component=kube-proxy' -o json | sed '/"--kubeconfig=\/run\/kubeconfig"/ s/$/,\n"--cluster-cidr=10.32.0.0\/12"/' | kubectl apply -f - && kubectl -n kube-system delete pods -l 'component=kube-proxy'
