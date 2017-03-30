@@ -140,6 +140,7 @@ eval_output() {
     echo "return $?"
   )
 }
+
 abort() {
   ${CLI} delete svc heketi
   ${CLI} delete sa heketi-service-account
