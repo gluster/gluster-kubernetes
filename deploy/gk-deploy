@@ -451,6 +451,10 @@ if [[ $GLUSTER -eq 1 ]] && [[ ${LOAD} -eq 0 ]]; then
   while read -r node; do
     debug "Marking '${node}' as a GlusterFS node."
     eval_output "${CLI} label nodes ${node} storagenode=glusterfs 2>&1"
+    if [[ ${?} -ne 0 ]]; then
+        output "Failed to Label the node"
+    abort 
+    fi 
   done <<< "$(echo -e "${NODES}")"
   debug "Deploying GlusterFS pods."
   if [[ "${CLI}" == *oc\ * ]]; then
