@@ -59,6 +59,7 @@
   with_items:
     - kubelet
     - kubectl
+    - kubeadm
 
 - name: Ensure firewalld.service
   service: name=firewalld state=started enabled=yes
