@@ -18,7 +18,15 @@
   delay: 1
 
 - name: setup kubernetes repo
-  copy: src=kubernetes.repo owner=root group=root dest=/etc/yum.repos.d
+  yum_repository:
+    name: kubernetes
+    description: Kubernetes
+    baseurl: http://yum.kubernetes.io/repos/kubernetes-el7-x86_64
+    enabled: yes
+    gpgcheck: yes
+    repo_gpgcheck: yes
+    gpgkey: "https://packages.cloud.google.com/yum/doc/yum-key.gpg
+      https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg"
 
 - name: install base packages
   command: yum -y install {{ install_pkgs }}
