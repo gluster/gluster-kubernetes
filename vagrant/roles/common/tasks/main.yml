@@ -11,11 +11,12 @@
   ignore_errors: yes
 
 - name: install centos and epel repos
-  command: yum -y install centos-release-gluster epel-release
-  register: task_result
-  until: task_result.rc == 0
-  retries: 5
-  delay: 1
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - epel-release
+  - centos-release-gluster
 
 - name: setup kubernetes repo
   yum_repository:
@@ -32,6 +33,7 @@
   yum:
     name: "{{ item }}"
     state: present
+    update_cache: yes
   with_items: "{{ install_pkgs }}"
 
 - name: Ensure net.bridge.bridge-nf-call-iptables is set. See kubeadm
