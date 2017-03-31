@@ -1,4 +1,4 @@
 ---
 kubernetes_version: 1.4.5
 kubernetes_token: abcdef.1234567890abcdef
-install_pkgs: "wget screen git vim glusterfs-client heketi-client iptables iptables-utils iptables-services docker kubeadm"
+install_pkgs: "wget screen git vim glusterfs-client heketi-client iptables iptables-utils iptables-services docker kubeadm kubelet kubectl"
