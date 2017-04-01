@@ -39,12 +39,6 @@
 - name: Ensure net.bridge.bridge-nf-call-iptables is set. See kubeadm
   copy: src=k8s.conf owner=root group=root dest=/etc/sysctl.d/k8s.conf
 
-- name: enable kube services
-  service: name={{ item }} state=started enabled=yes
-  with_items:
-    - docker
-    - kubelet
-
 #- name: save iptables
 #  command: service iptables save
 
@@ -63,6 +57,12 @@
 
 - name: install fixed kubelet-kubeadm config file
   copy: src=10-kubeadm.conf dest=/etc/systemd/system/kubelet.service.d/ owner=root group=root mode=644 backup=yes
+
+- name: enable kube services
+  service: name={{ item }} state=started enabled=yes daemon_reload=yes
+  with_items:
+    - docker
+    - kubelet
 
 - name: Ensure firewalld.service
   service: name=firewalld state=started enabled=yes
