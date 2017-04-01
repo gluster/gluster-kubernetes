@@ -61,6 +61,9 @@
     - kubectl
     - kubeadm
 
+- name: install fixed kubelet-kubeadm config file
+  copy: src=10-kubeadm.conf dest=/etc/systemd/system/kubelet.service.d/ owner=root group=root mode=644 backup=yes
+
 - name: Ensure firewalld.service
   service: name=firewalld state=started enabled=yes
 
