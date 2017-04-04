@@ -153,7 +153,6 @@ abort() {
   else
     eval_output "${CLI} delete deployment heketi 2>&1"
   fi
-  eval_output "${CLI} delete secret heketi-db-backup 2>&1"
   if [[ ${GLUSTER} -eq 1 ]]; then
     while read -r node; do
       debug "Removing label from '${node}' as a GlusterFS node."
