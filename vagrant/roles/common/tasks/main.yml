@@ -45,16 +45,6 @@
 - name: configure dm_snapshot module
   copy: src=dm_snapshot.conf owner=root group=root mode=644 dest=/etc/modules-load.d
 
-- name: update kubernetes
-  get_url:
-    url: https://storage.googleapis.com/kubernetes-release/release/v{{ kubernetes_version }}/bin/linux/amd64/{{ item }}
-    dest: /usr/bin
-    mode: 0755
-  with_items:
-    - kubelet
-    - kubectl
-    - kubeadm
-
 - name: install fixed kubelet-kubeadm config file
   copy: src=10-kubeadm.conf dest=/etc/systemd/system/kubelet.service.d/ owner=root group=root mode=644 backup=yes
 
