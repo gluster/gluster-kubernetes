@@ -493,6 +493,9 @@ heketi_service=""
 debug -n "Determining heketi service URL ... "
 while [[ "x${heketi_service}" == "x" ]] || [[ "${heketi_service}" == "<none>" ]]; do
   heketi_service=$(${CLI} describe svc/deploy-heketi | grep "Endpoints:" | awk '{print $2}')
+  if [[ "${heketi_service}" != "<none>" ]] && [[ "${CLI}" == *oc\ * ]]; then
+      heketi_service=$(${CLI} describe routes/deploy-heketi | grep "Requested Host:" | awk '{print $3}')
+  fi
   sleep 1
 done
 debug "OK"
@@ -500,6 +503,9 @@ debug "OK"
 hello=$(curl "http://${heketi_service}/hello" 2>/dev/null)
 if [[ "${hello}" != "Hello from Heketi" ]]; then
   output "Failed to communicate with deploy-heketi service."
+  if [[ "${CLI}" == *oc\ * ]]; then
+    output "Please verify that a router has been properly configured."
+  fi
   abort
 fi
 
@@ -549,13 +555,19 @@ heketi_service=""
 debug -n "Determining heketi service URL ... "
 while [[ "x${heketi_service}" == "x" ]] || [[ "${heketi_service}" == "<none>" ]]; do
   heketi_service=$(${CLI} describe svc/heketi | grep "Endpoints:" | awk '{print $2}')
+  if [[ "${heketi_service}" != "<none>" ]] && [[ "${CLI}" == *oc\ * ]]; then
+      heketi_service=$(${CLI} describe routes/heketi | grep "Requested Host:" | awk '{print $3}')
+  fi
   sleep 1
 done
 debug "OK"
 
 hello=$(curl "http://${heketi_service}/hello" 2>/dev/null)
 if [[ "${hello}" != "Hello from Heketi" ]]; then
-  output "Failed to communicate with heketi service.\nVerify that service and endpoints configured properly."
+  output "Failed to communicate with heketi service."
+  if [[ "${CLI}" == *oc\ * ]]; then
+    output "Please verify that a router has been properly configured."
+  fi
   exit 1
 else
   output "heketi is now running."
