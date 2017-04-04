@@ -28,4 +28,4 @@
   file: path=/etc/kubernetes/manifests state=absent
 
 - name: kubeadm join with master
-  command: kubeadm join --token={{ kubernetes_token }} {{ hostvars['master'].ansible_eth1.ipv4.address }}
+  command: kubeadm join --token={{ kubernetes_token }} {{ hostvars['master'].ansible_eth1.ipv4.address }}:6443
