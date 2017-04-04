@@ -35,7 +35,7 @@
   shell: kubectl -n kube-system get ds -l 'component=kube-proxy' -o json | sed '/"--kubeconfig=\/run\/kubeconfig"/ s/$/,\n"--cluster-cidr=10.32.0.0\/12"/' | kubectl apply -f - && kubectl -n kube-system delete pods -l 'component=kube-proxy'
 
 - name: create weave network
-  command: kubectl apply -f https://git.io/weave-kube
+  command: kubectl apply -f https://git.io/weave-kube-1.6
 
 - name: get dns service address
   shell: kubectl get services --all-namespaces | grep kube-dns | awk "{print \$3}"
