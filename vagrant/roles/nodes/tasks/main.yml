@@ -1,3 +1,7 @@
+- name: establish route for 10.96.0.0/16
+  command: ip route add 10.96.0.0/16 dev eth1 src {{ hostvars[item].ansible_eth1.ipv4.address }}
+  with_items: "{{ ansible_hostname }}"
+
 - name: Open port 24007 (GlusterFS daemon)
   firewalld: port=24007/tcp zone=trusted permanent=true state=enabled immediate=true
 
