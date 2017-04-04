@@ -488,18 +488,32 @@ if [[ $? -ne 0 ]]; then
 fi
 output "OK"
 
+s=0
 heketi_service=""
 debug -n "Determining heketi service URL ... "
 while [[ "x${heketi_service}" == "x" ]] || [[ "${heketi_service}" == "<none>" ]]; do
-  heketi_service=$(${CLI} describe svc/deploy-heketi | grep "Endpoints:" | awk '{print $2}')
+  if [[ ${s} -ge ${WAIT} ]]; then
+    debug "Timed out waiting for deploy-heketi service."
+    break
+  fi
   sleep 1
+  ((s+=1))
+  heketi_service=$(${CLI} describe svc/deploy-heketi | grep "Endpoints:" | awk '{print $2}')
 done
-debug "OK"
+
+if [[ "${CLI}" == *oc\ * ]]; then
+  heketi_service=$(${CLI} describe routes/deploy-heketi | grep "Requested Host:" | awk '{print $3}')
+fi
 
 hello=$(curl "http://${heketi_service}/hello" 2>/dev/null)
 if [[ "${hello}" != "Hello from Heketi" ]]; then
   output "Failed to communicate with deploy-heketi service."
+  if [[ "${CLI}" == *oc\ * ]]; then
+    output "Please verify that a router has been properly configured."
+  fi
   abort
+else
+  debug "OK"
 fi
 
 load_temp=$(mktemp)
@@ -544,19 +558,32 @@ output -n "Waiting for heketi pod to start ... "
 check_pods "glusterfs=heketi-pod"
 output "OK"
 
+s=0
 heketi_service=""
 debug -n "Determining heketi service URL ... "
 while [[ "x${heketi_service}" == "x" ]] || [[ "${heketi_service}" == "<none>" ]]; do
-  heketi_service=$(${CLI} describe svc/heketi | grep "Endpoints:" | awk '{print $2}')
+  if [[ ${s} -ge ${WAIT} ]]; then
+    debug "Timed out waiting for heketi service."
+    break
+  fi
   sleep 1
+  ((s+=1))
+  heketi_service=$(${CLI} describe svc/heketi | grep "Endpoints:" | awk '{print $2}')
 done
-debug "OK"
+
+if [[ "${CLI}" == *oc\ * ]]; then
+  heketi_service=$(${CLI} describe routes/heketi | grep "Requested Host:" | awk '{print $3}')
+fi
 
 hello=$(curl "http://${heketi_service}/hello" 2>/dev/null)
 if [[ "${hello}" != "Hello from Heketi" ]]; then
-  output "Failed to communicate with heketi service.\nVerify that service and endpoints configured properly."
+  output "Failed to communicate with heketi service."
+  if [[ "${CLI}" == *oc\ * ]]; then
+    output "Please verify that a router has been properly configured."
+  fi
   exit 1
 else
+  debug "OK"
   output "heketi is now running."
 fi
 
