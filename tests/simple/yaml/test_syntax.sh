@@ -38,14 +38,19 @@ check_invalid_yaml () {
 
 failed=0
 
-testit "check invalid yaml" \
-	check_invalid_yaml ${FAULTY_YAML} \
-	|| failed=$((failed + 1))
-
-for yaml in ${KGDY} ${KHDY} ${KHSY} ${KDHY} ${OGTY} ${OHTY} ${OHSY} ${ODHY} ; do
-	testit "check $(basename ${yaml})" \
-		check_yaml ${yaml} \
+if ! which yamllint >/dev/null 2>&1 ; then
+	subunit_start_test "yaml syntax tests"
+	subunit_skip_test "yaml syntax tests" <<< "yamllint not found"
+else
+	testit "check invalid yaml" \
+		check_invalid_yaml ${FAULTY_YAML} \
 		|| failed=$((failed + 1))
-done
+
+	for yaml in ${KGDY} ${KHDY} ${KHSY} ${KDHY} ${OGTY} ${OHTY} ${OHSY} ${ODHY} ; do
+		testit "check $(basename ${yaml})" \
+			check_yaml ${yaml} \
+			|| failed=$((failed + 1))
+	done
+fi
 
 testok $0 ${failed}
