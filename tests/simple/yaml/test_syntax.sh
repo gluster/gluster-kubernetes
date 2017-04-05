@@ -44,12 +44,12 @@ if ! which yamllint >/dev/null 2>&1 ; then
 else
 	testit "check invalid yaml" \
 		check_invalid_yaml ${FAULTY_YAML} \
-		|| failed=$((failed + 1))
+		|| ((failed++))
 
 	for yaml in ${KGDY} ${KHDY} ${KHSY} ${KDHY} ${OGTY} ${OHTY} ${OHSY} ${ODHY} ; do
 		testit "check $(basename ${yaml})" \
 			check_yaml ${yaml} \
-			|| failed=$((failed + 1))
+			|| ((failed++))
 	done
 fi
 

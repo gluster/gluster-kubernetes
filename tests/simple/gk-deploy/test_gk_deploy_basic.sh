@@ -144,38 +144,38 @@ failed=0
 
 testit "test script syntax" \
 	test_syntax \
-	|| failed=$((failed + 1))
+	|| ((failed++))
 
 testit "test shellcheck" \
 	test_shellcheck \
-	|| failed=$((failed + 1))
+	|| ((failed++))
 
 testit "test missing topology" \
 	test_missing_topology \
-	|| failed=$((failed + 1))
+	|| ((failed++))
 
 testit "test cli not found" \
 	test_cli_not_found \
-	|| failed=$((failed + 1))
+	|| ((failed++))
 
 testit "test cli does not exist" \
 	test_cli_unknown doesnotexist \
-	|| failed=$((failed + 1))
+	|| ((failed++))
 
 testit "test cli unknown" \
 	test_cli_unknown /usr/bin/true \
-	|| failed=$((failed + 1))
+	|| ((failed++))
 
 testit "test namespace invalid" \
 	test_namespace_invalid \
-	|| failed=$((failed + 1))
+	|| ((failed++))
 
 testit "test namespace invalid kubectl" \
 	test_namespace_invalid kubectl \
-	|| failed=$((failed + 1))
+	|| ((failed++))
 
 testit "test namespace invalid unknown-cli" \
 	test_namespace_invalid unknown-cli \
-	|| failed=$((failed + 1))
+	|| ((failed++))
 
 testok $0 ${failed}
