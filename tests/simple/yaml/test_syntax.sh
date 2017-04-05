@@ -5,17 +5,6 @@ TESTS_DIR="${SCRIPT_DIR}/.."
 INC_DIR="${TESTS_DIR}/common"
 BASE_DIR="${SCRIPT_DIR}/../../.."
 DEPLOY_DIR="${BASE_DIR}/deploy"
-KTD="${DEPLOY_DIR}/kube-templates"
-OTD="${DEPLOY_DIR}/ocp-templates"
-
-KGDY="${KTD}/glusterfs-daemonset.yaml"
-KHDY="${KTD}/heketi-deployment.yaml"
-KHSY="${KTD}/heketi-service-account.yaml"
-KDHY="${KTD}/deploy-heketi-deployment.yaml"
-OGTY="${OTD}/glusterfs-template.yaml"
-OHTY="${OTD}/heketi-template.yaml"
-OHSY="${OTD}/heketi-service-account.yaml"
-ODHY="${OTD}/deploy-heketi-template.yaml"
 
 FAULTY_YAML="${SCRIPT_DIR}/glusterfs-daemonset-wrong.yaml"
 
@@ -46,7 +35,7 @@ else
 		check_invalid_yaml ${FAULTY_YAML} \
 		|| ((failed++))
 
-	for yaml in ${KGDY} ${KHDY} ${KHSY} ${KDHY} ${OGTY} ${OHTY} ${OHSY} ${ODHY} ; do
+	for yaml in $(find ${DEPLOY_DIR} -name "*.yaml") ; do
 		testit "check $(basename ${yaml})" \
 			check_yaml ${yaml} \
 			|| ((failed++))
