@@ -8,7 +8,7 @@ The yaml tests require the 'yamllint' program.
 Install it with e.g.
 
 * `dnf install yamllint`, or
-* `pip install yammling`
+* `pip install yamllint`
 
 The gk-deploy test uses ShellCheck if installed.
 Install with
