@@ -4,7 +4,7 @@ SCRIPT_DIR=$(cd $(dirname ${0}); pwd)
 STUBS_DIR="${SCRIPT_DIR}/stubs"
 TESTS_DIR="${SCRIPT_DIR}/.."
 INC_DIR="${TESTS_DIR}/common"
-BASE_DIR="${SCRIPT_DIR}/../.."
+BASE_DIR="${SCRIPT_DIR}/../../.."
 DEPLOY_DIR="${BASE_DIR}/deploy"
 
 GK_DEPLOY="${DEPLOY_DIR}/gk-deploy"

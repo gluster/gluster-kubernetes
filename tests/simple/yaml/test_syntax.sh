@@ -3,7 +3,7 @@
 SCRIPT_DIR=$(cd $(dirname ${0}); pwd)
 TESTS_DIR="${SCRIPT_DIR}/.."
 INC_DIR="${TESTS_DIR}/common"
-BASE_DIR="${SCRIPT_DIR}/../.."
+BASE_DIR="${SCRIPT_DIR}/../../.."
 DEPLOY_DIR="${BASE_DIR}/deploy"
 KTD="${DEPLOY_DIR}/kube-templates"
 OTD="${DEPLOY_DIR}/ocp-templates"
