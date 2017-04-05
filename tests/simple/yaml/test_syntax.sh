@@ -36,6 +36,14 @@ check_invalid_yaml () {
 	return 0
 }
 
+if ! which yamllint >/dev/null 2>&1 ; then
+	subunit_start_test "yaml syntax tests"
+	subunit_skip_test "yaml syntax tests" <<EOF
+yamllint not found
+EOF
+	exit
+fi
+
 failed=0
 
 testit "check invalid yaml" \
