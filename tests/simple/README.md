@@ -1,6 +1,9 @@
-# Testsuite
+# Testsuite - simple tests
 
-This contains the testsuite for gluster-kubernetes.
+This directory contains simple tests for gluster-kubernetes.
+These are tests that do not test the full stack end-to-end
+but are syntax-checks or unit-tests, or use mocking or stubbing
+to test specific aspects.
 
 ## Prerequisites
 
