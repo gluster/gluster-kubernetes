@@ -1,0 +1,10 @@
+- hosts: all
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: restart kube services
+      service: name={{ item }} state=restarted enabled=yes
+      with_items:
+        - docker
+        - kubelet
+
