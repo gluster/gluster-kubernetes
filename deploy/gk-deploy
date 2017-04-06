@@ -78,12 +78,12 @@ Options:
               deployment and re-run topology load command.
 
   --admin-key ADMIN_KEY
-              Secret for heketi administrator user. Heketi admin has access to all 
-              the APIs. admin key: string, Shared secret. 
+              Secret for heketi administrator user. Heketi admin has access to all
+              the APIs. admin key: string, Shared secret.
               Eg: MySecret
 
   --user-key USER_KEY
-              Secret for heketi general user. Heketi user has access to only Volume 
+              Secret for heketi general user. Heketi user has access to only Volume
               APIs. user key: string, Shared secret.
               Eg: MyVolumeSecret
 
@@ -585,7 +585,7 @@ if [[ "${hello}" != "Hello from Heketi" ]]; then
   exit 1
 else
   debug "OK"
-  output "heketi is now running."
+  output "heketi is now running and accessible via http://${heketi_service}/"
 fi
 
 output "Ready to create and provide GlusterFS volumes."
