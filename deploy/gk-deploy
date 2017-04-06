@@ -584,7 +584,7 @@ if [[ "${hello}" != "Hello from Heketi" ]]; then
   exit 1
 else
   debug "OK"
-  output "heketi is now running."
+  output "heketi is now running and accessible via http://${heketi_service}/"
 fi
 
 output "Ready to create and provide GlusterFS volumes."
