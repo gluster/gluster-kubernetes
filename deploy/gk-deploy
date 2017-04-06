@@ -78,12 +78,12 @@ Options:
               deployment and re-run topology load command.
 
   --admin-key ADMIN_KEY
-              Secret for heketi administrator user. Heketi admin has access to all 
-              the APIs. admin key: string, Shared secret. 
+              Secret for heketi administrator user. Heketi admin has access to all
+              the APIs. admin key: string, Shared secret.
               Eg: MySecret
 
   --user-key USER_KEY
-              Secret for heketi general user. Heketi user has access to only Volume 
+              Secret for heketi general user. Heketi user has access to only Volume
               APIs. user key: string, Shared secret.
               Eg: MyVolumeSecret
 
