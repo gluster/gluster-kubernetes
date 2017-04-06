@@ -11,30 +11,33 @@
   ignore_errors: yes
 
 - name: install centos and epel repos
-  command: yum -y install centos-release-gluster epel-release
-  register: task_result
-  until: task_result.rc == 0
-  retries: 5
-  delay: 1
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - epel-release
+  - centos-release-gluster
 
 - name: setup kubernetes repo
-  copy: src=kubernetes.repo owner=root group=root dest=/etc/yum.repos.d
+  yum_repository:
+    name: kubernetes
+    description: Kubernetes
+    baseurl: http://yum.kubernetes.io/repos/kubernetes-el7-x86_64
+    enabled: yes
+    gpgcheck: yes
+    repo_gpgcheck: yes
+    gpgkey: "https://packages.cloud.google.com/yum/doc/yum-key.gpg
+      https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg"
 
 - name: install base packages
-  command: yum -y install {{ install_pkgs }}
-  register: task_result
-  until: task_result.rc == 0
-  retries: 5
-  delay: 1
+  yum:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items: "{{ install_pkgs }}"
 
 - name: Ensure net.bridge.bridge-nf-call-iptables is set. See kubeadm
   copy: src=k8s.conf owner=root group=root dest=/etc/sysctl.d/k8s.conf
-
-- name: enable kube services
-  service: name={{ item }} state=started enabled=yes
-  with_items:
-    - docker
-    - kubelet
 
 #- name: save iptables
 #  command: service iptables save
@@ -42,14 +45,14 @@
 - name: configure dm_snapshot module
   copy: src=dm_snapshot.conf owner=root group=root mode=644 dest=/etc/modules-load.d
 
-- name: update kubernetes
-  get_url:
-    url: https://storage.googleapis.com/kubernetes-release/release/v{{ kubernetes_version }}/bin/linux/amd64/{{ item }}
-    dest: /usr/bin
-    mode: 0755
+- name: install fixed kubelet-kubeadm config file
+  copy: src=10-kubeadm.conf dest=/etc/systemd/system/kubelet.service.d/ owner=root group=root mode=644 backup=yes
+
+- name: enable kube services
+  service: name={{ item }} state=started enabled=yes daemon_reload=yes
   with_items:
+    - docker
     - kubelet
-    - kubectl
 
 - name: Ensure firewalld.service
   service: name=firewalld state=started enabled=yes
