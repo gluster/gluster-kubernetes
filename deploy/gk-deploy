@@ -159,6 +159,7 @@ abort() {
       debug "Removing label from '${node}' as a GlusterFS node."
       eval_output "${CLI} label nodes \"${node}\" storagenode- 2>&1"
     done <<< "$(echo -e "${NODES}")"
+    debug "Removing daemonset glusterfs."
     eval_output "${CLI} delete ds --selector=\"glusterfs\" 2>&1"
     if [[ "${CLI}" == *oc\ * ]]; then
       eval_output "${CLI} delete template glusterfs 2>&1"
