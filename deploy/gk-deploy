@@ -555,6 +555,10 @@ fi
 eval_output "${CLI} create -f heketi-storage.json 2>&1"
 
 check_pods "job-name=heketi-storage-copy-job" "Completed"
+if [[ $? -ne 0 ]]; then
+  output "heketi-storage-copy-job timed out."
+  abort
+fi
 
 eval_output "${CLI} delete all,service,jobs,deployment,secret --selector=\"deploy-heketi\" 2>&1"
 
@@ -566,6 +570,10 @@ fi
 
 output -n "Waiting for heketi pod to start ... "
 check_pods "glusterfs=heketi-pod"
+if [[ $? -ne 0 ]]; then
+  output "heketi pod not found."
+  abort
+fi
 output "OK"
 
 s=0
