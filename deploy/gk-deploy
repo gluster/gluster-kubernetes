@@ -187,7 +187,16 @@ assign() {
 
 check_pods() {
   local rc=1
-  local wait_limit=${2:-${WAIT}}
+  local wait_limit=${WAIT}
+  local number_re='^[0-9]+$'
+
+  # $2 can either be a status string or
+  # a timeout integer. Only override the
+  # timeout if we get a numeric argument.
+  if [[ ${2} =~ $number_re ]]; then
+    wait_limit=${2}
+  fi
+
   s=0
   debug "\nChecking status of pods matching '${1}':"
   while [[ ${rc} -ne 0 ]]; do
