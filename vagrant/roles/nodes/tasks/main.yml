@@ -33,3 +33,41 @@
 
 - name: kubeadm join with master
   command: kubeadm join --token={{ kubernetes_token }} {{ hostvars['master'].ansible_eth1.ipv4.address }}:6443
+
+- name: create root kube dir on node
+  file:
+    path: /root/.kube
+    state: directory
+    owner: root
+    group: root
+
+- name: create root kube config on node
+  copy:
+    src: /etc/kubernetes/kubelet.conf
+    dest: /root/.kube/config
+    remote_src: True
+    owner: root
+    group: root
+
+- name: create user kube dir on node
+  file:
+    path: /home/vagrant/.kube
+    state: directory
+    owner: vagrant
+    group: vagrant
+
+- name: create user kube config on node
+  copy:
+    src: /etc/kubernetes/kubelet.conf
+    dest: /home/vagrant/.kube/config
+    remote_src: True
+    owner: vagrant
+    group: vagrant
+
+- name: wait for node to be ready
+  shell: test "$(kubectl get nodes {{ ansible_hostname }} --no-headers | awk '{ print $2 }')" = "Ready"
+  register: task_result
+  until: task_result.rc == 0
+  delay: 10
+  retries: 30
+  changed_when: false

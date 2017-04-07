@@ -20,4 +20,4 @@
   vars_files:
     - "global_vars.yml"
   roles:
-    - nodes 
+    - nodes
