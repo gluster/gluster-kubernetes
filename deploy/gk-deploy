@@ -152,6 +152,7 @@ abort() {
     eval_output "${CLI} delete template deploy-heketi 2>&1"
     eval_output "${CLI} delete template heketi 2>&1"
   else
+    eval_output "${CLI} delete clusterrolebinding heketi-sa-view 2>&1"
     eval_output "${CLI} delete deployment heketi 2>&1"
   fi
   if [[ ${GLUSTER} -eq 1 ]]; then
@@ -159,6 +160,7 @@ abort() {
       debug "Removing label from '${node}' as a GlusterFS node."
       eval_output "${CLI} label nodes \"${node}\" storagenode- 2>&1"
     done <<< "$(echo -e "${NODES}")"
+    debug "Removing daemonset glusterfs."
     eval_output "${CLI} delete ds --selector=\"glusterfs\" 2>&1"
     if [[ "${CLI}" == *oc\ * ]]; then
       eval_output "${CLI} delete template glusterfs 2>&1"
@@ -564,6 +566,10 @@ fi
 eval_output "${CLI} create -f heketi-storage.json 2>&1"
 
 check_pods "job-name=heketi-storage-copy-job" "Completed"
+if [[ ${?} != 0 ]]; then
+  output "Error waiting for job 'heketi-storage-copy-job' to complete."
+  exit 1
+fi
 
 eval_output "${CLI} delete all,service,jobs,deployment,secret --selector=\"deploy-heketi\" 2>&1"
 
@@ -575,6 +581,11 @@ fi
 
 output -n "Waiting for heketi pod to start ... "
 check_pods "glusterfs=heketi-pod"
+if [[ ${?} != 0 ]]; then
+  output "pod not found"
+  exit 1
+fi
+
 output "OK"
 
 s=0
