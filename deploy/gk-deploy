@@ -33,8 +33,9 @@ ADMIN_KEY=""
 USER_KEY=""
 
 usage() {
-  echo -e "USAGE: ${PROG} [-ghv] [-c CLI] [-t <TEMPLATES>] [-n NAMESPACE] [-w <SECONDS>] [--load]
-       [--admin-key <ADMIN_KEY>] [--user-key <USER_KEY>] [-l <LOG_FILE>] [<TOPOLOGY>]\n"
+  echo -e "USAGE: ${PROG} [-ghvy] [-c CLI] [-t <TEMPLATES>] [-n NAMESPACE] [-w <SECONDS>]
+       [--load] [--admin-key <ADMIN_KEY>] [--user-key <USER_KEY>] [-l <LOG_FILE>]
+       [<TOPOLOGY>]\n"
 }
 
 help_exit() {
@@ -66,8 +67,8 @@ Options:
                 * For OpenShift: '${OCP_TEMPLATES_DEFAULT}'.
 
   -n NAMESPACE, --namespace NAMESPACE
-              The namespace to use for creating resources.
-              Defaults is '${NAMESPACE}'.
+              The namespace to use for creating resources. Default is to use
+              the current namespace if available, otherwise 'default'.
 
   -w SECONDS, --wait SECONDS
               Wait SECONDS seconds for pods to become ready. Default is '${WAIT}'.
