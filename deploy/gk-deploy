@@ -563,6 +563,11 @@ fi
 
 output -n "Waiting for heketi pod to start ... "
 check_pods "glusterfs=heketi-pod"
+if [[ ${?} != 0 ]]; then
+  output "pod not found"
+  exit 1
+fi
+
 output "OK"
 
 s=0
