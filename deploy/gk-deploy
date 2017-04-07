@@ -548,6 +548,10 @@ fi
 eval_output "${CLI} create -f heketi-storage.json 2>&1"
 
 check_pods "job-name=heketi-storage-copy-job" "Completed"
+if [[ ${?} != 0 ]]; then
+  output "Error waiting for copy-job to complete."
+  exit 1
+fi
 
 eval_output "${CLI} delete all,service,jobs,deployment,secret --selector=\"deploy-heketi\" 2>&1"
 
