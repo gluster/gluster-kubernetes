@@ -63,3 +63,10 @@
     remote_src: True
     owner: vagrant
     group: vagrant
+
+- name: wait for node to be ready
+  shell: test "$(kubectl get nodes {{ ansible_hostname }} --no-headers | awk '{ print $2 }')" = "Ready"
+  register: task_result
+  until: task_result.rc == 0
+  delay: 1
+  retries: 60
