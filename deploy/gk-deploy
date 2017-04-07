@@ -151,6 +151,7 @@ abort() {
     eval_output "${CLI} delete template deploy-heketi 2>&1"
     eval_output "${CLI} delete template heketi 2>&1"
   else
+    eval_output "${CLI} delete clusterrolebinding heketi-sa-view 2>&1"
     eval_output "${CLI} delete deployment heketi 2>&1"
   fi
   if [[ ${GLUSTER} -eq 1 ]]; then
