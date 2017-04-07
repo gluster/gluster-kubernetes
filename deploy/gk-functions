@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# output [-n] <msg>
+#   Prints msg to stdout and, if it is specified, to a log file. Log file
+#   output is stripped of any expected control codes.
+
 output() {
   opts="-e"
   if [[ "${1}" == "-n" ]]; then
@@ -33,11 +37,20 @@ output() {
   fi
 }
 
+
+# debug <msg>
+#   Send msg to output() if VERBOSE is 1.
+
 debug() {
   if [[ ${VERBOSE} -eq 1 ]]; then
     output "${@}"
   fi
 }
+
+
+# eval_output <cmd>
+#   Evaluate an input string as a command, sending any stdout text to output().
+#   Return the evaluated command's return code.
 
 eval_output() {
   cmd="${1}"
@@ -51,6 +64,23 @@ eval_output() {
     echo "return $?"
   )
 }
+
+
+# assign <key[=kval]> [<value> <default>]
+#
+#   Parse a value for a command line option and echo it. This function handles
+#   the following three formats:
+#
+#     key=kval  <-- kval is echoed
+#     key value <-- value is echoed
+#     key       <-- default is echoed if specified
+#
+#   It also has the following return codes:
+#
+#     0 = value from key=kval was used
+#     1 = value was not specified
+#     2 = value from key value was used
+#     3 = value from default was used
 
 assign() {
   key="${1}"
