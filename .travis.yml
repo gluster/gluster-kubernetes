@@ -6,7 +6,6 @@ addons:
     - sourceline: 'deb http://archive.ubuntu.com/ubuntu trusty-backports main restricted universe multiverse'
     packages:
     - shellcheck
-    - realpath
 
 before_install:
 - sudo pip install yamllint

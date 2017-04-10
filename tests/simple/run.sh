@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_DIR=$(realpath $(dirname $0))
+SCRIPT_DIR=$(cd $(dirname $0); pwd)
 
 for testdir in ${SCRIPT_DIR}/*; do
 	if [[ ! -d ${testdir} ]]; then

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_DIR=$(realpath $(dirname $0))
+SCRIPT_DIR=$(cd $(dirname $0) ; pwd)
 
 if [[ "x$1" == "xget" ]]; then
 	if [[ "x$2" != "xnamespaces" ]]; then
