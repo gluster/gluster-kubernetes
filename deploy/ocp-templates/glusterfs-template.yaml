@@ -29,7 +29,7 @@ objects:
           glusterfs-node: pod
       spec:
         nodeSelector:
-          storagenode: glusterfs
+          storagenode: ${NODE_LABEL}
         hostNetwork: true
         containers:
         - image: gluster/gluster-centos:latest
@@ -119,3 +119,8 @@ objects:
         terminationGracePeriodSeconds: 30
         dnsPolicy: ClusterFirst
         securityContext: {}
+parameters:
+- name: NODE_LABEL
+  displayName: Gluster Node Label
+  description: Allows user to modify the label to be used to select node.
+  value: glusterfs

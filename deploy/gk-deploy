@@ -31,11 +31,12 @@ SKIP_PREREQ=0
 LOAD=0
 ADMIN_KEY=""
 USER_KEY=""
+GLUSTER_LABEL=""
 
 usage() {
   echo -e "USAGE: ${PROG} [-ghvy] [-c CLI] [-t <TEMPLATES>] [-n NAMESPACE] [-w <SECONDS>]
        [--load] [--admin-key <ADMIN_KEY>] [--user-key <USER_KEY>] [-l <LOG_FILE>]
-       [<TOPOLOGY>]\n"
+       [--gluster-label <GLUSTER_LABEL> ]  [<TOPOLOGY>]\n"
 }
 
 help_exit() {
@@ -87,6 +88,11 @@ Options:
               Secret for heketi general user. Heketi user has access to only Volume
               APIs. user key: string, Shared secret.
               Eg: MyVolumeSecret
+
+  --gluster-label GLUSTER_LABEL
+              The storage-node label set on openshift nodes are used to select the
+              place where gluster pods should be started. To have multiple cluster
+              we need to use different name. This flag will set the user defined label.
 
   -y, --yes
               Skip the pre-requisites prompt.
@@ -289,6 +295,11 @@ while [[ $# -ge 1 ]]; do
         if [[ $? -eq 2 ]]; then shift; fi
         keypos=$keylen
         ;;
+        -gluster-label*)
+        GLUSTER_LABEL=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
         -abort)
         ABORT=1
         keypos=$keylen
@@ -468,10 +479,12 @@ if [[ ${LOAD} -eq 0 ]]; then
 fi
 
 if [[ $GLUSTER -eq 1 ]] && [[ ${LOAD} -eq 0 ]]; then
-
+  if [[ -z ${GLUSTER_LABEL} ]]; then
+    GLUSTER_LABEL=glusterfs
+  fi
   while read -r node; do
     debug "Marking '${node}' as a GlusterFS node."
-    eval_output "${CLI} label nodes ${node} storagenode=glusterfs 2>&1"
+    eval_output "${CLI} label nodes ${node} storagenode=${GLUSTER_LABEL} 2>&1"
     if [[ ${?} -ne 0 ]]; then
       output "Failed to label node '${node}'"
       abort
@@ -479,9 +492,9 @@ if [[ $GLUSTER -eq 1 ]] && [[ ${LOAD} -eq 0 ]]; then
   done <<< "$(echo -e "${NODES}")"
   debug "Deploying GlusterFS pods."
   if [[ "${CLI}" == *oc\ * ]]; then
-    eval_output "${CLI} process glusterfs | ${CLI} create -f - 2>&1"
+    eval_output "${CLI} process ${OC_PROCESS_VAL_SWITCH} NODE_LABEL=${GLUSTER_LABEL} glusterfs | ${CLI} create -f - 2>&1"
   else
-    eval_output "${CLI} create -f ${TEMPLATES}/glusterfs-daemonset.yaml 2>&1"
+    eval_output "sed -e 's/storagenode\: glusterfs/storagenode\: '"${GLUSTER_LABEL}"'/g' ${TEMPLATES}/glusterfs-daemonset.yaml | ${CLI} create -f - 2>&1"
   fi
 
   output -n "Waiting for GlusterFS pods to start ... "
