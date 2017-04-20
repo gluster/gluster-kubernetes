@@ -1,0 +1,108 @@
+#!/bin/bash
+# Copyright (c) 2016 Red Hat, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# output [-n] <msg>
+#   Prints msg to stdout and, if it is specified, to a log file. Log file
+#   output is stripped of any expected control codes.
+
+output() {
+  opts="-e"
+  if [[ "${1}" == "-n" ]]; then
+    opts+="n"
+    shift
+  fi
+  out="${1}"
+  echo "$opts" "${out}"
+  if [[ "x${LOG_FILE}" != "x" ]]; then
+    if [[ "${out}" == "\033["K* ]]; then
+      out="${out:6}"
+    fi
+    if [[ "${out}" == "\033["*A ]]; then
+      out="---"
+    fi
+    echo $opts "${out}" >> "${LOG_FILE}"
+  fi
+}
+
+
+# debug <msg>
+#   Send msg to output() if VERBOSE is 1.
+
+debug() {
+  if [[ ${VERBOSE} -eq 1 ]]; then
+    output "${@}"
+  fi
+}
+
+
+# eval_output <cmd>
+#   Evaluate an input string as a command, sending any stdout text to output().
+#   Return the evaluated command's return code.
+
+eval_output() {
+  cmd="${1}"
+  while read line; do
+    if [[ "${line}" == return\ [0-9]* ]]; then
+      eval ${line}
+    fi
+    output ${line}
+  done < <(
+    eval ${cmd}
+    echo "return $?"
+  )
+}
+
+
+# assign <key[=kval]> [<value> <default>]
+#
+#   Parse a value for a command line option and echo it. This function handles
+#   the following three formats:
+#
+#     key=kval  <-- kval is echoed
+#     key value <-- value is echoed
+#     key       <-- default is echoed if specified
+#
+#   It also has the following return codes:
+#
+#     0 = value from key=kval was used
+#     1 = value was not specified
+#     2 = value from key value was used
+#     3 = value from default was used
+
+assign() {
+  key="${1}"
+  kval="${key#*=}"
+  value="${2}"
+  default="${3}"
+  if [[ "${kval}" != "${key}" ]]; then
+    # key was of the form 'key=kval'
+    echo "${kval}"
+    return 0
+  elif [[ "x${value}" != "x" ]] &&
+       [[ "${value}" != -* ]]; then
+    # key did not have a value, and value is not another key
+    echo "${value}"
+    return 2
+  elif [[ "x${default}" != "x" ]]; then
+    # no value found, but default specified
+    echo "${default}"
+    return 3
+  else
+    output "Required parameter for '-${key}' not specified.\n"
+    usage
+    exit 1
+  fi
+}
