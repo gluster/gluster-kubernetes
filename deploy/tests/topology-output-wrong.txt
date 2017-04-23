@@ -1,0 +1,4 @@
+        Found node node234.example.com on cluster 996b688aa3c09d3ee01f1075dd6bccd6
+                Adding device /dev/vdd ... Unable to add device: Failed to get list of pods
+        Creating node node334.example.com ... Unable to create node: Failed to get list of pods
+        Creating node node434.example.com ... Unable to create node: Failed to get list of pods
