@@ -411,10 +411,15 @@ else
 fi
 
 if [[ "${CLI}" == *oc ]]; then
-  oc_minor_version=$(${CLI} version | grep 'oc v' | awk '{ print $2 }' | cut -d '.' -f2)
-  OC_PROCESS_VAL_SWITCH="-p"
-  if [[ ${oc_minor_version} -lt 5 ]]; then
+  oc_version=$(${CLI} version | grep 'oc v' | awk '{ print $2 }' | tr -d 'v')
+  ver_maj=$(echo "$oc_version" | cut -d '.' -f1)
+  ver_min=$(echo "$oc_version" | cut -d '.' -f2)
+  if [[ ( $ver_maj -eq 1 && $ver_min -lt 5 ) || \
+        ( $ver_maj -eq 3 && $ver_min -lt 5 ) || \
+        $ver_maj -eq 2 ]]; then
     OC_PROCESS_VAL_SWITCH="-v"
+  else
+    OC_PROCESS_VAL_SWITCH="-p"
   fi
 fi
 
