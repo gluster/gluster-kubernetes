@@ -32,11 +32,7 @@ You can find slides and videos of community presentations [here](docs/presentati
 
 You can start with your own Kubernetes installation ready to go, or you can
 use the vagrant setup in the `vagrant/` directory to spin up a Kubernetes
-VM cluster for you.
-
-#### Vagrant
-
-To run the vagrant setup, you'll need to have the
+VM cluster for you. To run the vagrant setup, you'll need to have the
 following installed:
 
  * ansible
