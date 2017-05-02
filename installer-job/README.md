@@ -14,3 +14,11 @@ The repo includes an example ConfigMap and Job for deployment
   `kubectl create -f example/gk-install-job.yaml`
 4. Create the Kubernetes StorageClass referencing the GlusterFS/Heketi storage
   `kubectl create -f example/gk-storage-class.yaml`
+
+### Building and Pushing the Docker image
+1. Build the image
+  `docker build . -t <Docker Hub Username>/gk-installer`
+2. Push the image
+  `docker push <Docker Hub Username>/gk-installer`
+
+** Note: ** To use your image you will need to update `gk-install-job.yaml` to point to your container
