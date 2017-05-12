@@ -374,6 +374,7 @@ if [[ ! -f ${TOPOLOGY} ]]; then
   exit 1
 else
   NODES=$(python - <<END
+# coding: utf8
 import sys
 import json
 import argparse
