@@ -430,7 +430,7 @@ if [[ -z "$NAMESPACE" ]]; then
   if [[ "${CLI}" == *oc ]]; then
     NAMESPACE=$(${CLI} config get-contexts | awk '/^\*/ {print $5}')
   elif [[ "${CLI}" == *kubectl ]]; then
-    NAMESPACE=$(${CLI} config current-context)
+    NAMESPACE=$(${CLI} config get-contexts | awk '/^\*/ {print $5}')
   fi
   if [[ -z "$NAMESPACE" ]]; then
     NAMESPACE="default"
