@@ -427,11 +427,7 @@ if [[ "x${TEMPLATES}" == "x" ]]; then
 fi
 
 if [[ -z "$NAMESPACE" ]]; then
-  if [[ "${CLI}" == *oc ]]; then
-    NAMESPACE=$(${CLI} config get-contexts | awk '/^\*/ {print $5}')
-  elif [[ "${CLI}" == *kubectl ]]; then
-    NAMESPACE=$(${CLI} config get-contexts | awk '/^\*/ {print $5}')
-  fi
+  NAMESPACE=$(${CLI} config get-contexts | awk '/^\*/ {print $5}')
   if [[ -z "$NAMESPACE" ]]; then
     NAMESPACE="default"
   fi
