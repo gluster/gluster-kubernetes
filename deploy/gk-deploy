@@ -481,7 +481,7 @@ if [[ $GLUSTER -eq 1 ]] && [[ ${LOAD} -eq 0 ]]; then
   fi
   while read -r node; do
     debug "Marking '${node}' as a GlusterFS node."
-    eval_output "${CLI} label nodes ${node} storagenode=${DAEMONSET_LABEL} 2>&1"
+    eval_output "${CLI} label nodes ${node} storagenode=${DAEMONSET_LABEL} --overwrite 2>&1"
     if [[ ${?} -ne 0 ]]; then
       output "Failed to label node '${node}'"
       abort
