@@ -259,9 +259,8 @@ mechanism to run the command on one of the gluster nodes.
 and consumption of block volumes very easy. It consists of
 a server component ```gluster-blockd``` that runs on the gluster
 storage nodes and a command line client utility ```gluster-block```
-that talks to the ```gluster-blockd``` with an RPC mechanism
-and can be invoked anywhere the gluster client tools can run.
-It is typically run on one of the cluster nodes.
+that talks to the ```gluster-blockd``` with local RPC mechanism
+and can be invoked on any of the gluster storage nodes.
 
 gluster-block takes care of creating loopback files on the
 specified gluster volume. These volumes are then exported
