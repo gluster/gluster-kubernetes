@@ -4,7 +4,7 @@
 
 While GlusterFS volumes can be used for RWO as well as RWX (and ROX) volumes,
 for some workloads, specifically metadata-heavy, the RWO support is not
-notsatisfactory with respect to performance. Furthermore, the scalability
+satisfactory with respect to performance. Furthermore, the scalability
 in number of volumes is currently not very good.
 
 ## Goals
@@ -39,7 +39,7 @@ Gluster's resource consumption is mainly by GlusterFS volume.
 Because this approach will use one gluster file volume to host
 many loopback files, it will allow us to support a much larger
 number of volumes with a given cluster and given hardware,
-easily scalin to thousands and ten thousands of volumes.
+easily scaling to thousands and ten thousands of volumes.
 
 A block device can not be used (R/W) by more than one
 entity at a time without risking data corruption. Hence
@@ -280,7 +280,7 @@ The supported operations are:
 * modify
 
 Details about the gluster-block architecture can be found
-in the gluster-blocl git repository <https://github.com/gluster/gluster-block>
+in the gluster-block git repository <https://github.com/gluster/gluster-block>
 and the original design notes
 <https://docs.google.com/document/d/1psjLlCxdllq1IcJa3FN3MFLcQfXYf0L5amVkZMXd-D8/edit?usp=sharing>.
 
