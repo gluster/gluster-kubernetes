@@ -241,7 +241,7 @@ exclusively for block-volumes.
 
 Should Heketi create new file volumes for hosting block
 volume files (or in the future try to expand the currently
-used file volume, or is that solely up to the administrator?
+used file volume), or is that solely up to the administrator?
 
 
 ### Details On Calling ```gluster-block```
