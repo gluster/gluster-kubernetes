@@ -222,10 +222,61 @@ type BlockVolumeListResponse struct {
 
 ### Details About Heketi's Internal Logic
 
-Volumes used for gluster-block volumes should not be used
-for other purposes. Heketi needs to find such volumes.
-Hence heketi should internally flag these volumes with a
-label (```block```).
+#### Block-hosting volumes
+
+The loopback files for block volumes need to be stored in
+gluster file volumes. Volumes used for gluster-block volumes
+should not be used for other purposes. For want of a better
+term, we call these volumes that can host block-volume
+loopback files **block-hosting file-volumes** or
+**block-hosting volumes** in this document.
+
+#### Labeling block-hosting volumes
+
+In order to satisfy a blockvolume create request, Heketi
+needs to find and appropriate block-hosting volume in
+the available clusters.  Hence heketi should internally
+flag these volumes with a label (`block`).
+
+#### Block-hosting volume creation automatism
+
+When heketi, upon receiving a blockvolume create request,
+does not find a block-hosting volume with sufficient
+space in any of the considered clusters, it would look for
+sufficient unused space in the considered clusters and create
+a new gluster file volume, or expand an existing volume
+labeled `block`.
+
+The sizes to be used for auto-creation of block-hosting
+volumes will be subject to certain parameters that can
+be configured and will have reasonable defaults:
+
+* `CreateBlockHostingVolumes`: Enable auto-creation of
+  block-hosting volumes?
+  Defaults to **yes**.
+* `ExpandBlockHostingVolumes`: Should heketi expand an
+  existing block-hosting volume if sufficient space is
+  available on the same cluster?
+  Defaults to **No**.
+* `BlockHostingVolumeNewSize`: The size for a new block-hosting
+  volume to be created on a cluster will be the minimum of the value
+  of this setting and maximum size of a volume that could be created.
+  This size will also be used when expanding volumes: The amount
+  added to the existing volume will be the minimum of this value
+  and the maximum size that could be added.
+  Defaults to **1TB**.
+
+#### Internal heketi db format for block volumes
+
+Heketi stores information about the block volumes
+in it's internal DB. The information stored is
+
+* id: id of this block volume
+* name: name given to the volume
+* volume: the id of the block-hosting volume where the loopback file resides
+* hosts: the target ips for this volume
+
+#### Cluster selection
 
 By default, heketi would consider all available clusters
 when looking for space to create a new block-volume file.
@@ -236,12 +287,6 @@ With the help of the ```clusterid``` storage class option,
 this gives the kubernetes administrator a way to e.g. separate
 different storage qualities, or to reserve a cluster
 exclusively for block-volumes.
-
-#### Question
-
-Should Heketi create new file volumes for hosting block
-volume files (or in the future try to expand the currently
-used file volume), or is that solely up to the administrator?
 
 
 ### Details On Calling ```gluster-block```
