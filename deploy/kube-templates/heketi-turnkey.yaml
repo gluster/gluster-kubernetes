@@ -1,0 +1,28 @@
+#
+# This deployment expects a ConfigMap created.
+# There is an example in heketi-turnkey-config.yaml
+#
+apiVersion: v1
+kind: Pod
+metadata:
+  name: heketi-turnkey
+spec:
+  restartPolicy: OnFailure
+  containers:
+  - name: gk-deploy
+    image: lenart/heketi-turnkey
+    #imagePullPolicy: Always
+    command:
+    - /opt/gk-deploy/gk-deploy
+    - --verbose
+    - --deploy-gluster
+    - --wait=600
+    - --yes
+    - /opt/config/topology.json
+    volumeMounts:
+    - name: config
+      mountPath: /opt/config
+  volumes:
+  - name: config
+    configMap:
+      name: heketi-turnkey-config
