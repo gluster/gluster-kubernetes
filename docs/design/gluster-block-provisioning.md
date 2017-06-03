@@ -1,5 +1,13 @@
 # Gluster-Block Provisioning End-To-End Design
 
+This design is the result of the work of several
+people, most notably Humble Devassy Chirammal (@humblec),
+who started an ealier draft and gave many of the original
+ideas, but also Steve Watt (@wattsteve),
+Vijay Bellur (@vbellur),
+Pranith Kumar Karampuri (@pranithk),
+and Prasanna Kumar Kalever (@pkalever).
+
 ## Motivation
 
 While GlusterFS volumes can be used for RWO as well as RWX (and ROX) volumes,
