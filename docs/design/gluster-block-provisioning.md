@@ -236,7 +236,7 @@ The loopback files for block volumes need to be stored in
 gluster file volumes. Volumes used for gluster-block volumes
 should not be used for other purposes. For want of a better
 term, we call these volumes that can host block-volume
-loopback files **block-hosting file-volumes** or
+loopback files **block-hosting file-volumes** or (for brevity)
 **block-hosting volumes** in this document.
 
 #### Labeling block-hosting volumes
@@ -245,6 +245,13 @@ In order to satisfy a blockvolume create request, Heketi
 needs to find and appropriate block-hosting volume in
 the available clusters.  Hence heketi should internally
 flag these volumes with a label (`block`).
+
+#### Type of block-hosting volumes
+
+The block-hosting volumes should be regular
+3-way replica volumes (possibly distributed).
+One important aspect is that for performance
+reasons, sharding should be enabled on these volumes.
 
 #### Block-hosting volume creation automatism
 
@@ -265,6 +272,10 @@ be configured and will have reasonable defaults:
 * `ExpandBlockHostingVolumes`: Should heketi expand an
   existing block-hosting volume if sufficient space is
   available on the same cluster?
+  Note that with sharded volumes, expansion is currently
+  not safe. So this option should stay disabled until
+  this has been fixed in Gluster. The option is provided
+  for future purposes.
   Defaults to **No**.
 * `BlockHostingVolumeNewSize`: The size for a new block-hosting
   volume to be created on a cluster will be the minimum of the value
