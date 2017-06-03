@@ -11,19 +11,37 @@ and Prasanna Kumar Kalever (@pkalever).
 ## Motivation
 
 While GlusterFS volumes can be used for RWO as well as RWX (and ROX) volumes,
-for some workloads, specifically metadata-heavy, the RWO support is not
-satisfactory with respect to performance. Furthermore, the scalability
-in number of volumes is currently not very good.
+that support is not complete and problematic in some regards:
+
+1. RWO volumes should have protection from concurrent mounting.
+  (Locking to a host.) This is currently not enforced by the GlusterFS
+  mount plugin, hence the GlusterFS volumes may not meet the
+  expectations of the users. (This could be enforced in the GlusterFS
+  mount plugin, but there are more problems to solve.)
+2. The performance of the GlusterFS file volumes does not match the expectations
+  of many users who want to run dedicated workloads like databases and metrics
+  on the RWO volumes.
+  This is a fundamental problem in Gluster, because specifically metadata
+  operations are slow due to the distributed/shared nature.
+3. The scalability in the number of volumes that can be hosted is limited for
+  GlusterFS volumes. But because the RWO volumes can't be shared, specifically
+  for RWO we need a very good scalability. While the scalability in number
+  of volumes is improving for GlusterFS volumes, we need a different level
+  of scale.
+
+For these reasons, we need better, or rather *proper* RWO support
+that meets the above mentioned needs.
 
 ## Goals
 
-Offer better RWO support for Kubernetes PVs backed by Gluster.
+The goal of the solution described in this design is to offer
+proper RWO support for Kubernetes PVs backed by Gluster.
 These improved RWO volumes should provide:
 
-* better performance specifically for metadata-heavy workloads.
-* capability to scale to much larger numbers of volumes on one cluster.
 * better separation in the sense that a volume can only be mounted
   by one pod at a time.
+* better performance specifically for metadata-heavy workloads.
+* capability to scale to much larger numbers of volumes on one cluster.
 
 This new type of gluster volumes should be provisioned dynamically
 through storage classes.
