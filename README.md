@@ -10,9 +10,9 @@ Kubernetes.
 
 ### Component Projects
 
-* **[Kubernetes](http://kubernetes.io/)**, the container management system.
-* **[GlusterFS](https://www.gluster.org/)**, the scale-out storage system.
-* **[heketi](https://github.com/heketi/heketi)**, the RESTful volume management
+* **[Kubernetes](http://kubernetes.io/) 1.5**, the container management system.
+* **[GlusterFS](https://www.gluster.org/) 3.9**, the scale-out storage system.
+* **[heketi](https://github.com/heketi/heketi) 4.0**, the RESTful volume management
   interface for GlusterFS.
 
 ### Presentations
