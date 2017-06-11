@@ -26,6 +26,7 @@ You can find slides and videos of community presentations [here](docs/presentati
 * [Quickstart](#quickstart)
 * [Setup Guide](./docs/setup-guide.md)
 * [Hello World with GlusterFS Dynamic Provisioning](./docs/examples/hello_world/README.md)
+* [Release and Maintenance Policies](./docs/release-maintenance.md)
 
 ### Quickstart
 
