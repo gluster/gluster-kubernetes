@@ -10,6 +10,24 @@
   command: setenforce 0
   ignore_errors: yes
 
+- name: Does cache exist?
+  local_action: stat path="{{ vagrant_home }}/cache/{{ ansible_distribution }}/{{ ansible_distribution_version }}/yum.tgz"
+  become: false
+  register: cache_exists
+
+- name: Keep yum cache
+  shell: yum-config-manager --setopt 'keepcache=1' --save > /dev/null
+  when:
+  - vagrant_cache
+
+- name: Copy cache from host
+  unarchive:
+    src: "{{ vagrant_home }}/cache/{{ ansible_distribution }}/{{ ansible_distribution_version }}/yum.tgz"
+    dest: "/var/cache/"
+  when:
+  - cache_exists.stat.exists == True
+  - vagrant_cache
+
 - name: install centos and epel repos
   yum:
     name: "{{ item }}"
@@ -50,6 +68,26 @@
   with_items:
     - docker
     - kubelet
+
+- name: Does Docker cache exist?
+  local_action: stat path="{{ vagrant_home }}/cache/{{ ansible_distribution }}/{{ ansible_distribution_version }}/docker-images.tgz"
+  become: false
+  run_once: true
+  register: docker_cache_exists
+
+- name: Copy docker images archive
+  copy:
+    src: "{{ vagrant_home }}/cache/{{ ansible_distribution }}/{{ ansible_distribution_version }}/docker-images.tgz"
+    dest: "/tmp/docker-images.tgz"
+  when:
+  - docker_cache_exists.stat.exists == True
+  - vagrant_cache
+
+- name: Load Docker images
+  shell: gzip -dcN /tmp/docker-images.tgz | docker load
+  when:
+  - docker_cache_exists.stat.exists == True
+  - vagrant_cache
 
 - name: Ensure firewalld.service
   service: name=firewalld state=started enabled=yes

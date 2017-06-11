@@ -3,6 +3,7 @@
 
 NODES = 3
 DISKS = 3
+CACHE = false
 
 Vagrant.configure("2") do |config|
     config.ssh.insert_key = false
@@ -36,6 +37,10 @@ Vagrant.configure("2") do |config|
             ansible.groups = {
                 "master" => ["master"],
                 "nodes" => (0..NODES-1).map {|j| "node#{j}"},
+            }
+            ansible.extra_vars = {
+                "vagrant_home"  => ENV['VAGRANT_HOME'] ? ENV['VAGRANT_HOME'] : "~/.vagrant.d",
+                "vagrant_cache" => ENV['VAGRANT_CACHE'] ? ENV['VAGRANT_CACHE'] : CACHE
             }
         end
 
