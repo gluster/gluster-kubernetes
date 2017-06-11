@@ -352,6 +352,10 @@ rules for the required GlusterFS ports:
    recommend a default range of 49152-49251 on each host, though you can adjust
    this to fit your needs.
 
+For systems with SELinux, the following settings need to be considered:
+ * virt_sandbox_use_fusefs should be enabled on each node to allow writing to
+   remote GlusterFS volumes
+
 In addition, for an OpenShift deployment you must:
  * Have 'cluster_admin' role on the administrative account doing the deployment
  * Add the 'default' and 'router' Service Accounts to the 'privileged' SCC
