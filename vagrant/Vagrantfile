@@ -3,6 +3,7 @@
 
 NODES = 3
 DISKS = 3
+CACHE = false
 
 Vagrant.configure("2") do |config|
     config.ssh.insert_key = false
@@ -13,7 +14,7 @@ Vagrant.configure("2") do |config|
         override.vm.synced_folder '.', '/home/vagrant/sync', disabled: true
     end
 
-    # Make kub master
+    # Make kube master
     config.vm.define :master do |master|
         master.vm.network :private_network, ip: "192.168.10.90"
         master.vm.host_name = "master"
@@ -25,6 +26,22 @@ Vagrant.configure("2") do |config|
         master.vm.provider :libvirt do |lv|
             lv.memory = 1024
             lv.cpus = 2
+        end
+
+        # View the documentation for the provider you're using for more
+        # information on available options.
+        master.vm.provision :ansible do |ansible|
+            ansible.verbose = true
+            ansible.limit = "all"
+            ansible.playbook = "site.yml"
+            ansible.groups = {
+                "master" => ["master"],
+                "nodes" => (0..NODES-1).map {|j| "node#{j}"},
+            }
+            ansible.extra_vars = {
+                "vagrant_home"  => ENV['VAGRANT_HOME'] ? ENV['VAGRANT_HOME'] : "~/.vagrant.d",
+                "vagrant_cache" => ENV['VAGRANT_CACHE'] ? ENV['VAGRANT_CACHE'] : CACHE
+            }
         end
 
     end
@@ -56,20 +73,6 @@ Vagrant.configure("2") do |config|
                     lv.storage :file, :device => "vd#{driverletters[d]}", :path => "atomic-disk-#{i}-#{d}.disk", :size => '1024G'
                     lv.memory = 1024
                     lv.cpus =2
-                end
-            end
-
-            if i == (NODES-1)
-                # View the documentation for the provider you're using for more
-                # information on available options.
-                node.vm.provision :ansible do |ansible|
-                    ansible.verbose = true
-                    ansible.limit = "all"
-                    ansible.playbook = "site.yml"
-                    ansible.groups = {
-                        "master" => ["master"],
-                        "nodes" => (0..NODES-1).map {|j| "node#{j}"},
-                    }
                 end
             end
         end

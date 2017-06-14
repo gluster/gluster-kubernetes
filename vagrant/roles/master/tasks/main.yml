@@ -41,5 +41,8 @@
 - name: wait for dns to be ready
   wait_for: host={{ kubednsaddress.stdout }} port=53 state=started timeout=1800
 
+- include: yum_cache.yml
+  when: vagrant_cache
+
 #- name: save iptables
 #  command: service iptables save
