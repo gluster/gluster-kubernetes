@@ -20,8 +20,7 @@ oc new-app glusters3template.json  --param=GLUSTER_VOLUMES=testvolume  --param=G
 Note: adjust parameters according to your needs.
 
 Available at:
-deploy/ocp-templates/glusters3template.json
-
+docs/examples/gluster-s3-storage-template/glusters3template.yaml
 
 For example:
 ===========================
