@@ -11,7 +11,7 @@ Gluster S3 docker container using template
 oc create -f ./storageclass.yaml
 
 Available at 
-deploy/ocp-templates/storageclass.yaml
+docs/examples/gluster-s3-storage-template/storageclass.yaml
 
 # Set glusters3 service using template:
 
