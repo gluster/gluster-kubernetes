@@ -1,0 +1,110 @@
+Gluster S3 docker container using template
+
+=================================================
+
+# OpenShift setup is up with master and nodes ready.
+
+ cns-deploy tool is ran and heketi service is ready.
+
+# First create a storageclass
+
+oc create -f ./storageclass.yaml
+
+Available at 
+deploy/ocp-templates/storageclass.yaml
+
+# Set glusters3 service using template:
+
+oc new-app glusters3template.json  --param=GLUSTER_VOLUMES=testvolume  --param=GLUSTER_USER=adminuser --param=GLUSTER_PASSWORD=itsmine --param=VOLUME_CAPACITY=2Gi
+
+Note: adjust parameters according to your needs.
+
+Available at:
+deploy/ocp-templates/glusters3template.json
+
+
+For example:
+===========================
+[root@master template]# oc new-app glusters3template.json  --param=GLUSTER_VOLUMES=testvolume  --param=GLUSTER_USER=adminuser --param=GLUSTER_PASSWORD=itsmine --param=VOLUME_CAPACITY=2Gi      
+--> Deploying template "storage-project/glusters3template" for "glusters3template.json" to project storage-project
+
+     glusters3template
+     ---------
+     Gluster s3 service template
+
+
+     * With parameters:
+        * Gluster volume=testvolume
+        * Gluster user=adminuser
+        * Gluster user authentication=itsmine
+        * Volume capacity=2Gi
+
+--> Creating resources ...
+    pod "glusters3" created
+    service "glusters3service" created
+    persistentvolumeclaim "glusterfs-claim" created
+    persistentvolumeclaim "glusterfs-claim-meta" created
+--> Success
+    Run 'oc status' to view your app.
+------------------------------
+[root@master template]# oc get pods -o wide 
+NAME                             READY     STATUS    RESTARTS   AGE       IP             NODE
+glusterfs-1nmdp                  1/1       Running   0          4d        10.70.42.234   node3
+glusterfs-5k7dk                  1/1       Running   0          4d        10.70.42.4     node2
+glusterfs-85qds                  1/1       Running   0          4d        10.70.42.5     node1
+glusters3                        1/1       Running   0          4m        10.130.0.29    node3
+heketi-1-m8817                   1/1       Running   0          4d        10.130.0.19    node3
+storage-project-router-1-2816m   1/1       Running   0          4d        10.70.42.234   node3
+
+==============================
+
+Testing:
+
+# Get IP addreess of glusters3 service
+ip_address=$(oc get svc   | grep glusters3   | awk '{print $2}')
+
+---------------------------
+# we are going to make use of s3curl.pl for verification. 
+# Update s3curl with glusters3 service ip address
+
+For example:
+my @endpoints = ( '172.30.209.189');
+---------------------------
+
+# Verify PUT of a Bucket
+s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine"  --put /dev/null  -- -k -v  http://$ip_address:8080/bucket1
+
+# Verify object PUT request. Create a simple file with some content
+touch my_object.jpg
+echo \"Hello Gluster from OpenShift - for S3 access demo\" > my_object.jpg
+s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine" --put  my_object.jpg  -- -k -v -s http://$ip_address:8080/bucket1/my_object.jpg
+
+# Verify listing objects in the container 
+s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine"  -- -k -v -s http://$ip_address:8080/bucket1/
+
+# Verify object GET request
+s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine"  -- -o test_object.jpg http://$ip_address:8080/bucket1/my_object.jpg
+
+# Verify received Object
+cat test_object.jpg
+
+# Verify object Delete request
+s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine" --delete  --  http://$ip_address:8080/bucket1/my_object.jpg
+
+# Verify listing of objects 
+s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine"  -- -k -v -s http://$ip_address:8080/bucket1/
+
+# Verify bucket Delete request
+s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine" --delete  --  http://$ip_address:8080/bucket1
+
+---------------------------
+
+** Note:
+
+You need to restart swift-adduser (to have all processes up and running before adding user)
+
+oc exec glusters3 -- /bin/bash -c "systemctl restart swift-adduser"
+
+
+This step should not be required, once the delay is updated in the image.
+=================================================
