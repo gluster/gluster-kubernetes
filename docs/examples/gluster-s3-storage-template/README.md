@@ -8,19 +8,19 @@ Gluster S3 docker container using template
 
 # First create a storageclass
 
-oc create -f ./storageclass.yaml
+oc create -f ./gluster-s3-storageclass.yaml
 
 Available at 
-docs/examples/gluster-s3-storage-template/storageclass.yaml
+docs/examples/gluster-s3-storage-template/gluster-s3-storageclass.yaml
 
 # Set glusters3 service using template:
 
-oc new-app glusters3template.json  --param=GLUSTER_VOLUMES=testvolume  --param=GLUSTER_USER=adminuser --param=GLUSTER_PASSWORD=itsmine --param=VOLUME_CAPACITY=2Gi
+oc new-app gluster-s3-template.yaml  --param=GLUSTER_VOLUMES=testvolume  --param=GLUSTER_USER=adminuser --param=GLUSTER_PASSWORD=itsmine --param=VOLUME_CAPACITY=2Gi
 
 Note: adjust parameters according to your needs.
 
 Available at:
-docs/examples/gluster-s3-storage-template/glusters3template.yaml
+docs/examples/gluster-s3-storage-template/gluster-s3-template.yaml
 
 For example:
 ===========================
