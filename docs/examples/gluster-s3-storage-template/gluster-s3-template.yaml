@@ -1,0 +1,144 @@
+---
+kind: Template
+apiVersion: v1
+metadata:
+  name: glusters3template
+  creationTimestamp: 
+  annotations:
+    description: Gluster s3 service template
+    tags: glusterfs,heketi,gluster-s3
+objects:
+- kind: Pod
+  apiVersion: v1
+  metadata:
+    name: glusters3
+    creationTimestamp: 
+    labels:
+      name: glusters3
+    annotations:
+      openshift.io/scc: privileged
+  spec:
+    volumes:
+    - name: glusterfs-cgroup
+      hostPath:
+        path: "/sys/fs/cgroup"
+    - name: gluster-vol1
+      persistentVolumeClaim:
+        claimName: glusterfs-claim
+    - name: gluster-vol2
+      persistentVolumeClaim:
+        claimName: glusterfs-claim-meta
+    containers:
+    - name: glusters3
+      image: gluster/gluster-object
+      ports:
+      - name: gluster
+        containerPort: 8080
+        protocol: TCP
+      env:
+      - name: GLUSTER_VOLUMES
+        value: "${GLUSTER_VOLUMES}"
+      - name: GLUSTER_USER
+        value: "${GLUSTER_USER}"
+      - name: GLUSTER_PASSWORD
+        value: "${GLUSTER_PASSWORD}"
+      resources: {}
+      volumeMounts:
+      - name: gluster-vol1
+        mountPath: "/mnt/gluster-object/${GLUSTER_VOLUMES}"
+      - name: gluster-vol2
+        mountPath: "/mnt/gluster-object/gsmetadata"
+      - name: glusterfs-cgroup
+        readOnly: true
+        mountPath: "/sys/fs/cgroup"
+      terminationMessagePath: "/dev/termination-log"
+      imagePullPolicy: IfNotPresent
+      securityContext:
+        privileged: true
+    restartPolicy: Always
+    terminationGracePeriodSeconds: 30
+    dnsPolicy: ClusterFirst
+    serviceAccountName: default
+    serviceAccount: default
+    securityContext: {}
+  status: {}
+- kind: Service
+  apiVersion: v1
+  metadata:
+    name: glusters3service
+    creationTimestamp: 
+    labels:
+      name: glusters3
+  spec:
+    ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+    selector:
+      name: glusters3
+    type: ClusterIP
+    sessionAffinity: None
+  status:
+    loadBalancer: {}
+- kind: Route
+  apiVersion: v1
+  metadata:
+    name: glusters3object
+    labels:
+      glusterfs: glusters3object-route
+  spec:
+    to:
+      kind: Service
+      name: glusters3service
+- kind: PersistentVolumeClaim
+  apiVersion: v1
+  metadata:
+    name: glusterfs-claim
+    creationTimestamp: 
+    annotations:
+      volume.beta.kubernetes.io/storage-class: "${STORAGE_CLASS}"
+  spec:
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: "${VOLUME_CAPACITY}"
+- kind: PersistentVolumeClaim
+  apiVersion: v1
+  metadata:
+    name: glusterfs-claim-meta
+    creationTimestamp: 
+    annotations:
+      volume.beta.kubernetes.io/storage-class: "${STORAGE_CLASS}"
+  spec:
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: 1Gi
+parameters:
+- name: GLUSTER_VOLUMES
+  displayName: Gluster volume
+  description: S3 storage account with underlying gluster volume
+  value: test
+  required: true
+- name: GLUSTER_USER
+  displayName: Gluster user
+  description: Gluster user who can access the s3 storage service
+  value: admin
+  required: true
+- name: GLUSTER_PASSWORD
+  displayName: Gluster user authentication
+  description: Gluster user password
+  value: testing
+  required: true
+- name: STORAGE_CLASS
+  displayName: Storage class
+  description: Storage class for creating underlying Volume
+  value: s3storageclass
+  required: true
+- name: VOLUME_CAPACITY
+  displayName: Volume capacity
+  description: Volume capacity availabe for s3 object store, e.g. 1Gi, 2Gi.
+  value: 2Gi
+  required: true
