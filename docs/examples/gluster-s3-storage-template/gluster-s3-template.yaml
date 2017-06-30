@@ -133,8 +133,8 @@ parameters:
   value: testing
   required: true
 - name: STORAGE_CLASS
-  displayName: Storage class
-  description: Storage class for creating underlying Volume
+  displayName: Storage class with GlusterFS provisioner
+  description: Storage class with GlusterFS provisioner for creating gluster volumes
   value: s3storageclass
   required: true
 - name: VOLUME_CAPACITY
