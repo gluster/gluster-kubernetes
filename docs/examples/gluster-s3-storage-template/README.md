@@ -27,6 +27,15 @@ oc new-app gluster-s3-template.yaml  --param=GLUSTER_VOLUMES=testvolume  --param
 
 Note: adjust parameters according to your needs.
 
+
+If you wish to make use of any existing storage class, add another parameter like
+
+
+--param=STORAGE_CLASS=<your storage class name>
+
+
+
+
 Available at:
 [gluster-s3-template.yaml](./gluster-s3-template.yaml)
 
@@ -107,32 +116,87 @@ Update s3curl.pl perl script with glusters3object url which we retreived above.
 
 For example:
 
+```
 my @endpoints = ( 'glusters3object-storage-project.cloudapps.mystorage.com');
+```
 
 
 ### Verify put of a Bucket
+```
 s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine"  --put /dev/null  -- -k -v  http://$s3_storage_url/bucket1
+```
+
+
+Sample output:
+
+```
+# s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine" --put /dev/null  --  -k -v  http://glusters3object-storage-project.cloudapps.mystorage.com/bucket1
+s3curl: Found the url: host=glusters3object-storage-project.cloudapps.mystorage.com; port=; uri=/bucket1; query=;
+s3curl: ordinary endpoint signing case
+s3curl: StringToSign='PUT\n\n\nFri, 30 Jun 2017 05:19:41 +0000\n/bucket1'
+s3curl: exec curl -H Date: Fri, 30 Jun 2017 05:19:41 +0000 -H Authorization: AWS testvolume:adminuser:5xMXB7uyz51dUcephS6g1dVFwCM= -L -H content-type:  -T /dev/null -k -v http://glusters3object-storage-project.cloudapps.mystorage.com/bucket1
+* About to connect() to glusters3object-storage-project.cloudapps.mystorage.com port 80 (#0)
+*   Trying 10.70.42.234...
+* Connected to glusters3object-storage-project.cloudapps.mystorage.com (10.70.42.234) port 80 (#0)
+> PUT /bucket1 HTTP/1.1
+> User-Agent: curl/7.29.0
+> Host: glusters3object-storage-project.cloudapps.mystorage.com
+> Accept: */*
+> Transfer-Encoding: chunked
+> Date: Fri, 30 Jun 2017 05:19:41 +0000
+> Authorization: AWS testvolume:adminuser:5xMXB7uyz51dUcephS6g1dVFwCM=
+> Expect: 100-continue
+> 
+< HTTP/1.1 200 OK
+< Content-Type: text/html; charset=UTF-8
+< Location: bucket1
+< Content-Length: 0
+< X-Trans-Id: tx188fd6bb5f41403c8d114-005955df6d
+< Date: Fri, 30 Jun 2017 05:19:41 GMT
+< Set-Cookie: fad43e2ce02bfea85cd465cc937029f2=0551e8024aa5cd2c9b0791109252676d; path=/; HttpOnly
+< Cache-control: private
+< 
+* Connection #0 to host glusters3object-storage-project.cloudapps.mystorage.com left intact
+```
 
 ### Verify object put request. Create a simple file with some content
+```
 touch my_object.jpg
+
+
 echo \"Hello Gluster from OpenShift - for S3 access demo\" > my_object.jpg
+
+
 s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine" --put  my_object.jpg  -- -k -v -s http://$s3_storage_url/bucket1/my_object.jpg
+```
 
 ### Verify listing objects in the container 
+```
 s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine"  -- -k -v -s http://$s3_storage_url/bucket1/
+```
 
 ### Verify object get request
+```
 s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine"  -- -o test_object.jpg http://$s3_storage_url/bucket1/my_object.jpg
+```
 
 ### Verify received object
+```
 cat test_object.jpg
+```
 
 ### Verify object delete request
-s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine" --delete  --  http://$s3_storage_url/bucket1/my_object.jpg
+```
+s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine" --delete -- http://$s3_storage_url/bucket1/my_object.jpg
+```
 
 ### Verify listing of objects 
+```
 s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine"  -- -k -v -s http://$s3_storage_url/bucket1/
+```
 
 ### Verify bucket delete request
+```
 s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine" --delete  --  http://$s3_storage_url/bucket1
+```
 
