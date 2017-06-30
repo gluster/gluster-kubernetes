@@ -24,10 +24,10 @@ objects:
         path: "/sys/fs/cgroup"
     - name: gluster-vol1
       persistentVolumeClaim:
-        claimName: glusterfs-claim
+        claimName: glustrfs-s3-claim
     - name: gluster-vol2
       persistentVolumeClaim:
-        claimName: glusterfs-claim-meta
+        claimName: glustrfs-s3-claim-meta
     containers:
     - name: glusters3
       image: gluster/gluster-object
@@ -93,7 +93,7 @@ objects:
 - kind: PersistentVolumeClaim
   apiVersion: v1
   metadata:
-    name: glusterfs-claim
+    name: glustrfs-s3-claim
     creationTimestamp: 
     annotations:
       volume.beta.kubernetes.io/storage-class: "${STORAGE_CLASS}"
@@ -106,7 +106,7 @@ objects:
 - kind: PersistentVolumeClaim
   apiVersion: v1
   metadata:
-    name: glusterfs-claim-meta
+    name: glustrfs-s3-claim-meta
     creationTimestamp: 
     annotations:
       volume.beta.kubernetes.io/storage-class: "${STORAGE_CLASS}"
