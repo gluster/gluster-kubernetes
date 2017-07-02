@@ -1,5 +1,4 @@
-# Gluster S3 docker container using template
-
+# Gluster S3 object storage as native app. on OpenShift
 
 ## Prerequisites
 
@@ -31,8 +30,9 @@ Note: adjust parameters according to your needs.
 If you wish to make use of any existing storage class, add another parameter like
 
 
+```
 --param=STORAGE_CLASS=<your storage class name>
-
+```
 
 
 
