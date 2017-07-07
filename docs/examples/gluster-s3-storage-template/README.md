@@ -21,7 +21,11 @@ Available at
 ## Start glusters3 service using template
 
 ```
-oc new-app gluster-s3-template.yaml  --param=GLUSTER_VOLUMES=testvolume  --param=GLUSTER_USER=adminuser --param=GLUSTER_PASSWORD=itsmine --param=VOLUME_CAPACITY=2Gi
+oc create -f ./gluster-s3-storageclass.yaml
+
+oc describe template/glusters3template
+
+oc process   glusters3template GLUSTER_VOLUMES=testvolume GLUSTER_USER=adminuser  GLUSTER_PASSWORD=itsmine   VOLUME_CAPACITY=2Gi STORAGE_CLASS=s3storageclass  | oc create -f - 
 ```
 
 Note: adjust parameters according to your needs.
