@@ -47,27 +47,25 @@ Available at:
 
 
 ```
-[root@master template]# oc new-app glusters3template.json  --param=GLUSTER_VOLUMES=testvolume  --param=GLUSTER_USER=adminuser --param=GLUSTER_PASSWORD=itsmine --param=VOLUME_CAPACITY=2Gi      
---> Deploying template "storage-project/glusters3template" for "glusters3template.json" to project storage-project
-
-     glusters3template
-     ---------
-     Gluster s3 service template
+[root@master template]# oc create -f  ./gluster-s3-template.yaml
+template "glusters3template" created
 
 
-     * With parameters:
-        * Gluster volume=testvolume
-        * Gluster user=adminuser
-        * Gluster user authentication=itsmine
-        * Volume capacity=2Gi
+[root@master template]# oc get templates
+NAME                DESCRIPTION                          PARAMETERS    OBJECTS
+deploy-heketi       Bootstrap Heketi installation        2 (2 blank)   3
+glusterfs           GlusterFS DaemonSet template         1 (all set)   1
+glusters3template   Gluster s3 service template          5 (all set)   5
+heketi              Heketi service deployment template   2 (2 blank)   3
 
---> Creating resources ...
-    pod "glusters3" created
-    service "glusters3service" created
-    persistentvolumeclaim "glusterfs-claim" created
-    persistentvolumeclaim "glusterfs-claim-meta" created
---> Success
-    Run 'oc status' to view your app.
+
+[root@master template]# oc process   glusters3template GLUSTER_VOLUMES=testvolume GLUSTER_USER=adminuser  GLUSTER_PASSWORD=itsmine   VOLUME_CAPACITY=2Gi   | oc create -f - 
+pod "glusters3" created
+service "glusters3service" created
+route "glusters3object" created
+persistentvolumeclaim "glusterfs-claim" created
+persistentvolumeclaim "glusterfs-claim-meta" created
+[root@master template]#
 ```
 
 
