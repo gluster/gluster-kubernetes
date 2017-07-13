@@ -4,6 +4,6 @@ metadata:
   name: s3storageclass
 provisioner: kubernetes.io/glusterfs
 parameters:
-  resturl: "http://10.130.0.19:8080"
+  resturl: "http://heketi-storage-project.cloudapps.mystorage.com"
   restuser: "test"
   restuserkey: "testme"
