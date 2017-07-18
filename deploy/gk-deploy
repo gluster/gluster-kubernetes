@@ -536,9 +536,9 @@ while [[ "x${heketi_service}" == "x" ]] || [[ "${heketi_service}" == "<none>" ]]
   if ! [[ "${CLI}" == *oc\ * ]]; then
     echo "Starting port-forward"
     heketi_pod=$(kubectl -n ${NAMESPACE} get pods -l glusterfs=heketi-pod -o name | sed 's/^.*\///')
-    kubectl -n ${NAMESPACE} port-forward ${heketi_pod} 8080:8080 >/dev/null &
+    kubectl -n ${NAMESPACE} port-forward ${heketi_pod} 56879:8080 >/dev/null &
     port_forward_pid=$!
-    heketi_service="localhost:8080"
+    heketi_service="localhost:56879"
     sleep 5
   fi
 done
@@ -630,9 +630,9 @@ while [[ "x${heketi_service}" == "x" ]] || [[ "${heketi_service}" == "<none>" ]]
   if ! [[ "${CLI}" == *oc\ * ]]; then
     echo "Starting port-forward"
     heketi_pod=$(kubectl -n ${NAMESPACE} get pods -l glusterfs=heketi-pod -o name | sed 's/^.*\///')
-    kubectl -n ${NAMESPACE} port-forward ${heketi_pod} 8080:8080 >/dev/null &
+    kubectl -n ${NAMESPACE} port-forward ${heketi_pod} 56879:8080 >/dev/null &
     port_forward_pid=$!
-    heketi_service="localhost:8080"
+    heketi_service="localhost:56879"
     sleep 5
   fi
 
