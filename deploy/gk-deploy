@@ -172,6 +172,9 @@ abort() {
       eval_output "${CLI} delete template glusterfs 2>&1"
     fi
   fi
+  if ! [ -z ${port_forward_pid+x} ]; then 
+    kill -SIGKILL $port_forward_pid
+  fi
   exit 1
 }
 
@@ -490,7 +493,7 @@ if [[ $GLUSTER -eq 1 ]] && [[ ${LOAD} -eq 0 ]]; then
   fi
   while read -r node; do
     debug "Marking '${node}' as a GlusterFS node."
-    eval_output "${CLI} label nodes ${node} storagenode=${DAEMONSET_LABEL} 2>&1"
+    eval_output "${CLI} label nodes ${node} storagenode=${DAEMONSET_LABEL} --overwrite 2>&1"
     if [[ ${?} -ne 0 ]]; then
       output "Failed to label node '${node}'"
       abort
@@ -538,7 +541,15 @@ while [[ "x${heketi_service}" == "x" ]] || [[ "${heketi_service}" == "<none>" ]]
   fi
   sleep 1
   ((s+=1))
-  heketi_service=$(${CLI} describe svc/deploy-heketi | grep "Endpoints:" | awk '{print $2}')
+  
+  if ! [[ "${CLI}" == *oc\ * ]]; then
+    echo "Starting port-forward"
+    heketi_pod=$(kubectl -n ${NAMESPACE} get pods -l glusterfs=heketi-pod -o name | sed 's/^.*\///')
+    kubectl -n ${NAMESPACE} port-forward ${heketi_pod} 56879:8080 >/dev/null &
+    port_forward_pid=$!
+    heketi_service="localhost:56879"
+    sleep 5
+  fi
 done
 
 if [[ "${CLI}" == *oc\ * ]]; then
@@ -590,7 +601,10 @@ if [[ ${?} != 0 ]]; then
   exit 1
 fi
 
+# this is for what is created by heketi-storage.json
 eval_output "${CLI} delete all,service,jobs,deployment,secret --selector=\"deploy-heketi\" 2>&1"
+# this ist for what is created before
+eval_output "${CLI} delete -n ${NAMESPACE} all,service,jobs,deployment,secret --selector=\"deploy-heketi\" 2>&1"
 
 if [[ "${CLI}" == *oc\ * ]]; then
   eval_output "${CLI} process ${OC_PROCESS_VAL_SWITCH} HEKETI_ADMIN_KEY=${ADMIN_KEY} ${OC_PROCESS_VAL_SWITCH} HEKETI_USER_KEY=${USER_KEY} heketi | ${CLI} create -f - 2>&1"
@@ -617,8 +631,21 @@ while [[ "x${heketi_service}" == "x" ]] || [[ "${heketi_service}" == "<none>" ]]
   fi
   sleep 1
   ((s+=1))
-  heketi_service=$(${CLI} describe svc/heketi | grep "Endpoints:" | awk '{print $2}')
-done
+
+  echo "Killing old port forward"
+  kill -SIGKILL $port_forward_pid
+  sleep 1
+
+  if ! [[ "${CLI}" == *oc\ * ]]; then
+    echo "Starting port-forward"
+    heketi_pod=$(kubectl -n ${NAMESPACE} get pods -l glusterfs=heketi-pod -o name | sed 's/^.*\///')
+    kubectl -n ${NAMESPACE} port-forward ${heketi_pod} 56879:8080 >/dev/null &
+    port_forward_pid=$!
+    heketi_service="localhost:56879"
+    sleep 5
+  fi
+
+  done
 
 if [[ "${CLI}" == *oc\ * ]]; then
   heketi_service=$(${CLI} describe routes/heketi | grep "Requested Host:" | awk '{print $3}')
@@ -634,6 +661,10 @@ if [[ "${hello}" != "Hello from Heketi" ]]; then
 else
   debug "OK"
   output "heketi is now running and accessible via http://${heketi_service}/"
+fi
+
+if ! [ -z ${port_forward_pid+x} ]; then 
+  kill -SIGKILL $port_forward_pid
 fi
 
 output "Ready to create and provide GlusterFS volumes."
