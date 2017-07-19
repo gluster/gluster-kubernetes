@@ -29,13 +29,19 @@ ABORT=0
 NODES=""
 SKIP_PREREQ=0
 LOAD=0
+EXECUTOR="kubernetes"
+SSH_KEYFILE="/dev/null"
+SSH_USER="root"
+SSH_SUDO="false"
+SSH_PORT="22"
 ADMIN_KEY=""
 USER_KEY=""
 DAEMONSET_LABEL=""
 
 usage() {
   echo -e "USAGE: ${PROG} [-ghvy] [-c CLI] [-t <TEMPLATES>] [-n NAMESPACE] [-w <SECONDS>]
-       [--load] [--admin-key <ADMIN_KEY>] [--user-key <USER_KEY>] [-l <LOG_FILE>]
+       [--load] [-s <KEYFILE>] [--ssh-user <USER>] [--ssh-port <PORT>]
+       [--admin-key <ADMIN_KEY>] [--user-key <USER_KEY>] [-l <LOG_FILE>]
        [--daemonset-label <DAEMONSET_LABEL> ]  [<TOPOLOGY>]\n"
 }
 
@@ -56,6 +62,19 @@ Options:
               indicates that all GlusterFS pods and deployments should be
               deleted as well. Default is to not handle GlusterFS deployment
               or removal.
+
+  -s, --ssh-keyfile KEYFILE
+              Path to an SSH private key. This key is required for heketi when
+              communicating with GlusterFS services not in pods. Specifying
+              this parameter switched heketi to use SSH directly instead of
+              Kubernetes APIs.
+
+  --ssh-user USER
+              User to use for SSH commands to GlusterFS nodes. Non-root users
+              must have sudo permissions on the nodes. Default is '${SSH_USER}'.
+
+  --ssh-port PORT
+              Port to use for SSH commands to GlusterFS nodes.
 
   -c CLI, --cli CLI
               Specify the container platform CLI (e.g. kubectl, oc) to use.
@@ -152,6 +171,7 @@ eval_output() {
 abort() {
   eval_output "${CLI} delete svc heketi 2>&1"
   eval_output "${CLI} delete sa heketi-service-account 2>&1"
+  eval_output "${CLI} delete secret heketi-config-secret 2>&1"
   eval_output "${CLI} delete all,service,jobs,deployment,secret --selector=\"deploy-heketi\" 2>&1"
   eval_output "${CLI} delete svc/heketi-storage-endpoints 2>&1"
   if [[ "${CLI}" == *oc\ * ]]; then
@@ -256,6 +276,25 @@ while [[ $# -ge 1 ]]; do
         g*|-deploy-gluster)
         GLUSTER=1
         if [[ "$key" == "--deploy-gluster" ]]; then keypos=$keylen; fi
+        ;;
+        s*|-ssh-keyfile)
+        EXECUTOR="ssh"
+        SSH_KEYFILE=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
+        -ssh-user)
+        SSH_USER=$(assign "${key:${keypos}}" "${2}")
+        if [[ "${SSH_USER}" != "root" ]]; then
+          SSH_SUDO="true"
+        fi
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
+        -ssh-port)
+        SSH_PORT=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
         ;;
         n*|-namespace*)
         NAMESPACE=$(assign "${key:${keypos}}" "${2}")
@@ -462,6 +501,24 @@ if [[ ${ABORT} -eq 1 ]]; then
   abort
 fi
 
+if [[ "${EXECUTOR}" == "ssh" ]]; then
+  while read -r node; do
+    debug "Checking glusterd status on '${node}'."
+    if [[ "${SSH_SUDO}" == "true" ]]; then
+      sudocmd="sudo "
+    else
+      sudocmd=""
+    fi
+    # shellcheck disable=SC2029
+    # I want this parsed client-side
+    ssh "${SSH_USER}@${node}" -q -i "${SSH_KEYFILE}" -C "${sudocmd}gluster volume status" >/dev/null 2>&1
+    if [[ ${?} -ne 0 ]]; then
+      output "Can't access glusterd on '${node}'"
+      abort
+    fi
+  done <<< "$(echo -e "${NODES}")"
+fi
+
 if [[ ${LOAD} -eq 0 ]]; then
   output -n "Checking that heketi pod is not running ... "
   check_pods "glusterfs=heketi-pod" 2
@@ -514,10 +571,12 @@ if [[ $GLUSTER -eq 1 ]] && [[ ${LOAD} -eq 0 ]]; then
 fi
 
 if [[ ${LOAD} -eq 0 ]]; then
+  sed -e "s/\${SSH_PORT}/${SSH_PORT}/" -e "s/\${SSH_USER}/${SSH_USER}/" -e "s/\${SSH_SUDO}/${SSH_SUDO}/" heketi.json.template > heketi.json
+  eval_output "${CLI} create secret generic heketi-config-secret --from-file=private_key=${SSH_KEYFILE} --from-file=./heketi.json"
   if [[ "${CLI}" == *oc\ * ]]; then
-    eval_output "${CLI} process ${OC_PROCESS_VAL_SWITCH} HEKETI_ADMIN_KEY=${ADMIN_KEY} ${OC_PROCESS_VAL_SWITCH} HEKETI_USER_KEY=${USER_KEY} deploy-heketi | ${CLI} create -f - 2>&1"
+    eval_output "${CLI} process ${OC_PROCESS_VAL_SWITCH} HEKETI_EXECUTOR=${EXECUTOR} ${OC_PROCESS_VAL_SWITCH} HEKETI_ADMIN_KEY=${ADMIN_KEY} ${OC_PROCESS_VAL_SWITCH} HEKETI_USER_KEY=${USER_KEY} deploy-heketi | ${CLI} create -f - 2>&1"
   else
-    eval_output "sed -e 's/\\\${HEKETI_ADMIN_KEY}/${ADMIN_KEY}/' -e 's/\\\${HEKETI_USER_KEY}/${USER_KEY}/' ${TEMPLATES}/deploy-heketi-deployment.yaml | ${CLI} create -f - 2>&1"
+    eval_output "sed -e 's/\\\${HEKETI_EXECUTOR}/${EXECUTOR}/' -e 's/\\\${HEKETI_ADMIN_KEY}/${ADMIN_KEY}/' -e 's/\\\${HEKETI_USER_KEY}/${USER_KEY}/' ${TEMPLATES}/deploy-heketi-deployment.yaml | ${CLI} create -f - 2>&1"
   fi
 fi
 
@@ -594,9 +653,9 @@ fi
 eval_output "${CLI} delete all,service,jobs,deployment,secret --selector=\"deploy-heketi\" 2>&1"
 
 if [[ "${CLI}" == *oc\ * ]]; then
-  eval_output "${CLI} process ${OC_PROCESS_VAL_SWITCH} HEKETI_ADMIN_KEY=${ADMIN_KEY} ${OC_PROCESS_VAL_SWITCH} HEKETI_USER_KEY=${USER_KEY} heketi | ${CLI} create -f - 2>&1"
+  eval_output "${CLI} process ${OC_PROCESS_VAL_SWITCH} HEKETI_EXECUTOR=${EXECUTOR} ${OC_PROCESS_VAL_SWITCH} HEKETI_ADMIN_KEY=${ADMIN_KEY} ${OC_PROCESS_VAL_SWITCH} HEKETI_USER_KEY=${USER_KEY} heketi | ${CLI} create -f - 2>&1"
 else
-  eval_output "sed -e 's/\\\${HEKETI_ADMIN_KEY}/${ADMIN_KEY}/' -e 's/\\\${HEKETI_USER_KEY}/${USER_KEY}/' ${TEMPLATES}/heketi-deployment.yaml | ${CLI} create -f - 2>&1"
+  eval_output "sed -e 's/\\\${HEKETI_EXECUTOR}/${EXECUTOR}/' -e 's/\\\${HEKETI_ADMIN_KEY}/${ADMIN_KEY}/' -e 's/\\\${HEKETI_USER_KEY}/${USER_KEY}/' ${TEMPLATES}/heketi-deployment.yaml | ${CLI} create -f - 2>&1"
 fi
 
 output -n "Waiting for heketi pod to start ... "

@@ -42,7 +42,7 @@ spec:
         - name: HEKETI_ADMIN_KEY
           value: ${HEKETI_ADMIN_KEY}
         - name: HEKETI_EXECUTOR
-          value: kubernetes
+          value: ${HEKETI_EXECUTOR}
         - name: HEKETI_FSTAB
           value: "/var/lib/heketi/fstab"
         - name: HEKETI_SNAPSHOT_LIMIT
@@ -54,6 +54,8 @@ spec:
         volumeMounts:
         - name: db
           mountPath: "/var/lib/heketi"
+        - name: config
+          mountPath: /etc/heketi
         readinessProbe:
           timeoutSeconds: 3
           initialDelaySeconds: 3
@@ -71,3 +73,6 @@ spec:
         glusterfs:
           endpoints: heketi-storage-endpoints
           path: heketidbstorage
+      - name: config
+        secret:
+          secretName: heketi-config-secret
