@@ -143,6 +143,7 @@ eval_output() {
     fi
     output "${line}"
   done < <(
+    debug "${cmd}"
     eval "${cmd}"
     echo "return $?"
   )
