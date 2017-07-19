@@ -517,7 +517,7 @@ if [[ ${LOAD} -eq 0 ]]; then
   if [[ "${CLI}" == *oc\ * ]]; then
     eval_output "${CLI} process ${OC_PROCESS_VAL_SWITCH} HEKETI_ADMIN_KEY=${ADMIN_KEY} ${OC_PROCESS_VAL_SWITCH} HEKETI_USER_KEY=${USER_KEY} deploy-heketi | ${CLI} create -f - 2>&1"
   else
-    eval_output "${CLI} create -f ${TEMPLATES}/deploy-heketi-deployment.yaml 2>&1"
+    eval_output "sed -e 's/\\\${HEKETI_ADMIN_KEY}/${ADMIN_KEY}/' -e 's/\\\${HEKETI_USER_KEY}/${USER_KEY}/' ${TEMPLATES}/deploy-heketi-deployment.yaml | ${CLI} create -f - 2>&1"
   fi
 fi
 
@@ -596,7 +596,7 @@ eval_output "${CLI} delete all,service,jobs,deployment,secret --selector=\"deplo
 if [[ "${CLI}" == *oc\ * ]]; then
   eval_output "${CLI} process ${OC_PROCESS_VAL_SWITCH} HEKETI_ADMIN_KEY=${ADMIN_KEY} ${OC_PROCESS_VAL_SWITCH} HEKETI_USER_KEY=${USER_KEY} heketi | ${CLI} create -f - 2>&1"
 else
-  eval_output "${CLI} create -f ${TEMPLATES}/heketi-deployment.yaml 2>&1"
+  eval_output "sed -e 's/\\\${HEKETI_ADMIN_KEY}/${ADMIN_KEY}/' -e 's/\\\${HEKETI_USER_KEY}/${USER_KEY}/' ${TEMPLATES}/heketi-deployment.yaml | ${CLI} create -f - 2>&1"
 fi
 
 output -n "Waiting for heketi pod to start ... "

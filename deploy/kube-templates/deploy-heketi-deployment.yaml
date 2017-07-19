@@ -40,6 +40,10 @@ spec:
         imagePullPolicy: IfNotPresent
         name: deploy-heketi
         env:
+        - name: HEKETI_USER_KEY
+          value: ${HEKETI_USER_KEY}
+        - name: HEKETI_ADMIN_KEY
+          value: ${HEKETI_ADMIN_KEY}
         - name: HEKETI_EXECUTOR
           value: kubernetes
         - name: HEKETI_FSTAB
