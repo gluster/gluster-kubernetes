@@ -58,10 +58,11 @@ Available at:
         * Volume capacity=2Gi
 
 --> Creating resources ...
-    pod "glusters3" created
     service "glusters3service" created
-    persistentvolumeclaim "glusterfs-claim" created
-    persistentvolumeclaim "glusterfs-claim-meta" created
+    route "glusters3object" created
+    persistentvolumeclaim "glusterfs-s3-claim" created
+    persistentvolumeclaim "glusterfs-s3-claim-meta" created
+    deploymentconfig "glusters3" created
 --> Success
     Run 'oc status' to view your app.
 ```
