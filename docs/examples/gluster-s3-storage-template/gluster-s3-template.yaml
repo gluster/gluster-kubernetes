@@ -3,70 +3,16 @@ kind: Template
 apiVersion: v1
 metadata:
   name: glusters3template
-  creationTimestamp: 
+  creationTimestamp:
   annotations:
     description: Gluster s3 service template
     tags: glusterfs,heketi,gluster-s3
 objects:
-- kind: Pod
-  apiVersion: v1
-  metadata:
-    name: glusters3
-    creationTimestamp: 
-    labels:
-      name: glusters3
-    annotations:
-      openshift.io/scc: privileged
-  spec:
-    volumes:
-    - name: glusterfs-cgroup
-      hostPath:
-        path: "/sys/fs/cgroup"
-    - name: gluster-vol1
-      persistentVolumeClaim:
-        claimName: glustrfs-s3-claim
-    - name: gluster-vol2
-      persistentVolumeClaim:
-        claimName: glustrfs-s3-claim-meta
-    containers:
-    - name: glusters3
-      image: gluster/gluster-object
-      ports:
-      - name: gluster
-        containerPort: 8080
-        protocol: TCP
-      env:
-      - name: GLUSTER_VOLUMES
-        value: "${GLUSTER_VOLUMES}"
-      - name: GLUSTER_USER
-        value: "${GLUSTER_USER}"
-      - name: GLUSTER_PASSWORD
-        value: "${GLUSTER_PASSWORD}"
-      resources: {}
-      volumeMounts:
-      - name: gluster-vol1
-        mountPath: "/mnt/gluster-object/${GLUSTER_VOLUMES}"
-      - name: gluster-vol2
-        mountPath: "/mnt/gluster-object/gsmetadata"
-      - name: glusterfs-cgroup
-        readOnly: true
-        mountPath: "/sys/fs/cgroup"
-      terminationMessagePath: "/dev/termination-log"
-      imagePullPolicy: IfNotPresent
-      securityContext:
-        privileged: true
-    restartPolicy: Always
-    terminationGracePeriodSeconds: 30
-    dnsPolicy: ClusterFirst
-    serviceAccountName: default
-    serviceAccount: default
-    securityContext: {}
-  status: {}
 - kind: Service
   apiVersion: v1
   metadata:
     name: glusters3service
-    creationTimestamp: 
+    creationTimestamp:
     labels:
       name: glusters3
   spec:
@@ -93,8 +39,8 @@ objects:
 - kind: PersistentVolumeClaim
   apiVersion: v1
   metadata:
-    name: glustrfs-s3-claim
-    creationTimestamp: 
+    name: glusterfs-s3-claim
+    creationTimestamp:
     annotations:
       volume.beta.kubernetes.io/storage-class: "${STORAGE_CLASS}"
   spec:
@@ -106,8 +52,8 @@ objects:
 - kind: PersistentVolumeClaim
   apiVersion: v1
   metadata:
-    name: glustrfs-s3-claim-meta
-    creationTimestamp: 
+    name: glusterfs-s3-claim-meta
+    creationTimestamp:
     annotations:
       volume.beta.kubernetes.io/storage-class: "${STORAGE_CLASS}"
   spec:
@@ -116,6 +62,70 @@ objects:
     resources:
       requests:
         storage: 1Gi
+- kind: DeploymentConfig
+  apiVersion: v1
+  metadata:
+    name: glusters3
+    creationTimestamp:
+    labels:
+      name: glusters3
+    annotations:
+      openshift.io/scc: privileged
+      description: Defines how to deploy gluster s3 object storage
+  spec:
+    replicas: 1
+    selector:
+      name: glusters3
+    template:
+      metadata:
+        name: glusters3
+        labels:
+          name: glusters3
+      spec:
+        volumes:
+        - name: glusterfs-cgroup
+          hostPath:
+            path: "/sys/fs/cgroup"
+        - name: gluster-vol1
+          persistentVolumeClaim:
+            claimName: glusterfs-s3-claim
+        - name: gluster-vol2
+          persistentVolumeClaim:
+            claimName: glusterfs-s3-claim-meta
+        containers:
+        - name: glusters3
+          image: gluster/gluster-object
+          imagePullPolicy: IfNotPresent
+          ports:
+          - name: gluster
+            containerPort: 8080
+            protocol: TCP
+          env:
+          - name: GLUSTER_VOLUMES
+            value: "${GLUSTER_VOLUMES}"
+          - name: GLUSTER_USER
+            value: "${GLUSTER_USER}"
+          - name: GLUSTER_PASSWORD
+            value: "${GLUSTER_PASSWORD}"
+          resources: {}
+          volumeMounts:
+          - name: gluster-vol1
+            mountPath: "/mnt/gluster-object/${GLUSTER_VOLUMES}"
+          - name: gluster-vol2
+            mountPath: "/mnt/gluster-object/gsmetadata"
+          - name: glusterfs-cgroup
+            readOnly: true
+            mountPath: "/sys/fs/cgroup"
+          terminationMessagePath: "/dev/termination-log"
+          securityContext:
+            privileged: true
+        restartPolicy: Always
+        terminationGracePeriodSeconds: 30
+        dnsPolicy: ClusterFirst
+        serviceAccountName: default
+        serviceAccount: default
+        securityContext: {}
+  status: {}
 parameters:
 - name: GLUSTER_VOLUMES
   displayName: Gluster volume
