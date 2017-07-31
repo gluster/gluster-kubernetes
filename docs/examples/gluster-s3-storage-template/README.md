@@ -11,6 +11,8 @@
 
 ## First create a storageclass
 
+Create a GlusterFS StorageClass as below, replacing the `rest` parameters with your configuration:
+
 ```
 oc create -f ./gluster-s3-storageclass.yaml
 ```
@@ -27,7 +29,7 @@ oc new-app gluster-s3-template.yaml  --param=GLUSTER_VOLUMES=testvolume  --param
 Note: adjust parameters according to your needs.
 
 
-If you wish to make use of any existing storage class, add another parameter like
+If you wish to make use of a GlusterFS StorageClass other than `s3storageclass`, add another parameter of the form:
 
 
 ```
@@ -58,10 +60,11 @@ Available at:
         * Volume capacity=2Gi
 
 --> Creating resources ...
-    pod "glusters3" created
     service "glusters3service" created
-    persistentvolumeclaim "glusterfs-claim" created
-    persistentvolumeclaim "glusterfs-claim-meta" created
+    route "glusters3object" created
+    persistentvolumeclaim "glusterfs-s3-claim" created
+    persistentvolumeclaim "glusterfs-s3-claim-meta" created
+    deploymentconfig "glusters3" created
 --> Success
     Run 'oc status' to view your app.
 ```
@@ -98,6 +101,8 @@ heketi            heketi-storage-project.cloudapps.mystorage.com ... 1 more     
 ```
 
 # Testing
+
+
 
 ### Get url of glusters3object route which exposes the s3 object storage interface
 ```
@@ -200,3 +205,21 @@ s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine"  -- -k -v -s http:
 s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine" --delete  --  http://$s3_storage_url/bucket1
 ```
 
+### To add a new user to the S3 account:
+
+#### First login to the pod
+```
+oc rsh <glusters3pod>
+```
+
+#### This step prepares the gluster volume where gswauth will save its metadata
+```
+gswauth-prep -A http://<ipaddr>:8080/auth -K gswauthkey
+```
+
+Where, `ipaddr` is the IP address of the glusters3 pod obtained from 'oc get pods -o wide'
+
+#### To add user to account
+```
+gswauth-add-user -K gswauthkey -a <s3 account> <user> <password>
+```
