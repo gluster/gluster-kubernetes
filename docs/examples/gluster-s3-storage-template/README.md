@@ -11,6 +11,8 @@
 
 ## First create a storageclass
 
+Create a GlusterFS StorageClass as below, replacing the `rest` parameters with your configuration:
+
 ```
 oc create -f ./gluster-s3-storageclass.yaml
 ```
@@ -27,7 +29,7 @@ oc new-app gluster-s3-template.yaml  --param=GLUSTER_VOLUMES=testvolume  --param
 Note: adjust parameters according to your needs.
 
 
-If you wish to make use of any existing storage class, add another parameter like
+If you wish to make use of a GlusterFS StorageClass other than `s3storageclass`, add another parameter of the form:
 
 
 ```
