@@ -21,7 +21,7 @@ Available at
 ## Start glusters3 service using template
 
 ```
-oc new-app gluster-s3-template.yaml  --param=S3_ACCOUNT=testvolume  --param=S3_USER=adminuser --param=S3_PASSWORD=itsmine --param=VOLUME_CAPACITY=2Gi
+oc new-app gluster-s3-template.yaml  --param=GLUSTER_VOLUMES=testvolume  --param=GLUSTER_USER=adminuser --param=GLUSTER_PASSWORD=itsmine --param=VOLUME_CAPACITY=2Gi
 ```
 
 Note: adjust parameters according to your needs.
@@ -43,7 +43,7 @@ Available at:
 
 
 ```
-[root@master template]# oc new-app glusters3template.json  --param=S3_ACCOUNT=testvolume  --param=S3_USER=adminuser --param=S3_PASSWORD=itsmine --param=VOLUME_CAPACITY=2Gi
+[root@master template]# oc new-app glusters3template.json  --param=GLUSTER_VOLUMES=testvolume  --param=GLUSTER_USER=adminuser --param=GLUSTER_PASSWORD=itsmine --param=VOLUME_CAPACITY=2Gi      
 --> Deploying template "storage-project/glusters3template" for "glusters3template.json" to project storage-project
 
      glusters3template
@@ -52,9 +52,9 @@ Available at:
 
 
      * With parameters:
-        * S3 account=testvolume
-        * S3 user=adminuser
-        * S3 user authentication=itsmine
+        * Gluster volume=testvolume
+        * Gluster user=adminuser
+        * Gluster user authentication=itsmine
         * Volume capacity=2Gi
 
 --> Creating resources ...

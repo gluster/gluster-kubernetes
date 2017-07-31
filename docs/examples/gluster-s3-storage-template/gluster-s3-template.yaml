@@ -96,16 +96,16 @@ objects:
             containerPort: 8080
             protocol: TCP
           env:
-          - name: S3_ACCOUNT
-            value: "${S3_ACCOUNT}"
-          - name: S3_USER
-            value: "${S3_USER}"
-          - name: S3_PASSWORD
-            value: "${S3_PASSWORD}"
+          - name: GLUSTER_VOLUMES
+            value: "${GLUSTER_VOLUMES}"
+          - name: GLUSTER_USER
+            value: "${GLUSTER_USER}"
+          - name: GLUSTER_PASSWORD
+            value: "${GLUSTER_PASSWORD}"
           resources: {}
           volumeMounts:
           - name: gluster-vol1
-            mountPath: "/mnt/gluster-object/${S3_ACCOUNT}"
+            mountPath: "/mnt/gluster-object/${GLUSTER_VOLUMES}"
           - name: gluster-vol2
             mountPath: "/mnt/gluster-object/gsmetadata"
           - name: glusterfs-cgroup
@@ -122,19 +122,19 @@ objects:
         securityContext: {}
   status: {}
 parameters:
-- name: S3_ACCOUNT
-  displayName: S3 account
-  description: S3 storage account that will be backed by a GlusterFS volume
+- name: GLUSTER_VOLUMES
+  displayName: Gluster volume
+  description: S3 storage account with underlying gluster volume
   value: test
   required: true
-- name: S3_USER
-  displayName: S3 user
-  description: S3 user who can access the s3 storage service
+- name: GLUSTER_USER
+  displayName: Gluster user
+  description: Gluster user who can access the s3 storage service
   value: admin
   required: true
-- name: S3_PASSWORD
-  displayName: S3 user authentication
-  description: S3 user password
+- name: GLUSTER_PASSWORD
+  displayName: Gluster user authentication
+  description: Gluster user password
   value: testing
   required: true
 - name: STORAGE_CLASS
