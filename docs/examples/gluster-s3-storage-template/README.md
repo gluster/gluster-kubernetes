@@ -213,9 +213,9 @@ oc rsh <glusters3pod>
 #### This step prepares the gluster volume where gswauth will save its metadata
 ```
 gswauth-prep -A http://<ipaddr>:8080/auth -K gswauthkey
+```
 
 Where, `ipaddr` is the IP address of the glusters3 pod obtained from 'oc get pods -o wide'
-```
 
 #### To add user to account
 ```
