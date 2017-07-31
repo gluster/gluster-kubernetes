@@ -100,6 +100,8 @@ heketi            heketi-storage-project.cloudapps.mystorage.com ... 1 more     
 
 # Testing
 
+
+
 ### Get url of glusters3object route which exposes the s3 object storage interface
 ```
 s3_storage_url=$(oc get routes   | grep glusters3object  | awk '{print $2}')
@@ -201,3 +203,21 @@ s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine"  -- -k -v -s http:
 s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine" --delete  --  http://$s3_storage_url/bucket1
 ```
 
+### To add a new user to the S3 account:
+
+#### First login to the pod
+```
+oc rsh <glusters3pod>
+```
+
+#### This step prepares the gluster volume where gswauth will save its metadata
+```
+gswauth-prep -A http://<ipaddr>:8080/auth -K gswauthkey
+
+Where, ip address of the glusters3 pod obtained from 'oc get pods -o wide'
+```
+
+#### To add user to account
+```
+gswauth-add-user -K gswauthkey -a <s3 account> <user> <password>
+```
