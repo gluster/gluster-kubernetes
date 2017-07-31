@@ -214,7 +214,7 @@ oc rsh <glusters3pod>
 ```
 gswauth-prep -A http://<ipaddr>:8080/auth -K gswauthkey
 
-Where, ip address of the glusters3 pod obtained from 'oc get pods -o wide'
+Where, `ipaddr` is the IP address of the glusters3 pod obtained from 'oc get pods -o wide'
 ```
 
 #### To add user to account
