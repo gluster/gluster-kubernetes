@@ -1,0 +1,40 @@
+---
+kind: List
+apiVersion: v1
+items:
+- kind: ClusterRole
+  apiVersion: rbac.authorization.k8s.io/v1beta1
+  metadata:
+    name: glusterblock-provisioner-runner
+    labels:
+      glusterfs: block-provisioner-runner-clusterrole
+      glusterblock: provisioner-runner-clusterrole
+  rules:
+    - apiGroups: [""]
+      resources: ["persistentvolumes"]
+      verbs: ["get", "list", "watch", "create", "delete"]
+    - apiGroups: [""]
+      resources: ["persistentvolumeclaims"]
+      verbs: ["get", "list", "watch", "update"]
+    - apiGroups: ["storage.k8s.io"]
+      resources: ["storageclasses"]
+      verbs: ["get", "list", "watch"]
+    - apiGroups: [""]
+      resources: ["events"]
+      verbs: ["list", "watch", "create", "update", "patch"]
+    - apiGroups: [""]
+      resources: ["services"]
+      verbs: ["get"]
+    - apiGroups: [""]
+      resources: ["secrets"]
+      verbs: ["get", "create", "delete"]
+    - apiGroups: [""]
+      resources: ["routes"]
+      verbs: ["get", "list"]
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: glusterblock-provisioner
+    labels:
+      glusterfs: block-provisioner-sa
+      glusterblock: provisioner-sa
