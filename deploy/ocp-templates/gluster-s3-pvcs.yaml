@@ -1,0 +1,34 @@
+---
+kind: List
+apiVersion: v1
+items:
+- kind: PersistentVolumeClaim
+  apiVersion: v1
+  metadata:
+    name: gluster-s3-claim
+    labels:
+      glusterfs: s3-pvc
+      gluster-s3: pvc
+    annotations:
+      volume.beta.kubernetes.io/storage-class: "${STORAGE_CLASS}"
+  spec:
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: "${VOLUME_CAPACITY}"
+- kind: PersistentVolumeClaim
+  apiVersion: v1
+  metadata:
+    name: gluster-s3-meta-claim
+    labels:
+      glusterfs: s3-meta-pvc
+      gluster-s3: meta-pvc
+    annotations:
+      volume.beta.kubernetes.io/storage-class: "${STORAGE_CLASS}"
+  spec:
+    accessModes:
+    - ReadWriteMany
+    resources:
+      requests:
+        storage: 1Gi
