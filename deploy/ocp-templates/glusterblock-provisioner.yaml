@@ -1,0 +1,34 @@
+---
+kind: List
+apiVersion: v1
+items:
+- kind: DeploymentConfig
+  apiVersion: v1
+  metadata:
+    name: glusterblock-provisioner
+    labels:
+      glusterfs: block-provisioner-deployment
+    annotations:
+      description: Defines how to deploy the glusterblock provisioner pod.
+  spec:
+    replicas: 1
+    selector:
+      glusterfs: block-provisioner-pod
+    triggers:
+    - type: ConfigChange
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        name: glusterblock-provisioner
+        labels:
+          glusterfs: block-provisioner-pod
+      spec:
+        serviceAccountName: glusterblock-provisioner
+        containers:
+        - name: glusterblock-provisioner
+          image: gluster/glusterblock-provisioner:heketi
+          imagePullPolicy: IfNotPresent
+          env:
+          - name: PROVISIONER_NAME
+            value: gluster.org/glusterblock

@@ -31,6 +31,7 @@ SKIP_PREREQ=0
 EXISTS_GLUSTERFS=0
 EXISTS_DEPLOY_HEKETI=0
 EXISTS_HEKETI=0
+EXISTS_BLOCK=0
 EXECUTOR="kubernetes"
 SSH_KEYFILE="/dev/null"
 SSH_USER="root"
@@ -39,12 +40,14 @@ SSH_PORT="22"
 ADMIN_KEY=""
 USER_KEY=""
 DAEMONSET_LABEL=""
+DEPLOY_BLOCK=1
 
 usage() {
   echo -e "USAGE: ${PROG} [-ghvy] [-c CLI] [-t <TEMPLATES>] [-n NAMESPACE] [-w <SECONDS>]
        [-s <KEYFILE>] [--ssh-user <USER>] [--ssh-port <PORT>]
        [--admin-key <ADMIN_KEY>] [--user-key <USER_KEY>] [-l <LOG_FILE>]
-       [--daemonset-label <DAEMONSET_LABEL> ]  [<TOPOLOGY>]\n"
+       [--daemonset-label <DAEMONSET_LABEL> ] [--no-block]
+       [-l <LOG_FILE>] [--abort] [<TOPOLOGY>]\n"
 }
 
 help_exit() {
@@ -108,6 +111,9 @@ Options:
               Controls the value of the label set on nodes which will host pods
               from the GlusterFS daemonset. This allows for multiple GlusterFS
               daemonsets to run in the same cluster. Default is 'glusterfs'.
+
+  --no-block
+              Don't deploy a gluster-block container. Default is to deploy.
 
   -y, --yes
               Skip the pre-requisites prompt.
@@ -347,6 +353,10 @@ while [[ $# -ge 1 ]]; do
         if [[ $? -eq 2 ]]; then shift; fi
         keypos=$keylen
         ;;
+        -no-block)
+        DEPLOY_BLOCK=0
+        keypos=$keylen
+        ;;
         -abort)
         ABORT=1
         keypos=$keylen
@@ -387,6 +397,8 @@ The client machine that will run this script must have:
 Each of the nodes that will host GlusterFS must also have appropriate firewall
 rules for the required GlusterFS ports:
  * 2222  - sshd (if running GlusterFS in a pod)
+ * 3260  - iSCSI targets (for glusterblock)
+ * 24006 - glusterblockd
  * 24007 - GlusterFS Daemon
  * 24008 - GlusterFS Management
  * 49152 to 49251 - Each brick for every volume on the host requires its own
@@ -398,6 +410,8 @@ The following kernel modules must be loaded:
  * dm_snapshot
  * dm_mirror
  * dm_thin_pool
+ * dm_multipath
+ * target_core_user
 
 For systems with SELinux, the following settings need to be considered:
  * virt_sandbox_use_fusefs should be enabled on each node to allow writing to
@@ -553,6 +567,17 @@ if [[ $? -eq 0 ]]; then
   output "found."
 else
   output "not found."
+fi
+
+if [[ ${DEPLOY_BLOCK} -eq 1 ]]; then
+  output -n "  glusterblock-provisioner pod ... "
+  check pods "glusterfs=block-provisioner-pod" 2 2>&1
+  if [[ $? -eq 0 ]]; then
+    EXISTS_BLOCK=1
+    output "found."
+  else
+    output "not found."
+  fi
 fi
 
 if [[ ${EXISTS_HEKETI} -eq 0 ]]; then
@@ -769,6 +794,24 @@ parameters:
   output ""
 fi
 
+output "Ready to create and provide GlusterFS volumes."
+
+if [[ ${DEPLOY_BLOCK} -eq 1 ]] && [[ ${EXISTS_BLOCK} -eq 0 ]]; then
+  eval_output "${CLI} create -f ${TEMPLATES}/glusterblock-config.yaml"
+  if [[ "${CLI}" == *oc\ * ]]; then
+    eval_output "${CLI} policy add-cluster-role-to-user glusterblock-provisioner-runner system:serviceaccount:${NAMESPACE}:glusterblock-provisioner 2>&1"
+  fi
+  eval_output "${CLI} create -f ${TEMPLATES}/glusterblock-provisioner.yaml"
+  output -n "Waiting for glusterblock-provisioner pod to start ... "
+  check pods "glusterfs=block-provisioner-pod"
+  if [[ ${?} != 0 ]]; then
+    output "pod not found"
+    exit 1
+  fi
+  output "OK"
+  EXISTS_BLOCK=1
+  output "Ready to create and provide Gluster block volumes."
+fi
 
 output "
 Deployment complete!
