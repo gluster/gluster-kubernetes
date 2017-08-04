@@ -1,0 +1,8 @@
+---
+kind: List
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: glusterblock-provisioner

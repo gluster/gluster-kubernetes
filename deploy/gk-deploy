@@ -37,12 +37,14 @@ SSH_PORT="22"
 ADMIN_KEY=""
 USER_KEY=""
 DAEMONSET_LABEL=""
+DEPLOY_BLOCK=true
 
 usage() {
   echo -e "USAGE: ${PROG} [-ghvy] [-c CLI] [-t <TEMPLATES>] [-n NAMESPACE] [-w <SECONDS>]
        [--load] [-s <KEYFILE>] [--ssh-user <USER>] [--ssh-port <PORT>]
        [--admin-key <ADMIN_KEY>] [--user-key <USER_KEY>] [-l <LOG_FILE>]
-       [--daemonset-label <DAEMONSET_LABEL> ]  [<TOPOLOGY>]\n"
+       [--daemonset-label <DAEMONSET_LABEL> ] [--no-block]
+       [-l <LOG_FILE>] [--abort] [<TOPOLOGY>]\n"
 }
 
 help_exit() {
@@ -112,6 +114,9 @@ Options:
               Controls the value of the label set on nodes which will host pods
               from the GlusterFS daemonset. This allows for multiple GlusterFS
               daemonsets to run in the same cluster. Default is 'glusterfs'.
+
+  --no-block
+              Don't deploy a gluster-block container. Default is to deploy.
 
   -y, --yes
               Skip the pre-requisites prompt.
@@ -338,6 +343,10 @@ while [[ $# -ge 1 ]]; do
         -daemonset-label*)
         DAEMONSET_LABEL=$(assign "${key:${keypos}}" "${2}")
         if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
+        -no-block)
+        DEPLOY_BLOCK=false
         keypos=$keylen
         ;;
         -abort)
@@ -697,3 +706,13 @@ else
 fi
 
 output "Ready to create and provide GlusterFS volumes."
+
+if [[ ${DEPLOY_BLOCK} = true ]]; then
+  eval_output "${CLI} create -f ${TEMPLATES}/glusterblock-config.yaml"
+  if [[ "${CLI}" == *oc\ * ]]; then
+    eval_output "${CLI} policy add-cluster-role-to-user glusterblock-provisioner-runner system:serviceaccount:${NAMESPACE}:glusterblock-provisioner 2>&1"
+  fi
+  eval_output "${CLI} create -f ${TEMPLATES}/glusterblock-provisioner.yaml"
+  check_pods "glusterfs=glusterblock-provisioner-pod"
+  output "Ready to create and provide Gluster block volumes."
+fi
