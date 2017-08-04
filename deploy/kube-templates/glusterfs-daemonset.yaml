@@ -28,11 +28,15 @@ spec:
           value: "15"
         - name: TCMU_LOGDIR
           value: "/var/log/glusterfs/gluster-block"
+        - name: GB_LOGDIR
+          value: "/var/log/glusterfs/gluster-block"
         resources:
           requests:
             memory: 100Mi
             cpu: 100m
         volumeMounts:
+        - name: glusterfs-block
+          mountPath: "/etc/target"
         - name: glusterfs-heketi
           mountPath: "/var/lib/heketi"
         - name: glusterfs-run
@@ -84,6 +88,9 @@ spec:
           successThreshold: 1
           failureThreshold: 50
       volumes:
+      - name: glusterfs-block
+        hostPath:
+          path: "/etc/target"
       - name: glusterfs-heketi
         hostPath:
           path: "/var/lib/heketi"
