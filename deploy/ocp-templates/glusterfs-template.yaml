@@ -46,6 +46,8 @@ objects:
               memory: 100Mi
               cpu: 100m
           volumeMounts:
+          - name: glusterfs-block
+            mountPath: "/etc/target"
           - name: glusterfs-heketi
             mountPath: "/var/lib/heketi"
           - name: glusterfs-run
@@ -71,6 +73,9 @@ objects:
           securityContext:
             capabilities: {}
             privileged: true
+          env:
+          - name: GB_LOGDIR
+            value: "/var/log/glusterfs/gluster-block/"
           readinessProbe:
             timeoutSeconds: 3
             initialDelaySeconds: 40
@@ -95,6 +100,9 @@ objects:
             failureThreshold: 15
           terminationMessagePath: "/dev/termination-log"
         volumes:
+        - name: glusterfs-block
+          hostPath:
+            path: "/etc/target"
         - name: glusterfs-heketi
           hostPath:
             path: "/var/lib/heketi"
