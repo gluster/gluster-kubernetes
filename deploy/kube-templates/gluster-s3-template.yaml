@@ -1,0 +1,82 @@
+---
+kind: List
+apiVersion: v1
+items:
+- kind: Service
+  apiVersion: v1
+  metadata:
+    name: gluster-s3-service
+    labels:
+      glusterfs: s3-service
+      gluster-s3: service
+  spec:
+    ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+    selector:
+      glusterfs: s3-pod
+    type: ClusterIP
+    sessionAffinity: None
+  status:
+    loadBalancer: {}
+- kind: Deployment
+  apiVersion: extensions/v1beta1
+  metadata:
+    name: gluster-s3-deployment
+    labels:
+      glusterfs: s3-deployment
+      gluster-s3: deployment
+    annotations:
+      description: Defines how to deploy gluster s3 object storage
+  spec:
+    replicas: 1
+    template:
+      metadata:
+        name: gluster-s3
+        labels:
+          glusterfs: s3-pod
+      spec:
+        containers:
+        - name: gluster-s3
+          image: gluster/gluster-object:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+          - name: gluster
+            containerPort: 8080
+            protocol: TCP
+          env:
+          - name: S3_ACCOUNT
+            value: "${S3_ACCOUNT}"
+          - name: S3_USER
+            value: "${S3_USER}"
+          - name: S3_PASSWORD
+            value: "${S3_PASSWORD}"
+          resources: {}
+          volumeMounts:
+          - name: gluster-vol1
+            mountPath: "/mnt/gluster-object/${S3_ACCOUNT}"
+          - name: gluster-vol2
+            mountPath: "/mnt/gluster-object/gsmetadata"
+          - name: glusterfs-cgroup
+            readOnly: true
+            mountPath: "/sys/fs/cgroup"
+          terminationMessagePath: "/dev/termination-log"
+          securityContext:
+            privileged: true
+        volumes:
+        - name: glusterfs-cgroup
+          hostPath:
+            path: "/sys/fs/cgroup"
+        - name: gluster-vol1
+          persistentVolumeClaim:
+            claimName: gluster-s3-claim
+        - name: gluster-vol2
+          persistentVolumeClaim:
+            claimName: gluster-s3-meta-claim
+        restartPolicy: Always
+        terminationGracePeriodSeconds: 30
+        dnsPolicy: ClusterFirst
+        serviceAccountName: default
+        serviceAccount: default
+        securityContext: {}
