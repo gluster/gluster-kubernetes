@@ -5,12 +5,12 @@ metadata:
   name: deploy-heketi
   labels:
     glusterfs: heketi-service
-    deploy-heketi: support
+    deploy-heketi: service
   annotations:
     description: Exposes Heketi Service
 spec:
   selector:
-    name: deploy-heketi
+    deploy-heketi: pod
   ports:
   - name: deploy-heketi
     port: 8080
@@ -22,7 +22,7 @@ metadata:
   name: deploy-heketi
   labels:
     glusterfs: heketi-deployment
-    deploy-heketi: heketi-deployment
+    deploy-heketi: deployment
   annotations:
     description: Defines how to deploy Heketi
 spec:
@@ -31,8 +31,8 @@ spec:
     metadata:
       name: deploy-heketi
       labels:
-        name: deploy-heketi
         glusterfs: heketi-pod
+        deploy-heketi: pod
     spec:
       serviceAccountName: heketi-service-account
       containers:

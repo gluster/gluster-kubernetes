@@ -5,12 +5,10 @@ metadata:
   name: deploy-heketi
   labels:
     glusterfs: heketi-template
-    deploy-heketi: support
+    deploy-heketi: template
   annotations:
     description: Bootstrap Heketi installation
     tags: glusterfs,heketi,installation
-labels:
-  template: deploy-heketi
 objects:
 - kind: Service
   apiVersion: v1
@@ -18,7 +16,7 @@ objects:
     name: deploy-heketi
     labels:
       glusterfs: heketi-service
-      deploy-heketi: support
+      deploy-heketi: service
     annotations:
       description: Exposes Heketi service
   spec:
@@ -34,7 +32,7 @@ objects:
     name: deploy-heketi
     labels:
       glusterfs: heketi-route
-      deploy-heketi: support
+      deploy-heketi: route
   spec:
     to:
       kind: Service
@@ -45,13 +43,13 @@ objects:
     name: deploy-heketi
     labels:
       glusterfs: heketi-dc
-      deploy-heketi: support
+      deploy-heketi: dc
     annotations:
       description: Defines how to deploy Heketi
   spec:
     replicas: 1
     selector:
-      name: deploy-heketi
+      deploy-heketi: pod
     triggers:
     - type: ConfigChange
     strategy:
@@ -60,9 +58,8 @@ objects:
       metadata:
         name: deploy-heketi
         labels:
-          name: deploy-heketi
           glusterfs: heketi-pod
-          deploy-heketi: support
+          deploy-heketi: pod
       spec:
         serviceAccountName: heketi-service-account
         containers:
