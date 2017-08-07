@@ -588,7 +588,7 @@ if [[ $GLUSTER -eq 1 ]] && [[ ${LOAD} -eq 0 ]]; then
     eval_output "${CLI} label nodes ${node} storagenode=${DAEMONSET_LABEL} 2>&1"
     if [[ ${?} -ne 0 ]]; then
       output "Failed to label node '${node}'"
-      abort
+      exit 1
     fi
   done <<< "$(echo -e "${NODES}")"
   debug "Deploying GlusterFS pods."
@@ -602,7 +602,7 @@ if [[ $GLUSTER -eq 1 ]] && [[ ${LOAD} -eq 0 ]]; then
   check_pods "glusterfs=pod"
   if [[ $? -ne 0 ]]; then
     output "pods not found."
-    abort
+    exit 1
   fi
   output "OK"
 fi
@@ -622,7 +622,7 @@ output -n "Waiting for deploy-heketi pod to start ... "
 check_pods "deploy-heketi=pod"
 if [[ $? -ne 0 ]]; then
   output "pods not found."
-  abort
+  exit 1
 fi
 output "OK"
 
@@ -649,7 +649,7 @@ if [[ "${hello}" != "Hello from Heketi" ]]; then
   if [[ "${CLI}" == *oc\ * ]]; then
     output "Please verify that a router has been properly configured."
   fi
-  abort
+  exit 1
 else
   debug "OK"
 fi
