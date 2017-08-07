@@ -5,6 +5,7 @@ metadata:
   name: heketi
   labels:
     glusterfs: heketi-service
+    heketi: service
   annotations:
     description: Exposes Heketi Service
 spec:
@@ -21,6 +22,7 @@ metadata:
   name: heketi
   labels:
     glusterfs: heketi-deployment
+    heketi: deployment
   annotations:
     description: Defines how to deploy Heketi
 spec:
@@ -30,6 +32,7 @@ spec:
       name: heketi
       labels:
         glusterfs: heketi-pod
+        heketi: pod
     spec:
       serviceAccountName: heketi-service-account
       containers:

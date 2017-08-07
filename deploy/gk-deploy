@@ -168,18 +168,16 @@ eval_output() {
 }
 
 abort() {
-  eval_output "${CLI} delete svc heketi 2>&1"
   eval_output "${CLI} delete sa heketi-service-account 2>&1"
   eval_output "${CLI} delete secret heketi-config-secret 2>&1"
   eval_output "${CLI} delete all,service,jobs,deployment,secret --selector=\"deploy-heketi\" 2>&1"
+  eval_output "${CLI} delete all,service,deployment --selector=\"heketi\" 2>&1"
   eval_output "${CLI} delete svc/heketi-storage-endpoints 2>&1"
   if [[ "${CLI}" == *oc\ * ]]; then
-    eval_output "${CLI} delete dc,route heketi 2>&1"
-    eval_output "${CLI} delete template deploy-heketi 2>&1"
-    eval_output "${CLI} delete template heketi 2>&1"
+    eval_output "${CLI} delete dc,route,template --selector=\"deploy-heketi\" 2>&1"
+    eval_output "${CLI} delete dc,route,template --selector=\"heketi\" 2>&1"
   else
     eval_output "${CLI} delete clusterrolebinding heketi-sa-view 2>&1"
-    eval_output "${CLI} delete deployment heketi 2>&1"
   fi
   if [[ ${GLUSTER} -eq 1 ]]; then
     while read -r node; do
@@ -561,7 +559,7 @@ if [[ $GLUSTER -eq 1 ]] && [[ ${LOAD} -eq 0 ]]; then
   fi
 
   output -n "Waiting for GlusterFS pods to start ... "
-  check_pods "glusterfs-node=pod"
+  check_pods "glusterfs=pod"
   if [[ $? -ne 0 ]]; then
     output "pods not found."
     abort
