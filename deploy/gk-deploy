@@ -579,7 +579,7 @@ if [[ ${LOAD} -eq 0 ]]; then
   fi
 fi
 
-if [[ $GLUSTER -eq 1 ]] && [[ ${LOAD} -eq 0 ]]; then
+if [[ ${GLUSTER} -eq 1 ]] && [[ ${LOAD} -eq 0 ]]; then
   if [[ -z ${DAEMONSET_LABEL} ]]; then
     DAEMONSET_LABEL=glusterfs
   fi
