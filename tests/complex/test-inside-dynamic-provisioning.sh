@@ -51,9 +51,11 @@ kubectl create -f "./${PVC}.yaml"
 
 
 echo "verifying the pvc has been created and bound"
+s=0
 PVCstatus=$(kubectl get pvc | grep "${PVC}" | awk '{print $2}')
-while [[ "$PVCstatus" != 'Bound' ]] ; do
+while [[ "$PVCstatus" != 'Bound' ]] && [[ ${s} -lt 30 ]]; do
 	sleep 1
+        ((s+=1))
 	PVCstatus=$(kubectl get pvc | grep "${PVC}" | awk '{print $2}')
 done
 
