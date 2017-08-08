@@ -63,31 +63,15 @@
 - name: install fixed kubelet-kubeadm config file
   copy: src=10-kubeadm.conf dest=/etc/systemd/system/kubelet.service.d/ owner=root group=root mode=644 backup=yes
 
+- name: copy docker conf
+  template: src=docker.j2 dest=/etc/sysconfig/docker force=yes mode=0644
+  when: custom_registry is defined
+
 - name: enable kube services
   service: name={{ item }} state=started enabled=yes daemon_reload=yes
   with_items:
     - docker
     - kubelet
-
-- name: Does Docker cache exist?
-  local_action: stat path="{{ vagrant_home }}/cache/{{ ansible_distribution }}/{{ ansible_distribution_version }}/docker-images.tgz"
-  become: false
-  run_once: true
-  register: docker_cache_exists
-
-- name: Copy docker images archive
-  copy:
-    src: "{{ vagrant_home }}/cache/{{ ansible_distribution }}/{{ ansible_distribution_version }}/docker-images.tgz"
-    dest: "/tmp/docker-images.tgz"
-  when:
-  - docker_cache_exists.stat.exists == True
-  - vagrant_cache
-
-- name: Load Docker images
-  shell: gzip -dcN /tmp/docker-images.tgz | docker load
-  when:
-  - docker_cache_exists.stat.exists == True
-  - vagrant_cache
 
 - name: Ensure firewalld.service
   service: name=firewalld state=started enabled=yes
