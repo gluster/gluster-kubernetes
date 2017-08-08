@@ -15,3 +15,9 @@ install_pkgs:
 - kubeadm
 - kubelet
 - kubectl
+# Enables a custom registry
+#custom_registry: 192.168.121.1:5000
+# Marks the custom registry as insecure
+#custom_registry_insecure: true
+# Adds the custom registry as the first registry
+#custom_registry_add: true
