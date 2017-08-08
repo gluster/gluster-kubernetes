@@ -411,7 +411,6 @@ environment and of the container platform that you should verify.
 The client machine that will run this script must have:
  * Administrative access to an existing Kubernetes or OpenShift cluster
  * Access to a python interpreter 'python'
- * Access to the heketi client 'heketi-cli'
 
 Each of the nodes that will host GlusterFS must also have appropriate firewall
 rules for the required GlusterFS ports:
@@ -609,7 +608,7 @@ fi
 
 if [[ ${LOAD} -eq 0 ]]; then
   sed -e "s/\${HEKETI_EXECUTOR}/${EXECUTOR}/" -e "s/\${SSH_PORT}/${SSH_PORT}/" -e "s/\${SSH_USER}/${SSH_USER}/" -e "s/\${SSH_SUDO}/${SSH_SUDO}/" heketi.json.template > heketi.json
-  eval_output "${CLI} create secret generic heketi-config-secret --from-file=private_key=${SSH_KEYFILE} --from-file=./heketi.json"
+  eval_output "${CLI} create secret generic heketi-config-secret --from-file=private_key=${SSH_KEYFILE} --from-file=./heketi.json --from-file=topology.json=${TOPOLOGY}"
   eval_output "${CLI} label --overwrite secret heketi-config-secret glusterfs=heketi-config-secret heketi=config-secret"
   if [[ "${CLI}" == *oc\ * ]]; then
     eval_output "${CLI} process ${OC_PROCESS_VAL_SWITCH} HEKETI_EXECUTOR=${EXECUTOR} ${OC_PROCESS_VAL_SWITCH} HEKETI_ADMIN_KEY=${ADMIN_KEY} ${OC_PROCESS_VAL_SWITCH} HEKETI_USER_KEY=${USER_KEY} deploy-heketi | ${CLI} create -f - 2>&1"
@@ -654,8 +653,11 @@ else
   debug "OK"
 fi
 
+heketi_pod=$(${CLI} get pod --no-headers --show-all --selector="deploy-heketi" 2>&1 | awk '{print $1}')
+heketi_cli="${CLI} exec -it ${heketi_pod} -- heketi-cli -s http://localhost:8080 --user admin --secret '${ADMIN_KEY}'"
+
 load_temp=$(mktemp)
-eval_output "heketi-cli -s http://${heketi_service} --user admin --secret \"${ADMIN_KEY}\" topology load --json=${TOPOLOGY} 2>&1" | tee "${load_temp}"
+eval_output "${heketi_cli} topology load --json=/etc/heketi/topology.json 2>&1" | tee "${load_temp}"
 grep -q "Unable" "${load_temp}"
 unable=$?
 rm "${load_temp}"
@@ -670,17 +672,22 @@ else
   output "heketi topology loaded."
 fi
 
-eval_output "heketi-cli -s http://${heketi_service} --user admin --secret \"${ADMIN_KEY}\" setup-openshift-heketi-storage 2>&1"
-if [[ ${?} != 0 ]]; then
-  output "Failed on setup openshift heketi storage"
+if [[ $("${heketi_cli}" volume list 2>&1) != *heketidbstorage* ]]; then
+  eval_output "${heketi_cli} setup-openshift-heketi-storage 2>&1"
+  if [[ ${?} != 0 ]]; then
+    output "Failed on setup openshift heketi storage"
+    exit 1
+  fi
+else
+  output "Volume heketidbstorage not found."
   exit 1
 fi
 
-if [[ ! -f heketi-storage.json ]]; then
-  output "heketi-storage.json file not found"
+eval_output "${CLI} exec -it ${heketi_pod} -- cat heketi-storage.json | ${CLI} create -f - 2>&1"
+if [[ ${?} != 0 ]]; then
+  output "Failed on creating heketi storage resources."
   exit 1
 fi
-eval_output "${CLI} create -f heketi-storage.json 2>&1"
 
 check_pods "job-name=heketi-storage-copy-job" "Completed"
 if [[ ${?} != 0 ]]; then
@@ -735,7 +742,18 @@ if [[ "${hello}" != "Hello from Heketi" ]]; then
   exit 1
 else
   debug "OK"
-  output "heketi is now running and accessible via http://${heketi_service}/"
+  output "
+heketi is now running and accessible via http://${heketi_service} . To run
+administrative commands you can install 'heketi-cli' and use it as follows:
+
+  # heketi-cli -s http://${heketi_service} --user admin --secret '<ADMIN_KEY>' cluster list
+
+You can find it at https://github.com/heketi/heketi/releases . Alternatively,
+use it from within the heketi pod:
+
+  # ${CLI} exec -it <HEKETI_POD> -- heketi-cli -s http://localhost:8080 --user admin --secret '<ADMIN_KEY>' cluster list
+"
+
 fi
 
 output "Ready to create and provide GlusterFS volumes."
