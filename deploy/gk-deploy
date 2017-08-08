@@ -99,14 +99,13 @@ Options:
               deployment and re-run topology load command.
 
   --admin-key ADMIN_KEY
-              Secret for heketi administrator user. Heketi admin has access to all
-              the APIs. admin key: string, Shared secret.
-              Eg: MySecret
+              Secret string for heketi admin user. heketi admin has access to
+              all APIs and commands. Default is to use no secret.
 
   --user-key USER_KEY
-              Secret for heketi general user. Heketi user has access to only Volume
-              APIs. user key: string, Shared secret.
-              Eg: MyVolumeSecret
+              Secret string for general heketi users. heketi users have access
+              to only Volume APIs. Used in dynamic provisioning. Default is to
+              use no secret.
 
   --daemonset-label DAEMONSET_LABEL
               Controls the value of the label set on nodes which will host pods
