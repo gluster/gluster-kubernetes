@@ -690,6 +690,9 @@ fi
 
 eval_output "${CLI} label --overwrite svc heketi-storage-endpoints glusterfs=heketi-storage-endpoints heketi=storage-endpoints"
 eval_output "${CLI} delete all,service,jobs,deployment,secret --selector=\"deploy-heketi\" 2>&1"
+if [[ "${CLI}" == *oc\ * ]]; then
+  eval_output "${CLI} delete dc,route,template --selector=\"deploy-heketi\" 2>&1"
+fi
 
 if [[ "${CLI}" == *oc\ * ]]; then
   eval_output "${CLI} process ${OC_PROCESS_VAL_SWITCH} HEKETI_EXECUTOR=${EXECUTOR} ${OC_PROCESS_VAL_SWITCH} HEKETI_ADMIN_KEY=${ADMIN_KEY} ${OC_PROCESS_VAL_SWITCH} HEKETI_USER_KEY=${USER_KEY} heketi | ${CLI} create -f - 2>&1"
