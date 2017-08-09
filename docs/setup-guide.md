@@ -29,6 +29,10 @@ requirements:
   recommend a default range of 49152-49251 on each host, though you can
   adjust this to fit your needs.
 
+ * Each node requires that the `mount.glusterfs` command is available. Under
+  all Red Hat-based OSes this command is provided by the `glusterfs-fuse`
+  package.
+
 If you are not able to deploy a hyper-converged GlusterFS cluster, you must
 have one running somewhere that the Kubernetes nodes can access. The above
 requirements still apply for any pre-existing GlusterFS cluster.
@@ -102,9 +106,7 @@ note when running the script:
  any existing GlusterFS cluster. If you specify the `-g` option, it will
  deploy a GlusterFS DaemonSet onto your Kubernetes cluster by treating the
  nodes listed in the topology file as hyper-converged nodes with both
- Kubernetes and storage devices on them. If using the `-g` option, nodes
- must have the `mount.glusterfs` command available (in CentOS this is
- provided by the `glusterfs-fuse` package).
+ Kubernetes and storage devices on them.
 
   * If you use a pre-existing GlusterFS cluster, please note that any
   pre-existing volumes will not be detected by heketi, and thus not be under
