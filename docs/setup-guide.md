@@ -29,6 +29,10 @@ requirements:
   recommend a default range of 49152-49251 on each host, though you can
   adjust this to fit your needs.
 
+ * Each node requires that the `mount.glusterfs` command is available. Under
+  all Red Hat-based OSes this command is provided by the `glusterfs-fuse`
+  package.
+
 If you are not able to deploy a hyper-converged GlusterFS cluster, you must
 have one running somewhere that the Kubernetes nodes can access. The above
 requirements still apply for any pre-existing GlusterFS cluster.
