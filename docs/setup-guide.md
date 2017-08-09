@@ -102,7 +102,9 @@ note when running the script:
  any existing GlusterFS cluster. If you specify the `-g` option, it will
  deploy a GlusterFS DaemonSet onto your Kubernetes cluster by treating the
  nodes listed in the topology file as hyper-converged nodes with both
- Kubernetes and storage devices on them.
+ Kubernetes and storage devices on them. If using the `-g` option, nodes
+ must have the `mount.glusterfs` command available (in CentOS this is
+ provided by the `glusterfs-fuse` package).
 
   * If you use a pre-existing GlusterFS cluster, please note that any
   pre-existing volumes will not be detected by heketi, and thus not be under
