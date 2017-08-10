@@ -243,50 +243,57 @@ assign() {
   keypos=$keylen
 }
 
-check_pods() {
+check() {
   local rc=1
   local wait_limit=${WAIT}
   local number_re='^[0-9]+$'
+  local resource="${1}"
+  local select="${2}"
+  local cond="${3}"
 
-  # $2 can either be a status string or
+  # cond can either be a status string or
   # a timeout integer. Only override the
   # timeout if we get a numeric argument.
-  if [[ ${2} =~ $number_re ]]; then
-    wait_limit=${2}
+  if [[ ${cond} =~ $number_re ]]; then
+    wait_limit=${cond}
   fi
 
   s=0
-  debug "\nChecking status of pods matching '${1}':"
+  debug "\nChecking status of ${resource} matching '${select}':"
   while [[ ${rc} -ne 0 ]]; do
     if [[ ${s} -ge ${wait_limit} ]]; then
-      debug "Timed out waiting for pods matching '${1}'."
+      debug "Timed out waiting for ${resource} matching '${select}'."
       break
     fi
     sleep 2
-    pods=$(${CLI} get pod --no-headers --show-all --selector="${1}" 2>&1)
+    res=$(${CLI} get "${resource}" --no-headers --show-all --selector="${select}" 2>&1)
     if [[ ${s} -ne 0 ]] && [[ ${VERBOSE} -eq 1 ]]; then
-      podlines=$(echo "$pods" | wc -l)
-      ((podlines+=1))
-      debug "\033[${podlines}A"
+      reslines=$(echo "$res" | wc -l)
+      ((reslines+=1))
+      debug "\033[${reslines}A"
     fi
     rc=0
-    while read -r pod; do
-      debug "\033[K${pod}"
-      case ${2} in
-        Completed)
-        status=$(echo "${pod}" | awk '{print $3}')
-        if [[ "${status}" != "Completed" ]]; then
-          rc=1
-        fi
-        ;;
-        *)
-        status=$(echo "${pod}" | awk '{print $2}')
-        if [[ "${status}" != "1/1" ]]; then
-          rc=1
-        fi
+    while read -r line; do
+      debug "\033[K${line}"
+      case ${resource} in
+        Po* | po*)
+        case ${cond} in
+          Completed)
+          status=$(echo "${line}" | awk '{print $3}')
+          if [[ "${status}" != "Completed" ]]; then
+            rc=1
+          fi
+          ;;
+          *)
+          status=$(echo "${line}" | awk '{print $2}')
+          if [[ "${status}" != "1/1" ]]; then
+            rc=1
+          fi
+          ;;
+        esac
         ;;
       esac
-    done <<< "$(echo -e "$pods")"
+    done <<< "$(echo -e "$res")"
     ((s+=2))
   done
 
@@ -551,7 +558,7 @@ fi
 output "Checking for pre-existing resources..."
 
 output -n "  GlusterFS pods ... "
-check_pods "glusterfs=pod" 2 2>&1
+check pods "glusterfs=pod" 2 2>&1
 if [[ $? -eq 0 ]]; then
   EXISTS_GLUSTERFS=1
   output "found."
@@ -560,7 +567,7 @@ else
 fi
 
 output -n "  deploy-heketi pod ... "
-check_pods "deploy-heketi=pod" 2 2>&1
+check pods "deploy-heketi=pod" 2 2>&1
 if [[ $? -eq 0 ]]; then
   EXISTS_DEPLOY_HEKETI=1
   output "found."
@@ -569,7 +576,7 @@ else
 fi
 
 output -n "  heketi pod ... "
-check_pods "heketi=pod" 2 2>&1
+check pods "heketi=pod" 2 2>&1
 if [[ $? -eq 0 ]]; then
   EXISTS_HEKETI=1
   output "found."
@@ -616,7 +623,7 @@ if [[ ${GLUSTER} -eq 1 ]] && [[ ${EXISTS_GLUSTERFS} -eq 0 ]] && [[ ${EXISTS_HEKE
   fi
 
   output -n "Waiting for GlusterFS pods to start ... "
-  check_pods "glusterfs=pod"
+  check pods "glusterfs=pod"
   if [[ $? -ne 0 ]]; then
     output "pods not found."
     exit 1
@@ -637,7 +644,7 @@ if [[ ${EXISTS_DEPLOY_HEKETI} -eq 0 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
   fi
 
   output -n "Waiting for deploy-heketi pod to start ... "
-  check_pods "deploy-heketi=pod"
+  check pods "deploy-heketi=pod"
   if [[ $? -ne 0 ]]; then
     output "pod not found."
     exit 1
@@ -712,7 +719,7 @@ if [[ ${EXISTS_DEPLOY_HEKETI} -eq 1 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
     exit 1
   fi
 
-  check_pods "job-name=heketi-storage-copy-job" "Completed"
+  check pods "job-name=heketi-storage-copy-job" "Completed"
   if [[ ${?} != 0 ]]; then
     output "Error waiting for job 'heketi-storage-copy-job' to complete."
     exit 1
@@ -733,7 +740,7 @@ if [[ ${EXISTS_HEKETI} -eq 0 ]]; then
   fi
 
   output -n "Waiting for heketi pod to start ... "
-  check_pods "heketi=pod"
+  check pods "heketi=pod"
   if [[ ${?} != 0 ]]; then
     output "pod not found"
     exit 1
