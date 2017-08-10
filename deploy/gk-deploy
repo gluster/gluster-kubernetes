@@ -291,6 +291,12 @@ check() {
           ;;
         esac
         ;;
+        PersistentVolumeClaim* | persistentvolumeclaim* | pvc)
+        status=$(echo "${line}" | awk '{print $2}')
+        if [[ "${status}" != "Bound" ]]; then
+          rc=1
+        fi
+        ;;
       esac
     done <<< "$(echo -e "$res")"
     ((s+=2))
