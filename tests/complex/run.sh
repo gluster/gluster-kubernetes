@@ -6,12 +6,12 @@ TESTNAME=""
 
 source "${LIB_DIR}/lib.sh"
 
-${TEST_DIR}/test-setup.sh || fail
+run_test ${TEST_DIR}/test-setup.sh
 
-${TEST_DIR}/test-gk-deploy.sh || fail
+run_test ${TEST_DIR}/test-gk-deploy.sh
 
-${TEST_DIR}/test-dynamic-provisioning.sh || fail
+run_test ${TEST_DIR}/test-dynamic-provisioning.sh
 
-${TEST_DIR}/test-teardown.sh || fail
+run_test ${TEST_DIR}/test-teardown.sh
 
 pass

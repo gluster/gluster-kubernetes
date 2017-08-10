@@ -5,10 +5,18 @@ LIB_DIR="${TEST_DIR}"
 
 source "${LIB_DIR}/lib.sh"
 
-ssh_config || fail "ERROR to creating ssh-config"
+ssh_config
 
-copy_deploy || fail "ERROR copying deployment files"
+copy_deploy
 
-run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh" master || fail
+run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh" master "Greenfield deployment"
 
-pass
+run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh" master "Idempotent deployment"
+
+#run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh block" master "Block deployment"
+
+#run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh block" master "Idempotent block deployment"
+
+#run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh obj" master "S3 deployment"
+
+#run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh obj" master "Idempotent S3 deployment"
