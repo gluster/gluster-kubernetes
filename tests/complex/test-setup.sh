@@ -5,8 +5,6 @@ LIB_DIR="${TEST_DIR}"
 
 source "${LIB_DIR}/lib.sh"
 
-create_vagrant || fail "ERROR creating vagrant environment"
+create_vagrant
 
-ssh_config || fail "ERROR creating ssh-config"
-
-pass
+ssh_config

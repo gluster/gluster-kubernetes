@@ -69,27 +69,43 @@ fail() {
 
 create_vagrant() {
 	cd ${VAGRANT_DIR}
-	./up.sh
+	./up.sh || fail "Error bringing up vagrant environment"
 }
 
 start_vagrant() {
 	cd ${VAGRANT_DIR}
-	vagrant up --no-provision
+	vagrant up --no-provision || fail "Error starting vagrant environment"
 }
 
 stop_vagrant() {
 	cd ${VAGRANT_DIR}
-	vagrant halt
+	vagrant halt || fail "Error halting vagrant environment"
 }
 
 destroy_vagrant() {
 	cd ${VAGRANT_DIR}
-	vagrant destroy
+	vagrant destroy || fail "Error destroying vagrant environment"
 }
 
 ssh_config() {
 	cd ${VAGRANT_DIR}
 	vagrant ssh-config > ${SSH_CONFIG} || fail "Error creating ssh-config"
+}
+
+rollback_vagrant() {
+	cd ${VAGRANT_DIR}
+	(
+	if vagrant plugins | grep -q sahara; then
+		vagrant sandbox rollback
+		for m in $(vagrant status | grep running | awk '{print $1}'); do
+			vagrant ssh $m -c "sudo systemctl restart docker kubelet"
+		done
+	else
+		destroy_vagrant
+		create_vagrant
+		ssh_config
+	fi
+        ) || fail "Error rolling back vagrant environment"
 }
 
 copy_deploy() {
