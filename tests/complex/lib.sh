@@ -95,12 +95,8 @@ ssh_config() {
 rollback_vagrant() {
 	cd ${VAGRANT_DIR}
 	(
-	if vagrant plugins | grep -q sahara; then
-		vagrant sandbox rollback
-		for m in $(vagrant status | grep running | awk '{print $1}'); do
-			vagrant ssh $m -c "sudo systemctl restart docker kubelet"
-		done
-	else
+        ./rollback.sh
+	if [[ ${?} -ne 0 ]]; then
 		destroy_vagrant
 		create_vagrant
 		ssh_config
@@ -148,7 +144,8 @@ end_test() {
 }
 
 run_on_node() {
-	script=$(realpath $1)
+	script=$(realpath ${1%% .*})
+        args=${1#[^ ]+}
 	shift
 	node=$1
 	shift
@@ -164,7 +161,7 @@ run_on_node() {
 	cd ${VAGRANT_DIR}
 
 	scp -q -F "${SSH_CONFIG}" "${script}" "${node}": || fail "SCP ${script} to ${node} failed"
-	ssh -qt -F "${SSH_CONFIG}" "${node}" "./$(basename ${script})" || fail "SSH connection to ${node} failed"
+	ssh -qt -F "${SSH_CONFIG}" "${node}" "./$(basename ${script}) ${args}" || fail "SSH connection to ${node} failed"
 
 	end_test
 }

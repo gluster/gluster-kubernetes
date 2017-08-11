@@ -9,11 +9,13 @@ ssh_config
 
 copy_deploy
 
-run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh" master "Greenfield deployment"
+run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh" master "Greenfield basic deployment" || exit 1
 
-run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh" master "Idempotent deployment"
+run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh" master "Test deployment idempotence"
 
-#run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh block" master "Block deployment"
+rollback_vagrant
+
+run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh block" master "Block deployment"
 
 #run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh block" master "Idempotent block deployment"
 
