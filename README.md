@@ -1,12 +1,12 @@
 # gluster-kubernetes
 
-## Hyper-converged GlusterFS + heketi on Kubernetes
+## GlusterFS Native Storage Service for Kubernetes
 
 **gluster-kubernetes** is a project to provide Kubernetes administrators a
-mechanism to easily deploy a hyper-converged GlusterFS cluster along with
-heketi onto an existing Kubernetes cluster. This is a convenient way to unlock
-the power of dynamically provisioned, persistent GlusterFS volumes in
-Kubernetes.
+mechanism to easily deploy GlusterFS as a native storage service onto an
+existing Kubernetes cluster. Here, GlusterFS is managed and orchestrated like
+any other app in Kubernetes. This is a convenient way to unlock the power of
+dynamically provisioned, persistent GlusterFS volumes in Kubernetes.
 
 ### Component Projects
 
