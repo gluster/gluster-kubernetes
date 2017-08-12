@@ -21,7 +21,7 @@
 	"glusterfs" : {
 
 		"_executor_comment": "Execute plugin. Possible choices: mock, kubernetes, ssh",
-		"executor" : "{{ glusterfs_heketi_executor }}",
+		"executor" : "${HEKETI_EXECUTOR}",
 
 		"_db_comment": "Database file name",
 		"db" : "/var/lib/heketi/heketi.db",
@@ -32,5 +32,7 @@
 			"user" : "${SSH_USER}",
 			"sudo" : ${SSH_SUDO}
 		}
-	}
+	},
+
+	"backup_db_to_kube_secret": false
 }
