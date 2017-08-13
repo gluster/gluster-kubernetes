@@ -5,15 +5,17 @@ LIB_DIR="${TEST_DIR}"
 
 source "${LIB_DIR}/lib.sh"
 
-ssh_config
+create_vagrant
 
 copy_deploy
 
-run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh" master "Greenfield basic deployment" || exit 1
+#run_on_node -e "${TEST_DIR}/test-inside-gk-deploy.sh" master "Greenfield basic deployment"
 
-run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh" master "Test deployment idempotence"
+#run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh" master "Test deployment idempotence"
 
 rollback_vagrant
+
+copy_deploy
 
 run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh block" master "Block deployment"
 

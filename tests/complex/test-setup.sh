@@ -6,5 +6,3 @@ LIB_DIR="${TEST_DIR}"
 source "${LIB_DIR}/lib.sh"
 
 create_vagrant
-
-ssh_config

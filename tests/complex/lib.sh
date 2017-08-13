@@ -10,8 +10,10 @@
 : ${SUBTEST_MSG:=""}
 : ${SUBTEST_COUNT:=0}
 : ${SUBTEST_OUT:=1}
+: ${RUN_SUMMARY:=""}
 
 SSH_CONFIG=${VAGRANT_DIR}/ssh-config
+LOCAL_FAILURE=0
 
 pass() {
 	echo -en "| \e[32m\e[1mPASS...:\e[21m"
@@ -24,9 +26,7 @@ pass() {
 			fi
 			if [[ "x${SUBTEST_MSG}" != "x" ]]; then
 				echo -en ": ${SUBTEST_MSG}"
-				SUBTEST_MSG=""
 			fi
-			SUBTEST_OUT=1
 		fi
 	fi
 
@@ -50,9 +50,7 @@ fail() {
 			fi
 			if [[ "x${SUBTEST_MSG}" != "x" ]]; then
 				echo -en ": ${SUBTEST_MSG}"
-				SUBTEST_MSG=""
 			fi
-			SUBTEST_OUT=1
 		fi
 	fi
 
@@ -63,33 +61,46 @@ fail() {
         fi
 
 	echo -e "\e[0m"
-
-	exit 1
 }
 
 create_vagrant() {
 	cd ${VAGRANT_DIR}
-	./up.sh || fail "Error bringing up vagrant environment"
+
+	local vstatus=$(vagrant status | awk '{print $1}')
+	local run=0
+	for m in ${vstatus}; do
+		mstatus=$(vagrant status ${m} 2>&1)
+		mres=${?}
+		if [[ ${mres} -eq 0 ]] && [[ "$(echo "${mstatus}" | grep "running")" == "" ]]; then
+			run=1
+		fi
+	done
+
+	if [[ ${run} -eq 1 ]]; then
+		./up.sh || end_test -e "Error bringing up vagrant environment"
+	fi
+
+        ssh_config
 }
 
 start_vagrant() {
 	cd ${VAGRANT_DIR}
-	vagrant up --no-provision || fail "Error starting vagrant environment"
+	vagrant up --no-provision || end_test -e "Error starting vagrant environment"
 }
 
 stop_vagrant() {
 	cd ${VAGRANT_DIR}
-	vagrant halt || fail "Error halting vagrant environment"
+	vagrant halt || end_test -e "Error halting vagrant environment"
 }
 
 destroy_vagrant() {
 	cd ${VAGRANT_DIR}
-	vagrant destroy || fail "Error destroying vagrant environment"
+	vagrant destroy || end_test -e "Error destroying vagrant environment"
 }
 
 ssh_config() {
 	cd ${VAGRANT_DIR}
-	vagrant ssh-config > ${SSH_CONFIG} || fail "Error creating ssh-config"
+	vagrant ssh-config > ${SSH_CONFIG} || end_test -e "Error creating ssh-config"
 }
 
 rollback_vagrant() {
@@ -101,15 +112,14 @@ rollback_vagrant() {
 		create_vagrant
 		ssh_config
 	fi
-        ) || fail "Error rolling back vagrant environment"
+        ) || end_test -e "Error rolling back vagrant environment"
 }
 
 copy_deploy() {
 	local node=${1:-master}
 
 	cd ${VAGRANT_DIR}
-	ssh -q -F "${SSH_CONFIG}" master "mkdir -p ~/deploy" || fail "SSH connection to ${node} failed"
-	scp -qr -F "${SSH_CONFIG}" "${DEPLOY_DIR}/"* "${TOPOLOGY_FILE}" ${node}:~/deploy/ || fail "SCP deploy to ${node} failed"
+	scp -qr -F "${SSH_CONFIG}" "${DEPLOY_DIR}" "${TOPOLOGY_FILE}" ${node}: || end_test -e "SCP deploy to ${node} failed"
 }
 
 pull_docker_image() {
@@ -136,18 +146,48 @@ start_test() {
 }
 
 end_test() {
-	if [[ ${?} -eq 0 ]]; then
-		pass
-	else
-		fail
+	local result="${?}"
+	local output=""
+	local e=0
+	if [[ "${1}" == "-e" ]]; then
+		e=1
+		shift
 	fi
+	if [[ ${result} -eq 0 ]]; then
+		output=$(pass ${@})
+	else
+		output=$(fail ${@})
+		LOCAL_FAILURE=1
+	fi
+	echo -e "\n${output}"
+	RUN_SUMMARY+="${output}\n"
+	SUBTEST_MSG=""
+	SUBTEST_OUT=1
+
+	if [[ ${result} -ne 0 ]] && [[ ${e} -eq 1 ]]; then
+		exit 1
+        fi
+}
+
+end_run() {
+	(exit ${LOCAL_FAILURE})
+	end_test
+	echo -e "|=====\n| \e[1mTEST SUMMARY:\e[21m"
+	echo -e "${RUN_SUMMARY}"
 }
 
 run_on_node() {
-	script=$(realpath ${1%% .*})
-        args=${1#[^ ]+}
+	local e=""
+	if [[ "${1}" == "-e" ]]; then
+		e="-e"
+		shift
+	fi
+	local script=$(realpath ${1%% *})
+        local args=${1#[^ ]+}
+        echo "SCRIPT: $script"
+        echo "ARGS: $args"
 	shift
-	node=$1
+	local node=$1
 	shift
 
 	if [[ ${#} -ge 1 ]]; then
@@ -160,11 +200,13 @@ run_on_node() {
 
 	cd ${VAGRANT_DIR}
 
-	scp -q -F "${SSH_CONFIG}" "${script}" "${node}": || fail "SCP ${script} to ${node} failed"
-	ssh -qt -F "${SSH_CONFIG}" "${node}" "./$(basename ${script}) ${args}" || fail "SSH connection to ${node} failed"
+	(
+	scp -q -F "${SSH_CONFIG}" "${script}" "${node}": 1>/dev/null && ssh -qt -F "${SSH_CONFIG}" "${node}" "./$(basename ${script}) ${args}"
+	)
 
-	end_test
+	end_test ${e}
 }
 
-trap end_test EXIT
+trap end_run EXIT
+trap end_test ERR
 start_test
