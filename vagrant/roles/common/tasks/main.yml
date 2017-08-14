@@ -60,6 +60,17 @@
 - name: configure dm_snapshot module
   copy: src=dm_snapshot.conf owner=root group=root mode=644 dest=/etc/modules-load.d
 
+- name: enable kernel modules
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - dm_snapshot
+  - dm_mirror
+  - dm_thin_pool
+  - dm_multipath
+  - target_core_user
+
 - name: install fixed kubelet-kubeadm config file
   copy: src=10-kubeadm.conf dest=/etc/systemd/system/kubelet.service.d/ owner=root group=root mode=644 backup=yes
 
