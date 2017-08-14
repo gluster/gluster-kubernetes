@@ -4,6 +4,12 @@
   register: route_add
   failed_when: route_add.rc != 0 and "File exists" not in route_add.stderr
 
+- name: Open port 3260 (iSCSI targets)
+  firewalld: port=3260/tcp zone=trusted permanent=true state=enabled immediate=true
+
+- name: Open port 24006 (glusterblock daemon)
+  firewalld: port=24006/tcp zone=trusted permanent=true state=enabled immediate=true
+
 - name: Open port 24007 (GlusterFS management)
   firewalld: port=24007/tcp zone=trusted permanent=true state=enabled immediate=true
 
