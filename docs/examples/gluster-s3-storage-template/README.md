@@ -117,8 +117,8 @@ Download s3curl from here [s3curl](https://aws.amazon.com/code/128)
 
 We are going to make use of s3curl.pl for verification. 
 
-Note: Package perl-Digest-HMAC.noarch, a dependency package for s3curl also needs to be installed.
-Install the same using your package manager.
+s3curl.pl requires the presence of `Digest::HMAC_SHA1` and `Digest::MD5`.
+On Red Hat-based OSes, you can install the `perl-Digest-HMAC` package to get this.
 
 Now, update s3curl.pl perl script with glusters3object url which we retreived above.
 
