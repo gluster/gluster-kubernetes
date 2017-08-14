@@ -1,3 +1,18 @@
+- name: install s3-curl depencendies
+  yum:
+    name: "{{ item }}"
+    state: present
+    disable_gpg_check: yes
+  with_items:
+  - perl-Digest-HMAC
+  - unzip
+
+- name: get s3curl
+  unarchive:
+    src: http://s3.amazonaws.com/doc/s3-example-code/s3-curl.zip
+    dest: /home/vagrant/
+    remote_src: yes
+
 - name: check for kubelet config
   stat:
     path: /etc/kubernetes/kubelet.conf
