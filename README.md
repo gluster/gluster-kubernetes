@@ -29,11 +29,15 @@ You can find slides and videos of community presentations [here](docs/presentati
 
 ### Quickstart
 
-You can start with your own Kubernetes installation ready to go, or you can
-use the vagrant setup in the `vagrant/` directory to spin up a Kubernetes
-VM cluster for you. To run the vagrant setup, you'll need to have the
-following installed:
+If you already have a Kubernetes cluster you wish to use, make sure it meets
+the prerequisites outlined in our [setup guide](./docs/setup-guide.md).
 
+This project includes a vagrant setup in the `vagrant/` directory to spin up a
+Kubernetes cluster in VMs. To run the vagrant setup, you'll need to have the
+following pre-requisites on your machine:
+
+ * 4GB of memory
+ * 32GB of storage minimum, 112GB recommended
  * ansible
  * vagrant
  * libvirt or VirtualBox
