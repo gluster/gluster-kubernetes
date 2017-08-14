@@ -1,6 +1,8 @@
 - name: establish route for 10.96.0.0/16
   command: ip route add 10.96.0.0/16 dev eth1 src {{ hostvars[item].ansible_eth1.ipv4.address }}
   with_items: "{{ ansible_hostname }}"
+  register: route_add
+  failed_when: route_add.rc != 0 and "File exists" not in route_add.stderr
 
 - name: Open port 24007 (GlusterFS daemon)
   firewalld: port=24007/tcp zone=trusted permanent=true state=enabled immediate=true
@@ -31,43 +33,51 @@
 - name: clean up kubernetes /etc directory
   file: path=/etc/kubernetes/manifests state=absent
 
-- name: kubeadm join with master
-  command: kubeadm join --skip-preflight-checks --token={{ kubernetes_token }} {{ hostvars['master'].ansible_eth1.ipv4.address }}:6443
+- name: check for kubelet config
+  stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: kubelet
 
-- name: create root kube dir on node
-  file:
-    path: /root/.kube
-    state: directory
-    owner: root
-    group: root
+- block:
+  - name: kubeadm join with master
+    command: kubeadm join --skip-preflight-checks --token={{ kubernetes_token }} {{ hostvars['master'].ansible_eth1.ipv4.address }}:6443
 
-- name: create root kube config on node
-  copy:
-    src: /etc/kubernetes/kubelet.conf
-    dest: /root/.kube/config
-    remote_src: True
-    owner: root
-    group: root
+  - name: create root kube dir on node
+    file:
+      path: /root/.kube
+      state: directory
+      owner: root
+      group: root
+    when: not kubelet.stat.exists
 
-- name: create user kube dir on node
-  file:
-    path: /home/vagrant/.kube
-    state: directory
-    owner: vagrant
-    group: vagrant
+  - name: create root kube config on node
+    copy:
+      src: /etc/kubernetes/kubelet.conf
+      dest: /root/.kube/config
+      remote_src: True
+      owner: root
+      group: root
 
-- name: create user kube config on node
-  copy:
-    src: /etc/kubernetes/kubelet.conf
-    dest: /home/vagrant/.kube/config
-    remote_src: True
-    owner: vagrant
-    group: vagrant
+  - name: create user kube dir on node
+    file:
+      path: /home/vagrant/.kube
+      state: directory
+      owner: vagrant
+      group: vagrant
 
-- name: wait for node to be ready
-  shell: test "$(kubectl get nodes {{ ansible_hostname }} --no-headers | awk '{ print $2 }')" = "Ready"
-  register: task_result
-  until: task_result.rc == 0
-  delay: 10
-  retries: 30
-  changed_when: false
+  - name: create user kube config on node
+    copy:
+      src: /etc/kubernetes/kubelet.conf
+      dest: /home/vagrant/.kube/config
+      remote_src: True
+      owner: vagrant
+      group: vagrant
+
+  - name: wait for node to be ready
+    shell: test "$(kubectl get nodes {{ ansible_hostname }} --no-headers | awk '{ print $2 }')" = "Ready"
+    register: task_result
+    until: task_result.rc == 0
+    delay: 10
+    retries: 30
+    changed_when: false
+  when: not kubelet.stat.exists
