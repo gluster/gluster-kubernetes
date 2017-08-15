@@ -7,12 +7,10 @@ TESTNAME=""
 
 source "${LIB_DIR}/lib.sh"
 
-run_test "${TEST_DIR}/test-setup.sh"
+run -e "${TEST_DIR}/test-setup.sh"
 
-run_test "${TEST_DIR}/test-gk-deploy.sh"
+run -e "${TEST_DIR}/test-gk-deploy.sh"
 
-run_test "${TEST_DIR}/test-dynamic-provisioning.sh"
+#run "${TEST_DIR}/test-dynamic-provisioning.sh"
 
-run_test "${TEST_DIR}/test-teardown.sh"
-
-pass
+#run "${TEST_DIR}/test-teardown.sh"

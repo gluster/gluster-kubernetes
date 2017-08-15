@@ -5,13 +5,11 @@ LIB_DIR="${TEST_DIR}"
 
 source "${LIB_DIR}/lib.sh"
 
-#create_vagrant
-
 copy_deploy
 
-run_on_node -e "${TEST_DIR}/test-inside-gk-deploy.sh" master "Greenfield basic deployment"
+run -r master -e "${TEST_DIR}/test-inside-gk-deploy.sh" "Greenfield basic deployment"
 
-run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh" master "Test deployment idempotence"
+run -r master "${TEST_DIR}/test-inside-gk-deploy.sh" "Test deployment idempotence"
 
 #rollback_vagrant
 
