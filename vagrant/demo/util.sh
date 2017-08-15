@@ -37,10 +37,6 @@ function maybe_first_prompt() {
     fi
 }
 
-# After a `run` this variable will hold the stdout of the command that was run.
-# If the command was interactive, this will likely be garbage.
-DEMO_RUN_STDOUT=""
-
 function run() {
     maybe_first_prompt
     rate=25
@@ -59,7 +55,6 @@ function run() {
     if [ -z "${DEMO_AUTO_RUN}" ]; then
       read -r -s
     fi
-    DEMO_RUN_STDOUT="$(tail -n +2 "${OFILE}" | sed 's/\r//g')"
     return ${r}
 }
 
