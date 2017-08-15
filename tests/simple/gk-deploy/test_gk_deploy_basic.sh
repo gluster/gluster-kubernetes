@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_DIR=$(cd $(dirname ${0}); pwd)
+SCRIPT_DIR=$(cd "$(dirname "${0}")" || exit 1; pwd)
 STUBS_DIR="${SCRIPT_DIR}/stubs"
 TESTS_DIR="${SCRIPT_DIR}/.."
 INC_DIR="${TESTS_DIR}/common"
@@ -26,30 +26,25 @@ test_missing_topology () {
 }
 
 test_cli_not_found () {
-	local saved_path="${PATH}"
-	PATH="/doesnotexist"
 	local expected_out="Container platform CLI (e.g. kubectl, oc) not found."
 
-	OUT=$(${GK_DEPLOY} -y ${TOPOLOGY})
+	OUT=$(PATH="/doesnotexist" "${GK_DEPLOY}" -y "${TOPOLOGY}")
 	local rc=${?}
 
 	if [[ "x${rc}" == "x0" ]]; then
 		echo "ERROR: gk-deploy succeeded "\
 			"(output: \"${OUT}\")"
-		PATH=${saved_path}
 		return 1
 	fi
 
 	if [[ "x${rc}" != "x1" ]]; then
 		echo "ERROR: gk-deploy gave ${rc}, " \
 			"expected 1 (output: \"${OUT}\")"
-		PATH=${saved_path}
 		return 1
 	fi
 
 	if [[ "${OUT}" != "${expected_out}" ]]; then
 		echo "ERROR: got output '${OUT}', expected '${expected_out}'"
-		PATH=${saved_path}
 		return 1
 	fi
 
@@ -61,7 +56,7 @@ test_cli_unknown () {
 	local cli="${1}"
 	local expected_out="Unknown CLI '${cli}'."
 
-	OUT=$(${GK_DEPLOY} -y -c ${cli} ${TOPOLOGY})
+	OUT=$("${GK_DEPLOY}" -y -c "${cli}" "${TOPOLOGY}")
 	local rc=$?
 
 	if [[ "x${rc}" == "x0" ]]; then
@@ -101,7 +96,8 @@ Namespace 'invalid' not found."
 		args="${args} -c ${cli}"
 	fi
 
-	OUT=$(${GK_DEPLOY} ${args} ${TOPOLOGY})
+	# shellcheck disable=SC2086
+	OUT=$("${GK_DEPLOY}" ${args} "${TOPOLOGY}")
 	local rc=$?
 
 	echo "cmd: '${GK_DEPLOY} ${args} ${TOPOLOGY}'"
@@ -130,11 +126,11 @@ Namespace 'invalid' not found."
 failed=0
 
 testit "test script syntax" \
-	test_shell_syntax ${GK_DEPLOY} \
+	test_shell_syntax "${GK_DEPLOY}" \
 	|| ((failed++))
 
 testit "test shellcheck" \
-	test_shellcheck ${GK_DEPLOY} \
+	test_shellcheck "${GK_DEPLOY}" \
 	|| ((failed++))
 
 testit "test missing topology" \
@@ -165,4 +161,4 @@ testit "test namespace invalid unknown-cli" \
 	test_namespace_invalid unknown-cli \
 	|| ((failed++))
 
-testok $0 ${failed}
+testok "${0}" "${failed}"

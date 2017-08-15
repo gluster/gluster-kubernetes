@@ -2,22 +2,23 @@
 
 # test gk-deploy
 
-BLOCK=" --no-block"
-OBJ=" --no-object"
+BLOCK=( --no-block )
+OBJ=( --no-object )
 
 while [[ "x${1}" != "x" ]]; do
   if [[ "${1}" == "block" ]]; then
-    BLOCK=""
+    BLOCK=( "" )
   fi
   if [[ "${1}" == obj* ]]; then
-    OBJ=" --object-account test-account --object-user test-user --object-password password"
+    OBJ=( --object-account test-account --object-user test-user --object-password password )
   fi
   shift
 done
 
-cd ~/deploy
+cd ~/deploy || exit 1
 
-./gk-deploy -y -g -n default ./topology.json${BLOCK}${OBJ}
+# shellcheck disable=SC2086
+./gk-deploy -v -y -g -n default ${BLOCK[*]} ${OBJ[*]}
 
 if [[ $? -ne 0 ]]; then
 	echo "ERROR: gk-deploy failed"
@@ -27,8 +28,8 @@ fi
 # wait briefly for pods to settle down...
 sleep 2
 
-num_gluster_pods=$(kubectl get pods | grep -s "glusterfs-" | grep -s "1/1[[:space:]]*Running" | wc -l)
-num_heketi_pods=$(kubectl get pods | grep -s "heketi-" | grep -vs "Terminating" | grep -s "1/1[[:space:]]*Running"  | wc -l)
+num_gluster_pods=$(kubectl get pods | grep -s "glusterfs-" | grep -cs "1/1[[:space:]]*Running")
+num_heketi_pods=$(kubectl get pods | grep -s "heketi-" | grep -vs "Terminating" | grep -cs "1/1[[:space:]]*Running")
 
 if (( num_heketi_pods != 1 )); then
 	echo "ERROR: unexpected number of heketi pods: " \
@@ -44,8 +45,8 @@ if (( num_gluster_pods != 3 )); then
 	exit 1
 fi
 
-if [[ "${BLOCK}" != " --no-block" ]]; then
-	num_block_pods=$(kubectl get pods | grep -s "glusterblock-" | grep -s "1/1[[:space:]]*Running"  | wc -l)
+if [[ "${BLOCK[*]}" != "--no-block" ]]; then
+	num_block_pods=$(kubectl get pods | grep -s "glusterblock-" | grep -cs "1/1[[:space:]]*Running")
 
         if (( num_block_pods != 1 )); then
 		echo "ERROR: unexpected number of glusterblock pods: " \
@@ -55,8 +56,8 @@ if [[ "${BLOCK}" != " --no-block" ]]; then
 	fi
 fi
 
-if [[ "${OBJ}" != " --no-object" ]]; then
-	num_object_pods=$(kubectl get pods | grep -s "gluster-s3-" | grep -s "1/1[[:space:]]*Running"  | wc -l)
+if [[ "${OBJ[*]}" != "--no-object" ]]; then
+	num_object_pods=$(kubectl get pods | grep -s "gluster-s3-" | grep -cs "1/1[[:space:]]*Running")
 
         if (( num_object_pods != 1 )); then
 		echo "ERROR: unexpected number of gluster-s3 pods: " \

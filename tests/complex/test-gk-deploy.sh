@@ -1,23 +1,23 @@
 #!/bin/bash
 
-TEST_DIR="$(realpath $(dirname $0))"
+TEST_DIR="$(realpath "$(dirname "${0}")")"
 LIB_DIR="${TEST_DIR}"
 
 source "${LIB_DIR}/lib.sh"
 
-create_vagrant
+#create_vagrant
 
 copy_deploy
 
-#run_on_node -e "${TEST_DIR}/test-inside-gk-deploy.sh" master "Greenfield basic deployment"
+run_on_node -e "${TEST_DIR}/test-inside-gk-deploy.sh" master "Greenfield basic deployment"
 
-#run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh" master "Test deployment idempotence"
+run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh" master "Test deployment idempotence"
 
-rollback_vagrant
+#rollback_vagrant
 
-copy_deploy
+#copy_deploy
 
-run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh block" master "Block deployment"
+#run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh block" master "Block deployment"
 
 #run_on_node "${TEST_DIR}/test-inside-gk-deploy.sh block" master "Idempotent block deployment"
 

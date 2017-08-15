@@ -13,7 +13,7 @@ source "${INC_DIR}/shell_tests.sh"
 
 failed=0
 
-for script in $(find ${BASE_DIR} -name "*.sh") ; do
+for script in $(find ${BASE_DIR} -name "*.sh" | grep -v "subunit.sh") ; do
 	testit "check basic syntax: $(basename ${script})" \
 		test_shell_syntax ${script} \
 		|| ((failed++))

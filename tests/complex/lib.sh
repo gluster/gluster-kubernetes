@@ -1,16 +1,16 @@
 #!/bin/bash
 
 # honor variables set from the caller:
-: ${TEST_DIR:="$(realpath $(dirname $0))"}
-: ${BASE_DIR:="${TEST_DIR}/../.."}
-: ${VAGRANT_DIR:="${BASE_DIR}/vagrant"}
-: ${DEPLOY_DIR:="${BASE_DIR}/deploy"}
-: ${TOPOLOGY_FILE:="${DEPLOY_DIR}/topology.json.sample"}
-: ${TESTNAME:="$(basename $0)"}
-: ${SUBTEST_MSG:=""}
-: ${SUBTEST_COUNT:=0}
-: ${SUBTEST_OUT:=1}
-: ${RUN_SUMMARY:=""}
+: "${TEST_DIR:="$(realpath "$(dirname "${0}")")"}"
+: "${BASE_DIR:="${TEST_DIR}/../.."}"
+: "${VAGRANT_DIR:="${BASE_DIR}/vagrant"}"
+: "${DEPLOY_DIR:="${BASE_DIR}/deploy"}"
+: "${TOPOLOGY_FILE:="${DEPLOY_DIR}/topology.json.sample"}"
+: "${TESTNAME:="$(basename "${0}")"}"
+: "${SUBTEST_MSG:=""}"
+: "${SUBTEST_COUNT:=0}"
+: "${SUBTEST_OUT:=1}"
+: "${RUN_SUMMARY:=""}"
 
 SSH_CONFIG=${VAGRANT_DIR}/ssh-config
 LOCAL_FAILURE=0
@@ -64,12 +64,13 @@ fail() {
 }
 
 create_vagrant() {
-	cd ${VAGRANT_DIR}
+	cd "${VAGRANT_DIR}" || exit 1
 
-	local vstatus=$(vagrant status | awk '{print $1}')
+	local vstatus
+	vstatus=$(vagrant status | awk '{print $1}')
 	local run=0
 	for m in ${vstatus}; do
-		mstatus=$(vagrant status ${m} 2>&1)
+		mstatus=$(vagrant status "${m}" 2>&1)
 		mres=${?}
 		if [[ ${mres} -eq 0 ]] && [[ "$(echo "${mstatus}" | grep "running")" == "" ]]; then
 			run=1
@@ -84,27 +85,27 @@ create_vagrant() {
 }
 
 start_vagrant() {
-	cd ${VAGRANT_DIR}
+	cd "${VAGRANT_DIR}" || exit 1
 	vagrant up --no-provision || end_test -e "Error starting vagrant environment"
 }
 
 stop_vagrant() {
-	cd ${VAGRANT_DIR}
+	cd "${VAGRANT_DIR}" || exit 1
 	vagrant halt || end_test -e "Error halting vagrant environment"
 }
 
 destroy_vagrant() {
-	cd ${VAGRANT_DIR}
+	cd "${VAGRANT_DIR}" || exit 1
 	vagrant destroy || end_test -e "Error destroying vagrant environment"
 }
 
 ssh_config() {
-	cd ${VAGRANT_DIR}
-	vagrant ssh-config > ${SSH_CONFIG} || end_test -e "Error creating ssh-config"
+	cd "${VAGRANT_DIR}" || exit 1
+	vagrant ssh-config > "${SSH_CONFIG}" || end_test -e "Error creating ssh-config"
 }
 
 rollback_vagrant() {
-	cd ${VAGRANT_DIR}
+	cd "${VAGRANT_DIR}" || exit 1
 	(
         ./rollback.sh
 	if [[ ${?} -ne 0 ]]; then
@@ -118,15 +119,16 @@ rollback_vagrant() {
 copy_deploy() {
 	local node=${1:-master}
 
-	cd ${VAGRANT_DIR}
-	scp -qr -F "${SSH_CONFIG}" "${DEPLOY_DIR}" "${TOPOLOGY_FILE}" ${node}: || end_test -e "SCP deploy to ${node} failed"
+	cd "${VAGRANT_DIR}" || exit 1
+	scp -qr -F "${SSH_CONFIG}" "${DEPLOY_DIR}" "${node}:" || end_test -e "SCP deploy to ${node} failed"
+	scp -qr -F "${SSH_CONFIG}" "${TOPOLOGY_FILE}" "${node}:deploy/topology.json" || end_test -e "SCP topology to ${node} failed"
 }
 
 pull_docker_image() {
 	local image=$1
-	cd ${VAGRANT_DIR}
+	cd "${VAGRANT_DIR}" || exit 1
 	for NODE in node0 node1 node2 ; do
-		ssh -q -F ${SSH_CONFIG} ${NODE} "sudo docker pull ${image}"
+		ssh -q -F "${SSH_CONFIG}" "${NODE}" "sudo docker pull ${image}"
 	done
 }
 
@@ -154,12 +156,12 @@ end_test() {
 		shift
 	fi
 	if [[ ${result} -eq 0 ]]; then
-		output=$(pass ${@})
+		output=$(pass "${@}")
 	else
-		output=$(fail ${@})
+		output=$(fail "${@}")
 		LOCAL_FAILURE=1
 	fi
-	echo -e "\n${output}"
+	echo -e "\r${output}"
 	RUN_SUMMARY+="${output}\n"
 	SUBTEST_MSG=""
 	SUBTEST_OUT=1
@@ -182,10 +184,9 @@ run_on_node() {
 		e="-e"
 		shift
 	fi
-	local script=$(realpath ${1%% *})
-        local args=${1#[^ ]+}
-        echo "SCRIPT: $script"
-        echo "ARGS: $args"
+	local script
+	script=$(realpath "${1%% *}")
+        local args=${1#* }
 	shift
 	local node=$1
 	shift
@@ -198,10 +199,10 @@ run_on_node() {
 
 	start_test
 
-	cd ${VAGRANT_DIR}
+	cd "${VAGRANT_DIR}" || exit 1
 
 	(
-	scp -q -F "${SSH_CONFIG}" "${script}" "${node}": 1>/dev/null && ssh -qt -F "${SSH_CONFIG}" "${node}" "./$(basename ${script}) ${args}"
+	scp -q -F "${SSH_CONFIG}" "${script}" "${node}": 1>/dev/null && ssh -qt -F "${SSH_CONFIG}" "${node}" "./$(basename "${script}") ${args}"
 	)
 
 	end_test ${e}

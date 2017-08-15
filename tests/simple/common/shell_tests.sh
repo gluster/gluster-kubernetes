@@ -1,5 +1,5 @@
 test_shell_syntax() {
-	bash -n ${1}
+	bash -n "${1}"
 }
 
 test_shellcheck() {
@@ -8,6 +8,6 @@ test_shellcheck() {
 		return 0
 	fi
 
-	shellcheck -s bash -e SC2181 ${1}
+	shellcheck -x -s bash -e SC2181,SC2029,SC1091,SC1090 "${1}"
 }
 

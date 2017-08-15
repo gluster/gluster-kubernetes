@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TEST_DIR="$(realpath $(dirname $0))"
+TEST_DIR="$(realpath "$(dirname "${0}")")"
 LIB_DIR="${TEST_DIR}"
 
 DOCKER_IMAGE="gcr.io/google_containers/nginx-slim:0.8"

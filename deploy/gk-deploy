@@ -585,8 +585,6 @@ if [[ "${EXECUTOR}" == "ssh" ]]; then
     else
       sudocmd=""
     fi
-    # shellcheck disable=SC2029
-    # I want this parsed client-side
     ssh "${SSH_USER}@${node}" -q -i "${SSH_KEYFILE}" -C "${sudocmd}gluster volume status" >/dev/null 2>&1
     if [[ ${?} -ne 0 ]]; then
       output "Can't access glusterd on '${node}'"
