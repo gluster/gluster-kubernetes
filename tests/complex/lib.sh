@@ -83,10 +83,14 @@ copy_deploy() {
 }
 
 pull_docker_image() {
-	local image=$1
-	cd ${VAGRANT_DIR}
-	for NODE in node0 node1 node2 ; do
-		ssh -F ${SSH_CONFIG} ${NODE} "sudo docker pull ${image}"
+	cd "${VAGRANT_DIR}" || exit 1
+
+	local image=${1}
+	local vstatus
+
+	vstatus=$(vagrant status | grep "node" | awk '{print $1}')
+	for NODE in ${vstatus}; do
+		ssh -q -F "${SSH_CONFIG}" "${NODE}" "sudo docker pull ${image}"
 	done
 }
 
