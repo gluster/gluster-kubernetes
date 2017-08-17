@@ -129,6 +129,10 @@ Options:
   exit 0
 }
 
+# output [-n] <msg>
+#   Prints msg to stdout and, if it is specified, to a log file. Log file
+#   output is stripped of any expected control codes.
+
 output() {
   opts="-e"
   if [[ "${1}" == "-n" ]]; then
@@ -148,11 +152,18 @@ output() {
   fi
 }
 
+# debug <msg>
+#   Send msg to output() if VERBOSE is 1.
+
 debug() {
   if [[ ${VERBOSE} -eq 1 ]]; then
     output "${@}"
   fi
 }
+
+# eval_output <cmd>
+#   Evaluate an input string as a command, sending any stdout text to output().
+#   Return the evaluated command's return code.
 
 eval_output() {
   cmd="${1}"
@@ -167,6 +178,11 @@ eval_output() {
     echo "return $?"
   )
 }
+
+# abort
+#   Deletes all heketi resources that this script would generate. If the '-g'
+#   option is specified on the command line, this also deletes all GlusterFS
+#   resources. NOTE: This does not wipe the storage devices used by GlusterFS.
 
 abort() {
   eval_output "${CLI} delete svc heketi 2>&1"
@@ -195,6 +211,28 @@ abort() {
   fi
   exit 1
 }
+
+# assign <key[=kval]> [<value>]
+#
+#   Parse a value for a command line option and echo it. This function handles
+#   the following formats:
+#
+#     key=kval  <-- kval is echoed
+#     key value <-- value is echoed
+#
+#   The echoed value is intended to be assigned to a variable. The intent is to
+#   allow for command-line options that take a value to be specified with or
+#   without an equals sign ('=').
+#
+#   This function has the following return codes and associated meanings:
+#
+#     0 = value from key=kval was used
+#     1 = value was not specified (error)
+#     2 = value from key value was used
+#
+#   Example usage:
+#
+#     VARIABLE=$(assign "${key}" "${2}")
 
 assign() {
   key="${1}"
