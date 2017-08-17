@@ -32,7 +32,7 @@
   file: path=/etc/kubernetes/manifests state=absent
 
 - name: kubeadm join with master
-  command: kubeadm join --token={{ kubernetes_token }} {{ hostvars['master'].ansible_eth1.ipv4.address }}:6443
+  command: kubeadm join --skip-preflight-checks --token={{ kubernetes_token }} {{ hostvars['master'].ansible_eth1.ipv4.address }}:6443
 
 - name: create root kube dir on node
   file:
