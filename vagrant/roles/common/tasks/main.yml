@@ -1,3 +1,11 @@
+- name: restart network
+  systemd:
+    state: restarted
+    service: network
+  when: ansible_eth1.ipv4 is not defined
+- name: refresh inventory
+  setup:
+  when: ansible_eth1.ipv4 is not defined
 - name: build hosts file
   lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_eth1.ipv4.address }} {{item}}" state=present
   when: hostvars[item].ansible_eth1.ipv4.address is defined
