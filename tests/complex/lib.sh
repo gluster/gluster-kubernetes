@@ -102,6 +102,18 @@ ssh_config() {
 	vagrant ssh-config > "${SSH_CONFIG}" || end_test -e "Error creating ssh-config"
 }
 
+rollback_vagrant() {
+	cd "${VAGRANT_DIR}" || exit 1
+	(
+        ./rollback.sh
+	if [[ ${?} -ne 0 ]]; then
+		destroy_vagrant
+		create_vagrant
+		ssh_config
+	fi
+        ) || end_test -e "Error rolling back vagrant environment"
+}
+
 copy_deploy() {
 	cd ${VAGRANT_DIR}
 	local node=${1:-master}
