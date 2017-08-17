@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # honor variables set from the caller:
-: ${TEST_DIR:="$(realpath $(dirname $0))"}
-: ${BASE_DIR:="${TEST_DIR}/../.."}
-: ${VAGRANT_DIR:="${BASE_DIR}/vagrant"}
-: ${DEPLOY_DIR:="${BASE_DIR}/deploy"}
-: ${TOPOLOGY_FILE:="${DEPLOY_DIR}/topology.json.sample"}
-: ${TESTNAME:="$(basename $0)"}
+: ${TEST_DIR="$(realpath $(dirname ${0}))"}
+: ${BASE_DIR="${TEST_DIR}/../.."}
+: ${VAGRANT_DIR="${BASE_DIR}/vagrant"}
+: ${DEPLOY_DIR="${BASE_DIR}/deploy"}
+: ${TOPOLOGY_FILE="${DEPLOY_DIR}/topology.json.sample"}
+: ${TESTNAME="$(basename ${0})"}
 
 SSH_CONFIG=${VAGRANT_DIR}/ssh-config
 
