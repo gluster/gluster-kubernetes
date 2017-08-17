@@ -36,8 +36,23 @@ fail() {
 }
 
 create_vagrant() {
-	cd ${VAGRANT_DIR}
-	./up.sh
+	cd "${VAGRANT_DIR}" || exit 1
+
+	local vstatus
+	local run=0
+
+	vstatus=$(vagrant status | grep "master\|node")
+	for m in ${vstatus}; do
+		if [[ "$(echo "${mstatus}" | grep "running")" == "" ]]; then
+			run=1
+		fi
+	done
+
+	if [[ ${run} -eq 1 ]]; then
+		./up.sh
+	fi
+
+        ssh_config
 }
 
 start_vagrant() {

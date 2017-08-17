@@ -7,6 +7,4 @@ source "${LIB_DIR}/lib.sh"
 
 create_vagrant || fail "ERROR creating vagrant environment"
 
-ssh_config || fail "ERROR creating ssh-config"
-
 pass
