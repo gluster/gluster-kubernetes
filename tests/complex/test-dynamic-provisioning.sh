@@ -1,11 +1,9 @@
 #!/bin/bash
 
 TEST_DIR="$(realpath $(dirname $0))"
-LIB_DIR="${TEST_DIR}"
-
 DOCKER_IMAGE="gcr.io/google_containers/nginx-slim:0.8"
 
-source "${LIB_DIR}/lib.sh"
+source "${TEST_DIR}/lib.sh"
 
 ssh_config || fail "ERROR creating ssh config"
 

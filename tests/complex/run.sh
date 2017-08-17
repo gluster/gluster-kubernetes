@@ -1,10 +1,9 @@
 #!/bin/bash
 
 TEST_DIR="$(realpath $(dirname $0))"
-LIB_DIR="${TEST_DIR}"
 TESTNAME=""
 
-source "${LIB_DIR}/lib.sh"
+source "${TEST_DIR}/lib.sh"
 
 ${TEST_DIR}/test-setup.sh || fail
 
