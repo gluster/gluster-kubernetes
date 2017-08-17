@@ -5,12 +5,10 @@ TESTNAME=""
 
 source "${TEST_DIR}/lib.sh"
 
-${TEST_DIR}/test-setup.sh || fail
+run -e "${TEST_DIR}/test-setup.sh"
 
-${TEST_DIR}/test-gk-deploy.sh || fail
+run -e "${TEST_DIR}/test-gk-deploy.sh"
 
-${TEST_DIR}/test-dynamic-provisioning.sh || fail
+run "${TEST_DIR}/test-dynamic-provisioning.sh"
 
-${TEST_DIR}/test-teardown.sh || fail
-
-pass
+run "${TEST_DIR}/test-teardown.sh"
