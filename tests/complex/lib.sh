@@ -83,22 +83,22 @@ create_vagrant() {
 }
 
 start_vagrant() {
-	cd ${VAGRANT_DIR}
+	cd "${VAGRANT_DIR}" || exit 1
 	vagrant up --no-provision || end_test -e "Error starting vagrant environment"
 }
 
 stop_vagrant() {
-	cd ${VAGRANT_DIR}
+	cd "${VAGRANT_DIR}" || exit 1
 	vagrant halt || end_test -e "Error halting vagrant environment"
 }
 
 destroy_vagrant() {
-	cd ${VAGRANT_DIR}
+	cd "${VAGRANT_DIR}" || exit 1
 	vagrant destroy || end_test -e "Error destroying vagrant environment"
 }
 
 ssh_config() {
-	cd ${VAGRANT_DIR}
+	cd "${VAGRANT_DIR}" || exit 1
 	vagrant ssh-config > "${SSH_CONFIG}" || end_test -e "Error creating ssh-config"
 }
 
@@ -115,9 +115,9 @@ rollback_vagrant() {
 }
 
 copy_deploy() {
-	cd ${VAGRANT_DIR}
 	local node=${1:-master}
 
+	cd "${VAGRANT_DIR}" || exit 1
 	scp -qr -F "${SSH_CONFIG}" "${DEPLOY_DIR}" "${node}:" || end_test -e "SCP deploy to ${node} failed"
 	scp -qr -F "${SSH_CONFIG}" "${TOPOLOGY_FILE}" "${node}:deploy/topology.json" || end_test -e "SCP topology to ${node} failed"
 }

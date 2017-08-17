@@ -5,7 +5,10 @@
 cd ~/deploy
 
 
-./gk-deploy -y -g -n default ./topology.json
+cd ~/deploy || exit 1
+
+# shellcheck disable=SC2086
+./gk-deploy -v -y -g -n default
 
 if [[ $? -ne 0 ]]; then
 	echo "ERROR: gk-deploy failed"
