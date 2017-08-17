@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TEST_DIR="$(realpath $(dirname $0))"
+TEST_DIR="$(realpath "$(dirname "${0}")")"
 DOCKER_IMAGE="gcr.io/google_containers/nginx-slim:0.8"
 
 source "${TEST_DIR}/lib.sh"

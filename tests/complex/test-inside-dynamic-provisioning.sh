@@ -106,7 +106,7 @@ kubectl exec "${APP}" -- /bin/bash -c "echo \"${CONTENT}\" > /usr/share/nginx/ht
 
 
 echo "verifying we get back our content from the app"
-OUTPUT="$(curl http://${appIP})"
+OUTPUT="$(curl "http://${appIP}")"
 
 if [[ "${OUTPUT}" != "${CONTENT}" ]]; then
 	echo "ERROR: did not get expected output from nginx pod"
@@ -116,17 +116,17 @@ fi
 
 echo "verifying the content is actually stored on gluster"
 mountinfo=$(kubectl exec "${APP}" -- /bin/bash -c "cat /proc/mounts | grep nginx" | awk '{print $1}')
-volname=$(echo -n ${mountinfo} | cut -d: -f2)
-glusterip=$(echo -n ${mountinfo} |cut -d: -f1)
-glusterpod=$(kubectl get pods -o wide | grep ${glusterip} | awk '{print $1}')
+volname=$(echo -n "${mountinfo}" | cut -d: -f2)
+glusterip=$(echo -n "${mountinfo}" |cut -d: -f1)
+glusterpod=$(kubectl get pods -o wide | grep "${glusterip}" | awk '{print $1}')
 
 brickinfopath="/var/lib/glusterd/vols/${volname}/bricks"
 brickinfofile=$(kubectl exec "${glusterpod}" -- /bin/bash -c "ls -1 ${brickinfopath} | head -n 1")
-brickpath=$(kubectl exec ${glusterpod} -- /bin/bash -c "cat ${brickinfopath}/${brickinfofile} | grep real_path | cut -d= -f2")
-brickhost=$(kubectl exec ${glusterpod} -- /bin/bash -c "cat ${brickinfopath}/${brickinfofile} | grep hostname | cut -d= -f2")
-brickpod=$(kubectl get pods -o wide | grep ${brickhost} | awk '{print $1}')
+brickpath=$(kubectl exec "${glusterpod}" -- /bin/bash -c "cat ${brickinfopath}/${brickinfofile} | grep real_path | cut -d= -f2")
+brickhost=$(kubectl exec "${glusterpod}" -- /bin/bash -c "cat ${brickinfopath}/${brickinfofile} | grep hostname | cut -d= -f2")
+brickpod=$(kubectl get pods -o wide | grep "${brickhost}" | awk '{print $1}')
 
-BRICK_CONTENT=$(kubectl exec ${brickpod} -- /bin/bash -c "cat ${brickpath}/index.html")
+BRICK_CONTENT=$(kubectl exec "${brickpod}" -- /bin/bash -c "cat ${brickpath}/index.html")
 if [[ "${BRICK_CONTENT}" != "${CONTENT}" ]]; then
 	echo "ERROR: did not get expected content from brick"
 	exit 1

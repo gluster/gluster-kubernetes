@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_DIR=$(cd $(dirname ${0}); pwd)
+SCRIPT_DIR="$(realpath "$(dirname "${0}")")"
 STUBS_DIR="${SCRIPT_DIR}/stubs"
 TESTS_DIR="${SCRIPT_DIR}/.."
 INC_DIR="${TESTS_DIR}/common"
@@ -56,7 +56,7 @@ test_cli_unknown () {
 	local cli="${1}"
 	local expected_out="Unknown CLI '${cli}'."
 
-	OUT=$(${GK_DEPLOY} -y -c ${cli} ${TOPOLOGY})
+	OUT=$("${GK_DEPLOY}" -y -c "${cli}" "${TOPOLOGY}")
 	local rc=$?
 
 	if [[ "x${rc}" == "x0" ]]; then
@@ -96,7 +96,8 @@ Namespace 'invalid' not found."
 		args="${args} -c ${cli}"
 	fi
 
-	OUT=$(${GK_DEPLOY} ${args} ${TOPOLOGY})
+	# shellcheck disable=SC2086
+	OUT=$("${GK_DEPLOY}" ${args} "${TOPOLOGY}")
 	local rc=$?
 
 	echo "cmd: '${GK_DEPLOY} ${args} ${TOPOLOGY}'"
@@ -160,4 +161,4 @@ testit "test namespace invalid unknown-cli" \
 	test_namespace_invalid unknown-cli \
 	|| ((failed++))
 
-testok $0 ${failed}
+testok "${0}" "${failed}"
