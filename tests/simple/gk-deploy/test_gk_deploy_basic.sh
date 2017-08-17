@@ -13,20 +13,7 @@ TOPOLOGY="${DEPLOY_DIR}/topology.json.sample"
 PATH="${STUBS_DIR}:$PATH"
 
 source "${INC_DIR}/subunit.sh"
-
-
-test_syntax() {
-	bash -n ${GK_DEPLOY}
-}
-
-test_shellcheck() {
-	if ! which shellcheck ; then
-		echo "ShellCheck not found: skipping..."
-		return 0
-	fi
-
-	shellcheck -s bash -e SC2181 ${GK_DEPLOY}
-}
+source "${INC_DIR}/shell_tests.sh"
 
 test_missing_topology () {
 	${GK_DEPLOY} -y
@@ -138,11 +125,11 @@ Namespace 'invalid' not found."
 failed=0
 
 testit "test script syntax" \
-	test_syntax \
+	test_shell_syntax "${GK_DEPLOY}" \
 	|| ((failed++))
 
 testit "test shellcheck" \
-	test_shellcheck \
+	test_shellcheck "${GK_DEPLOY}" \
 	|| ((failed++))
 
 testit "test missing topology" \
