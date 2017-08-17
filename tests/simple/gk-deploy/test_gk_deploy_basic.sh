@@ -39,30 +39,25 @@ test_missing_topology () {
 }
 
 test_cli_not_found () {
-	local saved_path="${PATH}"
-	PATH="/doesnotexist"
 	local expected_out="Container platform CLI (e.g. kubectl, oc) not found."
 
-	OUT=$(${GK_DEPLOY} -y ${TOPOLOGY})
+	OUT=$(PATH="/doesnotexist" "${GK_DEPLOY}" -y "${TOPOLOGY}")
 	local rc=${?}
 
 	if [[ "x${rc}" == "x0" ]]; then
 		echo "ERROR: gk-deploy succeeded "\
 			"(output: \"${OUT}\")"
-		PATH=${saved_path}
 		return 1
 	fi
 
 	if [[ "x${rc}" != "x1" ]]; then
 		echo "ERROR: gk-deploy gave ${rc}, " \
 			"expected 1 (output: \"${OUT}\")"
-		PATH=${saved_path}
 		return 1
 	fi
 
 	if [[ "${OUT}" != "${expected_out}" ]]; then
 		echo "ERROR: got output '${OUT}', expected '${expected_out}'"
-		PATH=${saved_path}
 		return 1
 	fi
 
