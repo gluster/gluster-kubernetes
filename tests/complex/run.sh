@@ -12,4 +12,6 @@ run -e "${TEST_DIR}/test-gk-deploy.sh"
 
 run "${TEST_DIR}/test-dynamic-provisioning.sh"
 
+run "${TEST_DIR}/test-object-store.sh"
+
 run "${TEST_DIR}/test-teardown.sh"
