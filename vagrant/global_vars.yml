@@ -15,3 +15,15 @@ install_pkgs:
 - kubeadm
 - kubelet
 - kubectl
+# The following variables control the use and configuration of a custom docker
+# registry:
+# * custom_registry: Specifies and enables a custom registry (default none)
+# * custom_registry_insecure: Marks the custom registry as insecure. This is
+#   typically the case if you're running a local registry on your host machine
+#   (default true)
+# * custom_registry_add: Adds the custom registry as the first registry, making
+#   it the default registry to search for images if no registry is specified.
+#   (default true)
+#custom_registry: 192.168.121.1:5000
+#custom_registry_insecure: false
+#custom_registry_add: false
