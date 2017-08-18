@@ -37,14 +37,6 @@ If you are not able to deploy a hyper-converged GlusterFS cluster, you must
 have one running somewhere that the Kubernetes nodes can access. The above
 requirements still apply for any pre-existing GlusterFS cluster.
 
-## Client Setup
-
-Heketi provides a CLI client that allows users to administer the deployment
-and configuration of GlusterFS in Kubernetes. Download and install
-[heketi-cli](https://github.com/heketi/heketi/releases) onto a client machine
-that has administrative access to your Kubernetes cluster. This same machine
-will be the one you use for deployment.
-
 ## Deployment Overview
 
 An administrator must provide the topology information of the GlusterFS cluster
@@ -92,8 +84,6 @@ administrative access to your Kubernetes cluster. You should familiarize
 yourself with the script's options by running `gk-deploy -h`. Some things to
 note when running the script:
 
- * It must be run on a machine with `heketi-cli` installed.
-
  * By default it expects the topology file to be in the same directory as
  itself. You can specify a different location as the first non-option
  argument on the command-line.
@@ -115,7 +105,8 @@ note when running the script:
 # Usage Examples
 
 Running the following from a node with Kubernetes administrative access and
-`heketi-cli` installed creates 100GB Persistent Volume
+[heketi-cli](https://github.com/heketi/heketi/releases) installed creates a
+100GB Persistent Volume
 [which can be claimed](http://kubernetes.io/docs/user-guide/persistent-volumes/#claims-as-volumes)
 from any application:
 

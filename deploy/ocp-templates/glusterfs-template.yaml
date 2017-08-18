@@ -26,6 +26,7 @@ objects:
       metadata:
         name: glusterfs
         labels:
+          glusterfs: pod
           glusterfs-node: pod
       spec:
         nodeSelector:

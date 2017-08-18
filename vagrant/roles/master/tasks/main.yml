@@ -1,35 +1,42 @@
-- name: kubeadm init
-  command: kubeadm init --skip-preflight-checks --token={{ kubernetes_token }} --kubernetes-version=v{{ kubernetes_version }}  --apiserver-advertise-address={{ ansible_eth1.ipv4.address }}
+- name: check for kubelet config
+  stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: kubelet
 
-- name: create root kube dir
-  file:
-    path: /root/.kube
-    state: directory
-    owner: root
-    group: root
+- block:
+  - name: kubeadm init
+    command: kubeadm init --skip-preflight-checks --token={{ kubernetes_token }} --kubernetes-version=v{{ kubernetes_version }}  --apiserver-advertise-address={{ ansible_eth1.ipv4.address }}
 
-- name: create root kube config
-  copy:
-    src: /etc/kubernetes/admin.conf
-    dest: /root/.kube/config
-    remote_src: True
-    owner: root
-    group: root
+  - name: create root kube dir
+    file:
+      path: /root/.kube
+      state: directory
+      owner: root
+      group: root
 
-- name: create user kube dir
-  file:
-    path: /home/vagrant/.kube
-    state: directory
-    owner: vagrant
-    group: vagrant
+  - name: create root kube config
+    copy:
+      src: /etc/kubernetes/admin.conf
+      dest: /root/.kube/config
+      remote_src: True
+      owner: root
+      group: root
 
-- name: create user kube config
-  copy:
-    src: /etc/kubernetes/admin.conf
-    dest: /home/vagrant/.kube/config
-    remote_src: True
-    owner: vagrant
-    group: vagrant
+  - name: create user kube dir
+    file:
+      path: /home/vagrant/.kube
+      state: directory
+      owner: vagrant
+      group: vagrant
+
+  - name: create user kube config
+    copy:
+      src: /etc/kubernetes/admin.conf
+      dest: /home/vagrant/.kube/config
+      remote_src: True
+      owner: vagrant
+      group: vagrant
+  when: not kubelet.stat.exists
 
 - name: create weave network
   command: kubectl apply -f https://git.io/weave-kube-1.6
