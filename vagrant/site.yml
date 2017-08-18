@@ -14,25 +14,6 @@
     - "global_vars.yml"
   roles:
     - common
-  tasks:
-    - name: Does Docker cache exist?
-      local_action: stat path="{{ vagrant_home }}/cache/{{ ansible_distribution }}/{{ ansible_distribution_version }}/docker-images.tgz"
-      become: false
-      register: docker_cache_exists
-
-    - name: Copy docker images archive
-      copy:
-        src: "{{ vagrant_home }}/cache/{{ ansible_distribution }}/{{ ansible_distribution_version }}/docker-images.tgz"
-        dest: "/tmp/docker-images.tgz"
-      when:
-      - docker_cache_exists.stat.exists == True
-      - vagrant_cache
-
-    - name: Load Docker images
-      shell: gzip -dcN /tmp/docker-images.tgz | docker load
-      when:
-      - docker_cache_exists.stat.exists == True
-      - vagrant_cache
 
 - hosts: master
   become: yes
