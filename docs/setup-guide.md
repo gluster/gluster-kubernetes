@@ -7,7 +7,7 @@ Kubernetes.
 
 The only strict requirement is a pre-existing Kubernetes cluster and
 administrative access to that cluster. You can opt to deploy GlusterFS as a
-hyper-converged service on you Kubernetes nodes if they meet the following
+hyper-converged service on your Kubernetes nodes if they meet the following
 requirements:
 
  * There must be at least three nodes.
