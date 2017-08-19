@@ -59,7 +59,7 @@ kind: StorageClass
 metadata:
   name: gluster-heketi  <1>
 provisioner: kubernetes.io/glusterfs  <2>
- parameters:
+parameters:
   endpoint: "heketi-storage-endpoints"  <3>
   resturl: "http://10.42.0.0:8080"  <4>
   restuser: "joe"  <5>
