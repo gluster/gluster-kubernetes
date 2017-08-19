@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gk-installer
+spec:
+  template:
+    metadata:
+      name: gk-installer
+    spec:
+      containers:
+      - name: gk-installer
+        image: kubermatic/gk-installer
+        volumeMounts:
+        - name: topology
+          mountPath: /etc/gk-deploy/
+        ## Uncomment the following command if you need to abort the deployment
+        # command:
+        #   - /bin/sh
+        #   - -c
+        #   - -x
+        #   - "gk-deploy --abort -g -v -c kubectl -y --templates_dir /opt/gluster-kubernetes/gluster-kubernetes-1.1/deploy/kube-templates /etc/gk-deploy/topology.json"
+      restartPolicy: Never
+      volumes:
+        - name: topology
+          configMap:
+            name: gk-install-topology
