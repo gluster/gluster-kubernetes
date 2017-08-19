@@ -243,6 +243,35 @@ assign() {
   keypos=$keylen
 }
 
+# check <resource_type> <select> [<cond>]
+#
+#   Check a particular resource or set of resources for a particular state. The
+#   <resource_type> can be any type recognized by Kubernetes (e.g. pods, svc).
+#   <select> can be either a name or a label selector, its nature being
+#   determined by the presence or lack of an 's' at the end of <resource_type>
+#   (e.g. 'pod' searches for a pod by name, 'pods' searches for any pods
+#   matching the supplied selector). <cond> can either be a timeout in seconds
+#   for how long to wait for the resource to reach the desired state (default
+#   is determined by ${WAIT}) or a type-specific alternate state to look for
+#   (default is to just verify they exist).
+#
+#   The following resource types have unique conditional states:
+#
+#   * Pods
+#     - default: state reports '1/1'
+#     - Completed: state reports 'Completed', used for jobs
+#   * PersistentVolumeClaims
+#     - default: state reports 'Bound'
+#
+#   This function has the following return codes and associated meanings:
+#
+#     0 = one or more resources were found
+#     1 = no resources were found (error)
+#
+#   Example usage:
+#
+#     check pods "heketi=pod" 2
+
 check() {
   local rc=1
   local wait_limit=${WAIT}
@@ -298,6 +327,11 @@ check() {
         PersistentVolumeClaim* | persistentvolumeclaim* | pvc)
         status=$(echo "${line}" | awk '{print $2}')
         if [[ "${status}" != "Bound" ]]; then
+          rc=1
+        fi
+        ;;
+        *)
+        if echo "${line}" | grep -q "Error"; then
           rc=1
         fi
         ;;
