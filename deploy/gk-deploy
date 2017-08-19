@@ -698,6 +698,7 @@ if [[ ${EXISTS_DEPLOY_HEKETI} -eq 1 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
     eval_output "${heketi_cli} setup-openshift-heketi-storage 2>&1"
     if [[ ${?} != 0 ]]; then
       output "Failed on setup openshift heketi storage"
+      output "This may indicate that the storage must be wiped and the GlusterFS nodes must be reset."
       exit 1
     fi
   else
