@@ -256,6 +256,9 @@ check() {
   if [[ ${cond} =~ $number_re ]]; then
     wait_limit=${cond}
   fi
+  if [[ "${resource}" == *s ]]; then
+    select="--selector=${select}"
+  fi
 
   s=0
   debug "\nChecking status of ${resource} matching '${select}':"
@@ -265,7 +268,7 @@ check() {
       break
     fi
     sleep 2
-    res=$(${CLI} get "${resource}" --no-headers --show-all --selector="${select}" 2>&1)
+    res=$(${CLI} get "${resource}" --no-headers --show-all "${select}" 2>&1)
     if [[ ${s} -ne 0 ]] && [[ ${VERBOSE} -eq 1 ]]; then
       reslines=$(echo "$res" | wc -l)
       ((reslines+=1))
