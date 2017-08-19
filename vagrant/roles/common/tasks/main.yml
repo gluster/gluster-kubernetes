@@ -82,6 +82,7 @@
   with_items:
     - docker
     - kubelet
+    - ntpd
 
 - name: Ensure firewalld.service
   service: name=firewalld state=started enabled=yes
