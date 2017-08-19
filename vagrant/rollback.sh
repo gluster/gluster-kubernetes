@@ -6,5 +6,5 @@ vagrant sandbox rollback "${MACHINES[@]}"
 
 for m in ${MACHINES[*]}; do
   echo "[${m}] Restarting services..."
-  vagrant ssh "${m}" -c "sudo systemctl restart docker kubelet" 1>/dev/null
+  vagrant ssh "${m}" -c "sudo systemctl restart docker kubelet ntpd" 1>/dev/null
 done
