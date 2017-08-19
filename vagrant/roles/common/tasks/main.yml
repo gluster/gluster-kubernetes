@@ -120,3 +120,4 @@
   with_items:
     - docker
     - kubelet
+    - ntpd
