@@ -408,8 +408,8 @@ The client machine that will run this script must have:
 Each of the nodes that will host GlusterFS must also have appropriate firewall
 rules for the required GlusterFS ports:
  * 2222  - sshd (if running GlusterFS in a pod)
- * 24007 - GlusterFS Daemon
- * 24008 - GlusterFS Management
+ * 24007 - GlusterFS Management
+ * 24008 - GlusterFS RDMA
  * 49152 to 49251 - Each brick for every volume on the host requires its own
    port. For every new brick, one new port will be used starting at 49152. We
    recommend a default range of 49152-49251 on each host, though you can adjust
