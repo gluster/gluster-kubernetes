@@ -561,7 +561,7 @@ if [[ -z "$NAMESPACE" ]]; then
   fi
 fi
 
-${CLI} get namespaces ${NAMESPACE} 2>/dev/null
+check namespace "${NAMESPACE}" 10
 if [[ ${?} -eq 0 ]]; then
   output "Using namespace \"${NAMESPACE}\"."
   CLI="${CLI} -n ${NAMESPACE}"
