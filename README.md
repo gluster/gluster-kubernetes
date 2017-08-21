@@ -26,6 +26,7 @@ You can find slides and videos of community presentations [here](docs/presentati
 * [Quickstart](#quickstart)
 * [Setup Guide](./docs/setup-guide.md)
 * [Hello World with GlusterFS Dynamic Provisioning](./docs/examples/hello_world/README.md)
+* [Contact](#contact)
 
 ### Quickstart
 
@@ -133,3 +134,12 @@ then mount those volumes to verify they're working. To see an example of how
 to use this with a Kubernetes application, see the following:
 
 [Hello World application using GlusterFS Dynamic Provisioning](./docs/examples/hello_world/README.md)
+
+### Contact
+
+Facing any issue? Please raise a github issue.
+
+Interested to help with code/documentation? Send us a pull request.
+
+Sometimes gluster-kubernetes developers are available at gluster irc channel
+in Freenode network.
