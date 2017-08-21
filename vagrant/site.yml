@@ -30,3 +30,14 @@
     - "global_vars.yml"
   roles:
     - nodes
+
+- hosts: master
+  become: yes
+  become_method: sudo
+  vars_files:
+    - "global_vars.yml"
+  tasks:
+    - include_role:
+        name: master
+        tasks_from: yum_cache.yml
+      when: vagrant_cache
