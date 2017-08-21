@@ -37,7 +37,7 @@ fail() {
 
 create_vagrant() {
 	cd ${VAGRANT_DIR}
-	./up.sh
+	VAGRANT_CACHE=1 ./up.sh
 }
 
 start_vagrant() {
