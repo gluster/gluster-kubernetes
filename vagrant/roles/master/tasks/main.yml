@@ -1,3 +1,8 @@
+- include: gcr_proxy.yml
+  when:
+  - custom_registry is defined
+  - custom_registry_gcr | default(false)
+
 - name: install s3-curl depencendies
   yum:
     name: "{{ item }}"

@@ -42,6 +42,14 @@ scripts are available to facilitate this feature:
    ./docker-cache.sh 192.168.121.1:5000 master
    ```
 
+**GCR.IO PROXY:** An addition to the custom registry, this environment allows
+you to set up an nginx proxy on the master node VM that can redirect gcr.io
+traffic to your custom registry. This allows you to store any images from
+gcr.io in your custom registry and then have things like kubeadm pull from
+there instead of the actual gcr.io. Just specify `custom_registry_gcr=true` in
+`global_vars.yml`. The `gcr-proxy-state.sh` script is available to set the
+proxy redirect on or off at runtime.
+
 A typical workflow to start using this would look like:
 
  1. Run `docker-registry-run.sh`.
@@ -53,5 +61,10 @@ A typical workflow to start using this would look like:
  5. Run `docker-cache.sh <host IP>:5000 node0`
     * **OPTIONAL:** Run `docker pull gcr.io/google_containers/nginx-slim:0.8`
       on `node0` before caching, since it is used in testing.
+ 6. Tear down the vagrant environment: `vagrant destroy`
+ 7. Set `custom_registry_gcr=true` in `global_vars.yml`
 
-Now Docker will check your custom registry before pulling from Docker Hub.
+Now Docker will pull gcr.io images and custom images from your custom registry,
+and check your custom registry before pulling from Docker Hub. You will want to
+periodically set `custom_registry_add=false` and `custom_registry_gcr=false` to
+pull updated images and then cache them with `docker-cache.sh`.

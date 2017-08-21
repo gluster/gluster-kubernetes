@@ -1,0 +1,21 @@
+- hosts: master
+  become: yes
+  become_method: sudo
+  vars_files:
+    - "global_vars.yml"
+  tasks:
+    - include_role:
+        name: master
+        tasks_from: gcr_proxy.yml
+      when: custom_registry_gcr | default(false)
+
+- hosts: nodes
+  become: yes
+  become_method: sudo
+  vars_files:
+    - "global_vars.yml"
+  tasks:
+    - include_role:
+        name: nodes
+        tasks_from: gcr_proxy.yml
+      when: custom_registry_gcr | default(false)

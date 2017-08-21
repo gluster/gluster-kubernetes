@@ -25,6 +25,19 @@ install_pkgs:
 # * custom_registry_add: Adds the custom registry as the first registry, making
 #   it the default registry to search for images if no registry is specified.
 #   (default true)
+# * custom_registry_gcr: Sets up an nginx proxy on the master node VM to allow
+#   redirection of requests to gcr.io to your custom registry. This allows you
+#   to pull Google's images without changing image names/URLs. (default false)
+#   It is recommended to increase your master node's RAM to at least 2048 MB
+#   in the Vagrantfile for better performance.
+# * gcr_proxy_state: Whether or not the VMs' /etc/hosts will be updated to
+#   redirect gcr.io traffic to the nginx proxy running on the master node VM.
+#   Valid values are 'present' and 'absent'. (default 'present')
+# * gcr_proxy_nginx: The version of nginx-slim to use for the gcr.io proxy.
+#   (default '0.8')
 #custom_registry: 192.168.121.1:5000
 #custom_registry_insecure: false
 #custom_registry_add: false
+#custom_registry_gcr: true
+#gcr_proxy_state: absent
+#gcr_proxy_nginx: 0.23
