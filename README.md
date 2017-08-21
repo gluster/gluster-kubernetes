@@ -137,9 +137,7 @@ to use this with a Kubernetes application, see the following:
 
 ### Contact
 
-Facing any issue? Please raise a github issue.
+The gluster-kubernetes developers hang out in #sig-storage on the Kubernetes Slack and 
+on IRC channels in #gluster and #heketi at freenode network.
 
-Interested to help with code/documentation? Send us a pull request.
-
-Sometimes gluster-kubernetes developers are available at gluster irc channel
-in Freenode network.
+And, of course, you are always welcomed to reach us via Issues and Pull Requests on GitHub.
