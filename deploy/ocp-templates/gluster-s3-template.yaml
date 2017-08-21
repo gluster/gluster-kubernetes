@@ -1,0 +1,125 @@
+---
+kind: Template
+apiVersion: v1
+metadata:
+  name: gluster-s3
+  labels:
+    glusterfs: s3-template
+    gluster-s3: template
+  annotations:
+    description: Gluster s3 service template
+    tags: glusterfs,heketi,gluster-s3
+objects:
+- kind: Service
+  apiVersion: v1
+  metadata:
+    name: gluster-s3-service
+    labels:
+      glusterfs: s3-service
+      gluster-s3: service
+  spec:
+    ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+    selector:
+      glusterfs: s3-pod
+    type: ClusterIP
+    sessionAffinity: None
+  status:
+    loadBalancer: {}
+- kind: Route
+  apiVersion: v1
+  metadata:
+    name: gluster-s3-route
+    labels:
+      glusterfs: s3-route
+      gluster-s3: route
+  spec:
+    to:
+      kind: Service
+      name: gluster-s3-service
+- kind: DeploymentConfig
+  apiVersion: v1
+  metadata:
+    name: gluster-s3-dc
+    labels:
+      glusterfs: s3-dc
+      gluster-s3: dc
+    annotations:
+      openshift.io/scc: privileged
+      description: Defines how to deploy gluster s3 object storage
+  spec:
+    replicas: 1
+    selector:
+      glusterfs: s3-pod
+    template:
+      metadata:
+        name: gluster-s3
+        labels:
+          glusterfs: s3-pod
+      spec:
+        containers:
+        - name: gluster-s3
+          image: gluster/gluster-object:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+          - name: gluster
+            containerPort: 8080
+            protocol: TCP
+          env:
+          - name: S3_ACCOUNT
+            value: "${S3_ACCOUNT}"
+          - name: S3_USER
+            value: "${S3_USER}"
+          - name: S3_PASSWORD
+            value: "${S3_PASSWORD}"
+          resources: {}
+          volumeMounts:
+          - name: gluster-vol1
+            mountPath: "/mnt/gluster-object/${S3_ACCOUNT}"
+          - name: gluster-vol2
+            mountPath: "/mnt/gluster-object/gsmetadata"
+          - name: glusterfs-cgroup
+            readOnly: true
+            mountPath: "/sys/fs/cgroup"
+          terminationMessagePath: "/dev/termination-log"
+          securityContext:
+            privileged: true
+        volumes:
+        - name: glusterfs-cgroup
+          hostPath:
+            path: "/sys/fs/cgroup"
+        - name: gluster-vol1
+          persistentVolumeClaim:
+            claimName: ${PVC}
+        - name: gluster-vol2
+          persistentVolumeClaim:
+            claimName: ${META_PVC}
+        restartPolicy: Always
+        terminationGracePeriodSeconds: 30
+        dnsPolicy: ClusterFirst
+        serviceAccountName: default
+        serviceAccount: default
+        securityContext: {}
+parameters:
+- name: S3_ACCOUNT
+  displayName: S3 Account Name
+  description: S3 storage account which will provide storage on GlusterFS volumes
+  required: true
+- name: S3_USER
+  displayName: S3 User
+  description: S3 user who can access the S3 storage account
+  required: true
+- name: S3_PASSWORD
+  displayName: S3 User Password
+  description: Password for the S3 user
+  required: true
+- name: PVC
+  displayName: Primary GlusterFS-backed PVC
+  description: GlusterFS-backed PVC for object storage
+  value: gluster-s3-claim
+- name: META_PVC
+  displayName: Metadata GlusterFS-backed PVC
+  description: GlusterFS-backed PVC for object storage metadata
+  value: gluster-s3-meta-claim

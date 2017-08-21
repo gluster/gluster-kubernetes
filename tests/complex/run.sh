@@ -1,17 +1,17 @@
 #!/bin/bash
 
-TEST_DIR="$(realpath $(dirname $0))"
-LIB_DIR="${TEST_DIR}"
+# shellcheck disable=SC2034
 TESTNAME=""
+TEST_DIR="$(realpath "$(dirname "${0}")")"
 
-source "${LIB_DIR}/lib.sh"
+source "${TEST_DIR}/lib.sh"
 
-${TEST_DIR}/test-setup.sh || fail
+run -e "${TEST_DIR}/test-setup.sh"
 
-${TEST_DIR}/test-gk-deploy.sh || fail
+run -e "${TEST_DIR}/test-gk-deploy.sh"
 
-${TEST_DIR}/test-dynamic-provisioning.sh || fail
+run "${TEST_DIR}/test-dynamic-provisioning.sh"
 
-${TEST_DIR}/test-teardown.sh || fail
+run "${TEST_DIR}/test-object-store.sh"
 
-pass
+run "${TEST_DIR}/test-teardown.sh"

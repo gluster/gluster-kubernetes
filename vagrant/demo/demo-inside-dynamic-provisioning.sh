@@ -108,16 +108,16 @@ run "curl http://$appIP"
 run "kubectl exec myapp -- /bin/bash -c \"cat /proc/mounts | grep nginx\""
 
 mountinfo=$(kubectl exec myapp -- /bin/bash -c "cat /proc/mounts | grep nginx" | awk '{print $1}')
-volname=$(echo -n $mountinfo | cut -d: -f2)
-glusterip=$(echo -n $mountinfo |cut -d: -f1)
-glusterpod=$(kubectl get pods -o wide | grep $glusterip | awk '{print $1}')
+volname=$(echo -n "${mountinfo}" | cut -d: -f2)
+glusterip=$(echo -n "${mountinfo}" |cut -d: -f1)
+glusterpod=$(kubectl get pods -o wide | grep "${glusterip}" | awk '{print $1}')
 
-brickinfopath="/var/lib/glusterd/vols/$volname/bricks"
-brickinfofile=$(kubectl exec $glusterpod -- /bin/bash -c "ls -1 $brickinfopath | head -n 1")
-brickpath=$(kubectl exec $glusterpod -- /bin/bash -c "cat $brickinfopath/$brickinfofile | grep real_path | cut -d= -f2")
-brickhost=$(kubectl exec $glusterpod -- /bin/bash -c "cat $brickinfopath/$brickinfofile | grep hostname | cut -d= -f2")
-brickpod=$(kubectl get pods -o wide | grep $brickhost | awk '{print $1}')
+brickinfopath="/var/lib/glusterd/vols/${volname}/bricks"
+brickinfofile=$(kubectl exec "${glusterpod}" -- /bin/bash -c "ls -1 ${brickinfopath} | head -n 1")
+brickpath=$(kubectl exec "${glusterpod}" -- /bin/bash -c "cat ${brickinfopath}/${brickinfofile} | grep real_path | cut -d= -f2")
+brickhost=$(kubectl exec "${glusterpod}" -- /bin/bash -c "cat ${brickinfopath}/${brickinfofile} | grep hostname | cut -d= -f2")
+brickpod=$(kubectl get pods -o wide | grep "${brickhost}" | awk '{print $1}')
 
-run "kubectl exec $brickpod -- /bin/bash -c \"cat $brickpath/index.html\""
+run "kubectl exec ${brickpod} -- /bin/bash -c \"cat ${brickpath}/index.html\""
 
 desc "demo-dynamic-provisioning: done"

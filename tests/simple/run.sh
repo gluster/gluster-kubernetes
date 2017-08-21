@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_DIR=$(cd $(dirname $0); pwd)
+SCRIPT_DIR="$(realpath "$(dirname "${0}")")"
 
 for testdir in ${SCRIPT_DIR}/*; do
 	if [[ ! -d ${testdir} ]]; then
@@ -11,9 +11,9 @@ for testdir in ${SCRIPT_DIR}/*; do
 		continue
 	fi
 
-	pushd ${testdir}
+	pushd "${testdir}"
 	./run.sh
-	rc=$?
+	rc=${?}
 	popd
 
 	if [[ ${rc} -ne 0 ]]; then

@@ -1,3 +1,24 @@
+- name: install s3-curl depencendies
+  yum:
+    name: "{{ item }}"
+    state: present
+    disable_gpg_check: yes
+  with_items:
+  - perl-Digest-HMAC
+  - unzip
+
+- name: get s3curl
+  unarchive:
+    src: http://s3.amazonaws.com/doc/s3-example-code/s3-curl.zip
+    dest: /home/vagrant/
+    remote_src: yes
+
+- name: make s3curl executable
+  file:
+    path: /home/vagrant/s3-curl/s3curl.pl
+    state: file
+    mode: "a+x"
+
 - name: check for kubelet config
   stat:
     path: /etc/kubernetes/kubelet.conf
@@ -47,9 +68,3 @@
 
 - name: wait for dns to be ready
   wait_for: host={{ kubednsaddress.stdout }} port=53 state=started timeout=1800
-
-- include: yum_cache.yml
-  when: vagrant_cache
-
-#- name: save iptables
-#  command: service iptables save

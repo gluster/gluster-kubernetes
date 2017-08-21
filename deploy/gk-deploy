@@ -31,6 +31,8 @@ SKIP_PREREQ=0
 EXISTS_GLUSTERFS=0
 EXISTS_DEPLOY_HEKETI=0
 EXISTS_HEKETI=0
+EXISTS_BLOCK=0
+EXISTS_OBJECT=0
 EXECUTOR="kubernetes"
 SSH_KEYFILE="/dev/null"
 SSH_USER="root"
@@ -39,12 +41,22 @@ SSH_PORT="22"
 ADMIN_KEY=""
 USER_KEY=""
 DAEMONSET_LABEL=""
+DEPLOY_BLOCK=1
+DEPLOY_OBJECT=1
+OBJ_ACCOUNT=""
+OBJ_USER=""
+OBJ_PASSWORD=""
+OBJ_STORAGE_CLASS="glusterfs-for-s3"
+OBJ_CAPACITY="2Gi"
 
 usage() {
   echo -e "USAGE: ${PROG} [-ghvy] [-c CLI] [-t <TEMPLATES>] [-n NAMESPACE] [-w <SECONDS>]
        [-s <KEYFILE>] [--ssh-user <USER>] [--ssh-port <PORT>]
        [--admin-key <ADMIN_KEY>] [--user-key <USER_KEY>] [-l <LOG_FILE>]
-       [--daemonset-label <DAEMONSET_LABEL> ]  [<TOPOLOGY>]\n"
+       [--daemonset-label <DAEMONSET_LABEL> ] [--no-block] [--no-object]
+       [--object-account <ACCOUNT>] [--object-user <USER>]
+       [--object-password <password>] [--object-sc <STORAGE_CLASS>]
+       [--object-capacity <CAPACITY>] [-l <LOG_FILE>] [--abort] [<TOPOLOGY>]\n"
 }
 
 help_exit() {
@@ -108,6 +120,26 @@ Options:
               Controls the value of the label set on nodes which will host pods
               from the GlusterFS daemonset. This allows for multiple GlusterFS
               daemonsets to run in the same cluster. Default is 'glusterfs'.
+
+  --no-block
+              Don't deploy a gluster-block container. Default is to deploy.
+
+  --no-object
+              Don't deploy a gluster-s3 container. Default is to deploy.
+
+  --object-account ACCOUNT, --object-user USER, --object-password PASSWORD
+              Required credentials for deploying the gluster-s3 container. If
+              any of these are missing, object container deployment will be
+              skipped.
+
+  --object-sc STORAGE_CLASS
+              Specify an optional, pre-existing StorageClass for the object
+              container to use to create GlusterFS volumes to host the objects.
+              Default is to create a new StorageClass called '${OBJ_STORAGE_CLASS}'.
+
+  --object-capacity CAPACITY
+              The total capacity of the GlusterFS volume which will host the
+              objects. Default is '${OBJ_CAPACITY}'.
 
   -y, --yes
               Skip the pre-requisites prompt.
@@ -188,6 +220,20 @@ abort() {
     eval_output "${CLI} delete dc,route,template --selector=\"deploy-heketi\" 2>&1"
     eval_output "${CLI} delete dc,route,template --selector=\"heketi\" 2>&1"
   fi
+  if [[ ${DEPLOY_BLOCK} -eq 1 ]]; then
+    debug "Removing glusterblock resources."
+    eval_output "${CLI} delete all,deploy,sa,clusterrole,clusterrolebinding --selector=\"glusterblock\" 2>&1"
+    if [[ "${CLI}" == *oc\ * ]]; then
+      eval_output "${CLI} delete dc --selector=\"glusterblock\" 2>&1"
+    fi
+  fi
+  if [[ ${DEPLOY_OBJECT} -eq 1 ]]; then
+    debug "Removing gluster-s3 resources."
+    eval_output "${CLI} delete all,svc,deploy,secret,sc --selector=\"gluster-s3\" 2>&1"
+    if [[ "${CLI}" == *oc\ * ]]; then
+      eval_output "${CLI} delete dc,route,template --selector=\"gluster-s3\" 2>&1"
+    fi
+  fi
   if [[ ${GLUSTER} -eq 1 ]]; then
     while read -r node; do
       debug "Removing label from '${node}' as a GlusterFS node."
@@ -242,50 +288,100 @@ assign() {
   keypos=$keylen
 }
 
-check_pods() {
+# check <resource_type> <select> [<cond>]
+#
+#   Check a particular resource or set of resources for a particular state. The
+#   <resource_type> can be any type recognized by Kubernetes (e.g. pods, svc).
+#   <select> can be either a name or a label selector, its nature being
+#   determined by the presence or lack of an 's' at the end of <resource_type>
+#   (e.g. 'pod' searches for a pod by name, 'pods' searches for any pods
+#   matching the supplied selector). <cond> can either be a timeout in seconds
+#   for how long to wait for the resource to reach the desired state (default
+#   is determined by ${WAIT}) or a type-specific alternate state to look for
+#   (default is to just verify they exist).
+#
+#   The following resource types have unique conditional states:
+#
+#   * Pods
+#     - default: state reports '1/1'
+#     - Completed: state reports 'Completed', used for jobs
+#   * PersistentVolumeClaims
+#     - default: state reports 'Bound'
+#
+#   This function has the following return codes and associated meanings:
+#
+#     0 = one or more resources were found
+#     1 = no resources were found (error)
+#
+#   Example usage:
+#
+#     check pods "heketi=pod" 2
+
+check() {
   local rc=1
   local wait_limit=${WAIT}
   local number_re='^[0-9]+$'
+  local resource="${1}"
+  local select="${2}"
+  local cond="${3}"
 
-  # $2 can either be a status string or
+  # cond can either be a status string or
   # a timeout integer. Only override the
   # timeout if we get a numeric argument.
-  if [[ ${2} =~ $number_re ]]; then
-    wait_limit=${2}
+  if [[ ${cond} =~ $number_re ]]; then
+    wait_limit=${cond}
+  fi
+  if [[ "${resource}" == *s ]]; then
+    select="--selector=${select}"
   fi
 
   s=0
-  debug "\nChecking status of pods matching '${1}':"
+  debug "\nChecking status of ${resource} matching '${select}':"
   while [[ ${rc} -ne 0 ]]; do
     if [[ ${s} -ge ${wait_limit} ]]; then
-      debug "Timed out waiting for pods matching '${1}'."
+      debug "Timed out waiting for ${resource} matching '${select}'."
       break
     fi
     sleep 2
-    pods=$(${CLI} get pod --no-headers --show-all --selector="${1}" 2>&1)
+    res=$(${CLI} get "${resource}" --no-headers --show-all "${select}" 2>&1)
     if [[ ${s} -ne 0 ]] && [[ ${VERBOSE} -eq 1 ]]; then
-      podlines=$(echo "$pods" | wc -l)
-      ((podlines+=1))
-      debug "\033[${podlines}A"
+      reslines=$(echo "$res" | wc -l)
+      ((reslines+=1))
+      debug "\033[${reslines}A"
     fi
     rc=0
-    while read -r pod; do
-      debug "\033[K${pod}"
-      case ${2} in
-        Completed)
-        status=$(echo "${pod}" | awk '{print $3}')
-        if [[ "${status}" != "Completed" ]]; then
+    while read -r line; do
+      debug "\033[K${line}"
+      case ${resource} in
+        Po* | po*)
+        case ${cond} in
+          Completed)
+          status=$(echo "${line}" | awk '{print $3}')
+          if [[ "${status}" != "Completed" ]]; then
+            rc=1
+          fi
+          ;;
+          *)
+          status=$(echo "${line}" | awk '{print $2}')
+          if [[ "${status}" != "1/1" ]]; then
+            rc=1
+          fi
+          ;;
+        esac
+        ;;
+        PersistentVolumeClaim* | persistentvolumeclaim* | pvc)
+        status=$(echo "${line}" | awk '{print $2}')
+        if [[ "${status}" != "Bound" ]]; then
           rc=1
         fi
         ;;
         *)
-        status=$(echo "${pod}" | awk '{print $2}')
-        if [[ "${status}" != "1/1" ]]; then
+        if [[ "${line}" == *Error* ]]; then
           rc=1
         fi
         ;;
       esac
-    done <<< "$(echo -e "$pods")"
+    done <<< "$(echo -e "$res")"
     ((s+=2))
   done
 
@@ -368,6 +464,39 @@ while [[ $# -ge 1 ]]; do
         if [[ $? -eq 2 ]]; then shift; fi
         keypos=$keylen
         ;;
+        -no-block)
+        DEPLOY_BLOCK=0
+        keypos=$keylen
+        ;;
+        -no-object)
+        DEPLOY_OBJECT=0
+        keypos=$keylen
+        ;;
+        -object-account*)
+        OBJ_ACCOUNT=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
+        -object-user*)
+        OBJ_USER=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
+        -object-password*)
+        OBJ_PASSWORD=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
+        -object-sc*)
+        OBJ_STORAGE_CLASS=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
+        -object-capacity*)
+        OBJ_CAPACITY=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
         -abort)
         ABORT=1
         keypos=$keylen
@@ -407,7 +536,10 @@ The client machine that will run this script must have:
 
 Each of the nodes that will host GlusterFS must also have appropriate firewall
 rules for the required GlusterFS ports:
+ * 111   - rpcbind (for glusterblock)
  * 2222  - sshd (if running GlusterFS in a pod)
+ * 3260  - iSCSI targets (for glusterblock)
+ * 24006 - glusterblockd
  * 24007 - GlusterFS Daemon
  * 24008 - GlusterFS Management
  * 49152 to 49251 - Each brick for every volume on the host requires its own
@@ -419,6 +551,8 @@ The following kernel modules must be loaded:
  * dm_snapshot
  * dm_mirror
  * dm_thin_pool
+ * dm_multipath
+ * target_core_user
 
 For systems with SELinux, the following settings need to be considered:
  * virt_sandbox_use_fusefs should be enabled on each node to allow writing to
@@ -511,7 +645,7 @@ if [[ -z "$NAMESPACE" ]]; then
   fi
 fi
 
-${CLI} get namespaces ${NAMESPACE} 2>/dev/null
+check namespace "${NAMESPACE}" 10
 if [[ ${?} -eq 0 ]]; then
   output "Using namespace \"${NAMESPACE}\"."
   CLI="${CLI} -n ${NAMESPACE}"
@@ -550,7 +684,7 @@ fi
 output "Checking for pre-existing resources..."
 
 output -n "  GlusterFS pods ... "
-check_pods "glusterfs=pod" 2 2>&1
+check pods "glusterfs=pod" 2 2>&1
 if [[ $? -eq 0 ]]; then
   EXISTS_GLUSTERFS=1
   output "found."
@@ -559,7 +693,7 @@ else
 fi
 
 output -n "  deploy-heketi pod ... "
-check_pods "deploy-heketi=pod" 2 2>&1
+check pods "deploy-heketi=pod" 2 2>&1
 if [[ $? -eq 0 ]]; then
   EXISTS_DEPLOY_HEKETI=1
   output "found."
@@ -568,12 +702,34 @@ else
 fi
 
 output -n "  heketi pod ... "
-check_pods "heketi=pod" 2 2>&1
+check pods "heketi=pod" 2 2>&1
 if [[ $? -eq 0 ]]; then
   EXISTS_HEKETI=1
   output "found."
 else
   output "not found."
+fi
+
+if [[ ${DEPLOY_BLOCK} -eq 1 ]]; then
+  output -n "  glusterblock-provisioner pod ... "
+  check pods "glusterfs=block-provisioner-pod" 2 2>&1
+  if [[ $? -eq 0 ]]; then
+    EXISTS_BLOCK=1
+    output "found."
+  else
+    output "not found."
+  fi
+fi
+
+if [[ ${DEPLOY_OBJECT} -eq 1 ]]; then
+  output -n "  gluster-s3 pod ... "
+  check pods "glusterfs=s3-pod" 2 2>&1
+  if [[ $? -eq 0 ]]; then
+    EXISTS_OBJECT=1
+    output "found."
+  else
+    output "not found."
+  fi
 fi
 
 if [[ ${EXISTS_HEKETI} -eq 0 ]]; then
@@ -615,7 +771,7 @@ if [[ ${GLUSTER} -eq 1 ]] && [[ ${EXISTS_GLUSTERFS} -eq 0 ]] && [[ ${EXISTS_HEKE
   fi
 
   output -n "Waiting for GlusterFS pods to start ... "
-  check_pods "glusterfs=pod"
+  check pods "glusterfs=pod"
   if [[ $? -ne 0 ]]; then
     output "pods not found."
     exit 1
@@ -635,7 +791,7 @@ if [[ ${EXISTS_DEPLOY_HEKETI} -eq 0 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
   fi
 
   output -n "Waiting for deploy-heketi pod to start ... "
-  check_pods "deploy-heketi=pod"
+  check pods "deploy-heketi=pod"
   if [[ $? -ne 0 ]]; then
     output "pod not found."
     exit 1
@@ -696,6 +852,7 @@ if [[ ${EXISTS_DEPLOY_HEKETI} -eq 1 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
     eval_output "${heketi_cli} setup-openshift-heketi-storage 2>&1"
     if [[ ${?} != 0 ]]; then
       output "Failed on setup openshift heketi storage"
+      output "This may indicate that the storage must be wiped and the GlusterFS nodes must be reset."
       exit 1
     fi
   else
@@ -709,7 +866,7 @@ if [[ ${EXISTS_DEPLOY_HEKETI} -eq 1 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
     exit 1
   fi
 
-  check_pods "job-name=heketi-storage-copy-job" "Completed"
+  check pods "job-name=heketi-storage-copy-job" "Completed"
   if [[ ${?} != 0 ]]; then
     output "Error waiting for job 'heketi-storage-copy-job' to complete."
     exit 1
@@ -730,7 +887,7 @@ if [[ ${EXISTS_HEKETI} -eq 0 ]]; then
   fi
 
   output -n "Waiting for heketi pod to start ... "
-  check_pods "heketi=pod"
+  check pods "heketi=pod"
   if [[ ${?} != 0 ]]; then
     output "pod not found"
     exit 1
@@ -793,6 +950,53 @@ parameters:
   output ""
 fi
 
+output "Ready to create and provide GlusterFS volumes."
+
+if [[ ${DEPLOY_BLOCK} -eq 1 ]] && [[ ${EXISTS_BLOCK} -eq 0 ]]; then
+  eval_output "${CLI} create -f ${TEMPLATES}/glusterblock-config.yaml"
+  if [[ "${CLI}" == *oc\ * ]]; then
+    eval_output "${CLI} policy add-cluster-role-to-user glusterblock-provisioner-runner system:serviceaccount:${NAMESPACE}:glusterblock-provisioner 2>&1"
+  else
+    eval_output "${CLI} create clusterrolebinding glusterblock-provisioner --clusterrole=glusterblock-provisioner-runner --serviceaccount=${NAMESPACE}:glusterblock-provisioner 2>&1"
+  fi
+  eval_output "${CLI} create -f ${TEMPLATES}/glusterblock-provisioner.yaml"
+  output -n "Waiting for glusterblock-provisioner pod to start ... "
+  check pods "glusterfs=block-provisioner-pod"
+  if [[ ${?} != 0 ]]; then
+    output "pod not found"
+    exit 1
+  fi
+  output "OK"
+  EXISTS_BLOCK=1
+  output "Ready to create and provide Gluster block volumes."
+fi
+
+if [[ ${DEPLOY_OBJECT} -eq 1 ]] && [[ "${OBJ_ACCOUNT}" != "" ]] && [[ "${OBJ_USER}" != "" ]] && [[ "${OBJ_PASSWORD}" != "" ]] && [[ ${EXISTS_OBJECT} -eq 0 ]]; then
+  if [[ "${OBJ_STORAGE_CLASS}" == "glusterfs-for-s3" ]]; then
+    eval_output "${CLI} create secret generic heketi-${NAMESPACE}-admin-secret --from-literal=key=${ADMIN_KEY} --type=kubernetes.io/glusterfs"
+    eval_output "${CLI} label --overwrite secret heketi-${NAMESPACE}-admin-secret glusterfs=s3-heketi-${NAMESPACE}-admin-secret gluster-s3=heketi-${NAMESPACE}-admin-secret"
+    eval_output "sed -e 's/\\\${STORAGE_CLASS}/${OBJ_STORAGE_CLASS}/' -e 's/\\\${HEKETI_URL}/${heketi_service}/' -e 's/\\\${NAMESPACE}/${NAMESPACE}/' ${TEMPLATES}/gluster-s3-storageclass.yaml | ${CLI} create -f - 2>&1"
+  fi
+
+  eval_output "sed -e 's/\\\${STORAGE_CLASS}/${OBJ_STORAGE_CLASS}/' -e 's/\\\${VOLUME_CAPACITY}/${OBJ_CAPACITY}/' ${TEMPLATES}/gluster-s3-pvcs.yaml | ${CLI} create -f - 2>&1"
+  check persistentvolumeclaims "glusterfs in (s3-pvc, s3-meta-pvc)"
+
+  if [[ "${CLI}" == *oc\ * ]]; then
+    eval_output "${CLI} create -f ${TEMPLATES}/gluster-s3-template.yaml 2>&1"
+    eval_output "${CLI} process ${OC_PROCESS_VAL_SWITCH} S3_ACCOUNT=${OBJ_ACCOUNT} ${OC_PROCESS_VAL_SWITCH} S3_USER=${OBJ_USER} ${OC_PROCESS_VAL_SWITCH} S3_PASSWORD=${OBJ_PASSWORD} gluster-s3 | ${CLI} create -f - 2>&1"
+  else
+    eval_output "sed -e 's/\\\${S3_ACCOUNT}/${OBJ_ACCOUNT}/' -e 's/\\\${S3_USER}/${OBJ_USER}/' -e 's/\\\${S3_PASSWORD}/${OBJ_PASSWORD}/' ${TEMPLATES}/gluster-s3-template.yaml | ${CLI} create -f - 2>&1"
+  fi
+  output -n "Waiting for gluster-s3 pod to start ... "
+  check pods "glusterfs=s3-pod"
+  if [[ ${?} != 0 ]]; then
+    output "pod not found"
+    exit 1
+  fi
+  output "OK"
+  EXISTS_BLOCK=1
+  output "Ready to create and provide Gluster object volumes."
+fi
 
 output "
 Deployment complete!
