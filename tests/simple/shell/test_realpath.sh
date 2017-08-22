@@ -10,12 +10,17 @@ source "${INC_DIR}/shell_tests.sh"
 
 failed=0
 
+find_scripts() {
+	find "${BASE_DIR}" -name "*.sh" | grep -v "subunit.sh"
+	find "${TESTS_DIR}/gk-deploy/stubs" -type f | grep -v "txt$" | grep -v "~$"
+}
+
 while read -r script; do
 	# note: this is intentially mis-spelled realPath
 	# so that this does not trigger an error.
 	testit "check for use of realPath: $(basename "${script}")" \
 		test_real_path "${script}" \
 		|| ((failed++))
-done <<< "$(find "${BASE_DIR}" -name "*.sh" | grep -v "subunit.sh")"
+done <<< "$(find_scripts)"
 
 testok "${0}" "${failed}"
