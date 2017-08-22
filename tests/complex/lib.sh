@@ -63,6 +63,7 @@ fail() {
 }
 
 create_vagrant() {
+	echo "${VAGRANT_DIR}"
 	cd "${VAGRANT_DIR}" || exit 1
 
 	local vstatus
@@ -98,6 +99,7 @@ destroy_vagrant() {
 }
 
 ssh_config() {
+	echo "${VAGRANT_DIR}"
 	cd "${VAGRANT_DIR}" || exit 1
 	vagrant ssh-config > "${SSH_CONFIG}" || end_test -e "Error creating ssh-config"
 }
