@@ -10,7 +10,7 @@ run "kubectl get nodes"
 desc "show pods"
 run "kubectl get pods"
 
-cd deploy
+cd deploy || exit 1
 
 desc "look at topology"
 run "vim topology.json"

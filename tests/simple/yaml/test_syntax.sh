@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_DIR=$(cd $(dirname ${0}); pwd)
+SCRIPT_DIR="$(realpath "$(dirname "${0}")")"
 TESTS_DIR="${SCRIPT_DIR}/.."
 INC_DIR="${TESTS_DIR}/common"
 BASE_DIR="${SCRIPT_DIR}/../../.."
@@ -12,11 +12,11 @@ source "${INC_DIR}/subunit.sh"
 
 check_yaml () {
 	local yaml=${1}
-	yamllint -f parsable -d relaxed ${yaml}
+	yamllint -f parsable -d relaxed "${yaml}"
 }
 
 check_invalid_yaml () {
-	check_yaml ${1}
+	check_yaml "${1}"
 	if [[ "x$?" == "x0" ]]; then
 		echo "ERROR: parsing invalid yaml succeeded"
 		return 1
@@ -32,14 +32,14 @@ if ! which yamllint >/dev/null 2>&1 ; then
 	subunit_skip_test "yaml syntax tests" <<< "yamllint not found"
 else
 	testit "check invalid yaml" \
-		check_invalid_yaml ${FAULTY_YAML} \
+		check_invalid_yaml "${FAULTY_YAML}" \
 		|| ((failed++))
 
-	for yaml in $(find ${DEPLOY_DIR} -name "*.yaml") ; do
-		testit "check $(basename ${yaml})" \
-			check_yaml ${yaml} \
+	while read -r yaml; do
+		testit "check $(basename "${yaml}")" \
+			check_yaml "${yaml}" \
 			|| ((failed++))
-	done
+	done <<< "$(find "${DEPLOY_DIR}" -name "*.yaml")"
 fi
 
-testok $0 ${failed}
+testok "${0}" "${failed}"
