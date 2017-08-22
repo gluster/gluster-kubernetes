@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # honor variables set from the caller:
-: "${TEST_DIR="$(dirname "${0}")"}"
+: "${TEST_DIR="$(cd "$(dirname "${0}")" && pwd)"}"
 : "${BASE_DIR="${TEST_DIR}/../.."}"
 : "${VAGRANT_DIR="${BASE_DIR}/vagrant"}"
 : "${DEPLOY_DIR="${BASE_DIR}/deploy"}"
@@ -177,6 +177,8 @@ start_test() {
 }
 
 end_run() {
+	(exit ${LOCAL_FAILURE})
+	end_test
 	if [[ ${RUN_DEPTH} -eq 0 ]]; then
 		echo -e "|=====\n| \e[1mTEST SUMMARY:\e[21m"
 		echo -e "$(cat "${TEST_LOG}")"

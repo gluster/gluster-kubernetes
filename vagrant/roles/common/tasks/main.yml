@@ -70,20 +70,6 @@
 - name: configure dm_snapshot module
   copy: src=dm_snapshot.conf owner=root group=root mode=644 dest=/etc/modules-load.d
 
-- name: install fixed kubelet-kubeadm config file
-  copy: src=10-kubeadm.conf dest=/etc/systemd/system/kubelet.service.d/ owner=root group=root mode=644 backup=yes
-
-- name: copy docker conf
-  template: src=docker.j2 dest=/etc/sysconfig/docker force=yes mode=0644
-  when: custom_registry is defined
-
-- name: enable kube services
-  service: name={{ item }} state=started enabled=yes daemon_reload=yes
-  with_items:
-    - docker
-    - kubelet
-    - ntpd
-
 - name: Ensure firewalld.service
   service: name=firewalld state=started enabled=yes
 
@@ -110,3 +96,17 @@
 
 - name: firewall trust port 9898
   firewalld: port=9898/tcp zone=trusted permanent=true state=enabled immediate=true
+
+- name: install fixed kubelet-kubeadm config file
+  copy: src=10-kubeadm.conf dest=/etc/systemd/system/kubelet.service.d/ owner=root group=root mode=644 backup=yes
+
+- name: copy docker conf
+  template: src=docker.j2 dest=/etc/sysconfig/docker force=yes mode=0644
+  when: custom_registry is defined
+
+- name: enable kube services
+  service: name={{ item }} state=restarted enabled=yes daemon_reload=yes
+  with_items:
+    - docker
+    - kubelet
+    - ntpd

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_DIR="$(dirname "${0}")"
+SCRIPT_DIR="$(cd "$(dirname "${0}")" && pwd)"
 
 echo "running tests in ${SCRIPT_DIR}"
 

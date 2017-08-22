@@ -15,7 +15,7 @@
 # limitations under the License.
 
 PROG="$(basename "${0}")"
-SCRIPT_DIR="$(dirname "${0}")"
+SCRIPT_DIR="$(cd "$(dirname "${0}")" && pwd)"
 TOPOLOGY='topology.json'
 LOG_FILE=''
 VERBOSE=0
@@ -243,50 +243,100 @@ assign() {
   keypos=$keylen
 }
 
-check_pods() {
+# check <resource_type> <select> [<cond>]
+#
+#   Check a particular resource or set of resources for a particular state. The
+#   <resource_type> can be any type recognized by Kubernetes (e.g. pods, svc).
+#   <select> can be either a name or a label selector, its nature being
+#   determined by the presence or lack of an 's' at the end of <resource_type>
+#   (e.g. 'pod' searches for a pod by name, 'pods' searches for any pods
+#   matching the supplied selector). <cond> can either be a timeout in seconds
+#   for how long to wait for the resource to reach the desired state (default
+#   is determined by ${WAIT}) or a type-specific alternate state to look for
+#   (default is to just verify they exist).
+#
+#   The following resource types have unique conditional states:
+#
+#   * Pods
+#     - default: state reports '1/1'
+#     - Completed: state reports 'Completed', used for jobs
+#   * PersistentVolumeClaims
+#     - default: state reports 'Bound'
+#
+#   This function has the following return codes and associated meanings:
+#
+#     0 = one or more resources were found
+#     1 = no resources were found (error)
+#
+#   Example usage:
+#
+#     check pods "heketi=pod" 2
+
+check() {
   local rc=1
   local wait_limit=${WAIT}
   local number_re='^[0-9]+$'
+  local resource="${1}"
+  local select="${2}"
+  local cond="${3}"
 
-  # $2 can either be a status string or
+  # cond can either be a status string or
   # a timeout integer. Only override the
   # timeout if we get a numeric argument.
-  if [[ ${2} =~ $number_re ]]; then
-    wait_limit=${2}
+  if [[ ${cond} =~ $number_re ]]; then
+    wait_limit=${cond}
+  fi
+  if [[ "${resource}" == *s ]]; then
+    select="--selector=${select}"
   fi
 
   s=0
-  debug "\nChecking status of pods matching '${1}':"
+  debug "\nChecking status of ${resource} matching '${select}':"
   while [[ ${rc} -ne 0 ]]; do
     if [[ ${s} -ge ${wait_limit} ]]; then
-      debug "Timed out waiting for pods matching '${1}'."
+      debug "Timed out waiting for ${resource} matching '${select}'."
       break
     fi
     sleep 2
-    pods=$(${CLI} get pod --no-headers --show-all --selector="${1}" 2>&1)
+    res=$(${CLI} get "${resource}" --no-headers --show-all "${select}" 2>&1)
     if [[ ${s} -ne 0 ]] && [[ ${VERBOSE} -eq 1 ]]; then
-      podlines=$(echo "$pods" | wc -l)
-      ((podlines+=1))
-      debug "\033[${podlines}A"
+      reslines=$(echo "$res" | wc -l)
+      ((reslines+=1))
+      debug "\033[${reslines}A"
     fi
     rc=0
-    while read -r pod; do
-      debug "\033[K${pod}"
-      case ${2} in
-        Completed)
-        status=$(echo "${pod}" | awk '{print $3}')
-        if [[ "${status}" != "Completed" ]]; then
+    while read -r line; do
+      debug "\033[K${line}"
+      case ${resource} in
+        Po* | po*)
+        case ${cond} in
+          Completed)
+          status=$(echo "${line}" | awk '{print $3}')
+          if [[ "${status}" != "Completed" ]]; then
+            rc=1
+          fi
+          ;;
+          *)
+          status=$(echo "${line}" | awk '{print $2}')
+          if [[ "${status}" != "1/1" ]]; then
+            rc=1
+          fi
+          ;;
+        esac
+        ;;
+        PersistentVolumeClaim* | persistentvolumeclaim* | pvc)
+        status=$(echo "${line}" | awk '{print $2}')
+        if [[ "${status}" != "Bound" ]]; then
           rc=1
         fi
         ;;
         *)
-        status=$(echo "${pod}" | awk '{print $2}')
-        if [[ "${status}" != "1/1" ]]; then
+        if echo "${line}" | grep -q "Error"; then
           rc=1
         fi
         ;;
       esac
-    done <<< "$(echo -e "$pods")"
+    done <<< "$(echo -e "$res")"
     ((s+=2))
   done
 
@@ -512,7 +562,7 @@ if [[ -z "$NAMESPACE" ]]; then
   fi
 fi
 
-${CLI} get namespaces ${NAMESPACE} 2>/dev/null
+check namespace "${NAMESPACE}" 10
 if [[ ${?} -eq 0 ]]; then
   output "Using namespace \"${NAMESPACE}\"."
   CLI="${CLI} -n ${NAMESPACE}"
@@ -551,7 +601,7 @@ fi
 output "Checking for pre-existing resources..."
 
 output -n "  GlusterFS pods ... "
-check_pods "glusterfs=pod" 2 2>&1
+check pods "glusterfs=pod" 2 2>&1
 if [[ $? -eq 0 ]]; then
   EXISTS_GLUSTERFS=1
   output "found."
@@ -560,7 +610,7 @@ else
 fi
 
 output -n "  deploy-heketi pod ... "
-check_pods "deploy-heketi=pod" 2 2>&1
+check pods "deploy-heketi=pod" 2 2>&1
 if [[ $? -eq 0 ]]; then
   EXISTS_DEPLOY_HEKETI=1
   output "found."
@@ -569,7 +619,7 @@ else
 fi
 
 output -n "  heketi pod ... "
-check_pods "heketi=pod" 2 2>&1
+check pods "heketi=pod" 2 2>&1
 if [[ $? -eq 0 ]]; then
   EXISTS_HEKETI=1
   output "found."
@@ -616,7 +666,7 @@ if [[ ${GLUSTER} -eq 1 ]] && [[ ${EXISTS_GLUSTERFS} -eq 0 ]] && [[ ${EXISTS_HEKE
   fi
 
   output -n "Waiting for GlusterFS pods to start ... "
-  check_pods "glusterfs=pod"
+  check pods "glusterfs=pod"
   if [[ $? -ne 0 ]]; then
     output "pods not found."
     exit 1
@@ -629,6 +679,7 @@ if [[ ${EXISTS_DEPLOY_HEKETI} -eq 0 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
   sed -e "s/\${HEKETI_EXECUTOR}/${EXECUTOR}/" -e "s/\${SSH_PORT}/${SSH_PORT}/" -e "s/\${SSH_USER}/${SSH_USER}/" -e "s/\${SSH_SUDO}/${SSH_SUDO}/" "${SCRIPT_DIR}/heketi.json.template" > heketi.json
   eval_output "${CLI} create secret generic heketi-config-secret --from-file=private_key=${SSH_KEYFILE} --from-file=./heketi.json --from-file=topology.json=${TOPOLOGY}"
   eval_output "${CLI} label --overwrite secret heketi-config-secret glusterfs=heketi-config-secret heketi=config-secret"
+  rm -f heketi.json
   if [[ "${CLI}" == *oc\ * ]]; then
     eval_output "${CLI} process ${OC_PROCESS_VAL_SWITCH} HEKETI_EXECUTOR=${EXECUTOR} ${OC_PROCESS_VAL_SWITCH} HEKETI_ADMIN_KEY=${ADMIN_KEY} ${OC_PROCESS_VAL_SWITCH} HEKETI_USER_KEY=${USER_KEY} deploy-heketi | ${CLI} create -f - 2>&1"
   else
@@ -636,7 +687,7 @@ if [[ ${EXISTS_DEPLOY_HEKETI} -eq 0 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
   fi
 
   output -n "Waiting for deploy-heketi pod to start ... "
-  check_pods "deploy-heketi=pod"
+  check pods "deploy-heketi=pod"
   if [[ $? -ne 0 ]]; then
     output "pod not found."
     exit 1
@@ -697,6 +748,7 @@ if [[ ${EXISTS_DEPLOY_HEKETI} -eq 1 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
     eval_output "${heketi_cli} setup-openshift-heketi-storage 2>&1"
     if [[ ${?} != 0 ]]; then
       output "Failed on setup openshift heketi storage"
+      output "This may indicate that the storage must be wiped and the GlusterFS nodes must be reset."
       exit 1
     fi
   else
@@ -710,7 +762,7 @@ if [[ ${EXISTS_DEPLOY_HEKETI} -eq 1 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
     exit 1
   fi
 
-  check_pods "job-name=heketi-storage-copy-job" "Completed"
+  check pods "job-name=heketi-storage-copy-job" "Completed"
   if [[ ${?} != 0 ]]; then
     output "Error waiting for job 'heketi-storage-copy-job' to complete."
     exit 1
@@ -731,7 +783,7 @@ if [[ ${EXISTS_HEKETI} -eq 0 ]]; then
   fi
 
   output -n "Waiting for heketi pod to start ... "
-  check_pods "heketi=pod"
+  check pods "heketi=pod"
   if [[ ${?} != 0 ]]; then
     output "pod not found"
     exit 1
