@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_DIR="$(dirname "${0}")"
+SCRIPT_DIR="$(cd "$(dirname "${0}")" && pwd)"
 STUBS_DIR="${SCRIPT_DIR}/stubs"
 TESTS_DIR="${SCRIPT_DIR}/.."
 INC_DIR="${TESTS_DIR}/common"

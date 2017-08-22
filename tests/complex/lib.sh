@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # honor variables set from the caller:
-: "${TEST_DIR="$(dirname "${0}")"}"
+: "${TEST_DIR="$(cd "$(dirname "${0}")" && pwd)"}"
 : "${BASE_DIR="${TEST_DIR}/../.."}"
 : "${VAGRANT_DIR="${BASE_DIR}/vagrant"}"
 : "${DEPLOY_DIR="${BASE_DIR}/deploy"}"

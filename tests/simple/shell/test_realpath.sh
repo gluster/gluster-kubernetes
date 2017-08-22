@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_DIR=$(cd "$(dirname "${0}")" || exit 1; pwd)
+SCRIPT_DIR="$(cd "$(dirname "${0}")" && pwd)"
 TESTS_DIR="${SCRIPT_DIR}/.."
 INC_DIR="${TESTS_DIR}/common"
 BASE_DIR="${SCRIPT_DIR}/../../.."
