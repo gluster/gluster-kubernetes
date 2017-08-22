@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DEMO_DIR="$(realpath "$(dirname "${0}")")"
+DEMO_DIR="$(dirname "${0}")"
 VAGRANT_DIR="${DEMO_DIR}/.."
 
 cd "${VAGRANT_DIR}" || exit 1

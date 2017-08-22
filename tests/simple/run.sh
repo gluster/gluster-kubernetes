@@ -1,6 +1,8 @@
 #!/bin/bash
 
-SCRIPT_DIR="$(realpath "$(dirname "${0}")")"
+SCRIPT_DIR="$(dirname "${0}")"
+
+failed=0
 
 for testdir in ${SCRIPT_DIR}/*; do
 	if [[ ! -d ${testdir} ]]; then
@@ -17,6 +19,8 @@ for testdir in ${SCRIPT_DIR}/*; do
 	popd
 
 	if [[ ${rc} -ne 0 ]]; then
-		exit 1
+		((failed+=rc))
 	fi
 done
+
+exit ${failed}

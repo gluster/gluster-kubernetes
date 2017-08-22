@@ -58,12 +58,6 @@ function run() {
     return ${r}
 }
 
-function relative() {
-    for arg; do
-        echo "$(realpath "$(dirname "$(which "${0}")")")/${arg}" | sed "s|$(realpath "$(pwd)")|.|"
-    done
-}
-
 #SSH_NODE=$(kubectl get nodes | tail -1 | cut -f1 -d' ')
 
 trap "echo" EXIT

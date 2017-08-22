@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # honor variables set from the caller:
-: "${TEST_DIR="$(realpath "$(dirname "${0}")")"}"
+: "${TEST_DIR="$(dirname "${0}")"}"
 : "${BASE_DIR="${TEST_DIR}/../.."}"
 : "${VAGRANT_DIR="${BASE_DIR}/vagrant"}"
 : "${DEPLOY_DIR="${BASE_DIR}/deploy"}"
@@ -204,7 +204,7 @@ run() {
 		fi
 		shift
 	done
-	script=$(realpath "${1%% *}")
+	script="${1%% *}"
         args=${1#* }
 	shift
 
