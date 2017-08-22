@@ -120,6 +120,28 @@ objects:
         serviceAccountName: default
         serviceAccount: default
         securityContext: {}
+        readinessProbe:
+          timeoutSeconds: 3
+          initialDelaySeconds: 60
+          exec:
+            command:
+            - "/bin/bash"
+            - "-c"
+            - systemctl status swift-object.service
+          periodSeconds: 25
+          successThreshold: 1
+          failureThreshold: 15
+        livenessProbe:
+          timeoutSeconds: 3
+          initialDelaySeconds: 60
+          exec:
+            command:
+            - "/bin/bash"
+            - "-c"
+            - systemctl status swift-object.service
+          periodSeconds: 25
+          successThreshold: 1
+          failureThreshold: 15
   status: {}
 parameters:
 - name: S3_ACCOUNT
