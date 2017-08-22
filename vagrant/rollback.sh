@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 MACHINES=(${@:-$(vagrant status | grep running | awk '{print $1}')})
 
