@@ -69,9 +69,9 @@ parameters:
 
 <2> Provisioner
 
-<3> GlusterFS defined EndPoint taken from Step 1 above (kubectl get endpoints)
+<3> GlusterFS defined EndPoint taken from Step 1 above (kubectl get endpoints). As of Kubernetes 1.7, this parameter should be removed as Kubernetes will reject this YAML definition.
 
-<4> Heketi REST Url, taken from Step 1 above (echo $HEKETI_CLI_SERVER)
+<4> Heketi REST Url, taken from Step 1 above (echo $HEKETI_CLI_SERVER), may also the Kubernetes service DNS name for the Heketi service.
 
 <5> Restuser, can be anything since authorization is turned off
 
