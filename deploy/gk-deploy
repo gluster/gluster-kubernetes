@@ -15,7 +15,7 @@
 # limitations under the License.
 
 PROG="$(basename "${0}")"
-SCRIPT_DIR="$(dirname "$(realpath "${0}")")"
+SCRIPT_DIR="$(dirname "${0}")"
 TOPOLOGY='topology.json'
 LOG_FILE=''
 VERBOSE=0
