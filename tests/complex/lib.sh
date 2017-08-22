@@ -177,6 +177,8 @@ start_test() {
 }
 
 end_run() {
+	(exit ${LOCAL_FAILURE})
+	end_test
 	if [[ ${RUN_DEPTH} -eq 0 ]]; then
 		echo -e "|=====\n| \e[1mTEST SUMMARY:\e[21m"
 		echo -e "$(cat "${TEST_LOG}")"
