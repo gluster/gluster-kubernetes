@@ -25,7 +25,7 @@ objects:
       port: 8080
       targetPort: 8080
     selector:
-      name: deploy-heketi
+      deploy-heketi: pod
 - kind: Route
   apiVersion: v1
   metadata:
