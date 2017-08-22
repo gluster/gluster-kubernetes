@@ -2,9 +2,6 @@
 
 # test gk-deploy
 
-cd ~/deploy
-
-
 cd ~/deploy || exit 1
 
 # shellcheck disable=SC2086
