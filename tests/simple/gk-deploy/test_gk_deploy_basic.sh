@@ -16,9 +16,17 @@ source "${INC_DIR}/subunit.sh"
 source "${INC_DIR}/shell_tests.sh"
 
 test_missing_topology () {
-	${GK_DEPLOY} -y
-	if [[ "x$?" == "x0" ]]; then
-		echo "ERROR: gk_deploy without toplogoy succeeded"
+	local args=( -y )
+
+	OUT=$("${GK_DEPLOY}" "${args[@]}")
+	local rc=${?}
+
+	echo "cmd: '${GK_DEPLOY} ${args[*]}'"
+	echo "output:"
+	echo "${OUT}"
+
+	if [[ ${rc} == 0 ]]; then
+		echo "ERROR: script without topology succeeded"
 		return 1
 	fi
 
@@ -26,25 +34,28 @@ test_missing_topology () {
 }
 
 test_cli_not_found () {
+	local args=( -y )
 	local expected_out="Container platform CLI (e.g. kubectl, oc) not found."
 
-	OUT=$(PATH="/doesnotexist" "${GK_DEPLOY}" -y "${TOPOLOGY}")
+	OUT=$(PATH='/doesnotexist' "${GK_DEPLOY}" "${args[@]}" "${TOPOLOGY}")
 	local rc=${?}
 
-	if [[ "x${rc}" == "x0" ]]; then
-		echo "ERROR: gk-deploy succeeded "\
-			"(output: \"${OUT}\")"
+	echo "cmd: 'PATH='/doesnotexist' ${GK_DEPLOY} ${args[*]} ${TOPOLOGY}'"
+	echo "output:"
+	echo "${OUT}"
+
+	if [[ ${rc} == 0 ]]; then
+		echo "ERROR: script succeeded"
 		return 1
 	fi
 
-	if [[ "x${rc}" != "x1" ]]; then
-		echo "ERROR: gk-deploy gave ${rc}, " \
-			"expected 1 (output: \"${OUT}\")"
+	if [[ ${rc} != 1 ]]; then
+		echo "ERROR: script returned ${rc}, expected 1"
 		return 1
 	fi
 
 	if [[ "${OUT}" != "${expected_out}" ]]; then
-		echo "ERROR: got output '${OUT}', expected '${expected_out}'"
+		echo "ERROR: expected \"${expected_out}\" in output"
 		return 1
 	fi
 
@@ -54,25 +65,28 @@ test_cli_not_found () {
 
 test_cli_unknown () {
 	local cli="${1}"
+	local args=( -y -c "${cli}" )
 	local expected_out="Unknown CLI '${cli}'."
 
-	OUT=$("${GK_DEPLOY}" -y -c "${cli}" "${TOPOLOGY}")
-	local rc=$?
+	OUT=$("${GK_DEPLOY}" "${args[@]}" "${TOPOLOGY}")
+	local rc=${?}
 
-	if [[ "x${rc}" == "x0" ]]; then
-		echo "ERROR: gk-deploy -c ${cli} succeeded "\
-			"(output: \"${OUT}\")"
+	echo "cmd: '${GK_DEPLOY} ${args[*]} ${TOPOLOGY}'"
+	echo "output:"
+	echo "${OUT}"
+
+	if [[ ${rc} == 0 ]]; then
+		echo "ERROR: script succeeded"
 		return 1
 	fi
 
-	if [[ "x${rc}" != "x1" ]]; then
-		echo "ERROR: gk-deploy -c ${cli} gave ${rc}, " \
-			"expected 1 (output: \"${OUT}\")"
+	if [[ ${rc} != 1 ]]; then
+		echo "ERROR: script returned ${rc}, expected 1"
 		return 1
 	fi
 
 	if [[ "${OUT}" != "${expected_out}" ]]; then
-		echo "ERROR: got output '${OUT}', expected '${expected_out}'"
+		echo "ERROR: expected \"${expected_out}\" in output"
 		return 1
 	fi
 
@@ -81,30 +95,29 @@ test_cli_unknown () {
 
 test_namespace_invalid () {
 	local cli="${1}"
-	local args="-y -c ${1} -n invalid"
+	local args=( -y -c "${1}" -n invalid )
 	local expected_out="Namespace 'invalid' not found"
 
 	# shellcheck disable=SC2086
-	OUT=$("${GK_DEPLOY}" ${args} "${TOPOLOGY}")
-	local rc=$?
+	OUT=$("${GK_DEPLOY}" "${args[@]}" "${TOPOLOGY}")
+	local rc=${?}
 
-	echo "cmd: '${GK_DEPLOY} ${args} ${TOPOLOGY}'"
-	echo "out: '${OUT}'"
+	echo "cmd: '${GK_DEPLOY} ${args[*]} ${TOPOLOGY}'"
+	echo "output:"
+	echo "${OUT}"
 
-	if [[ "x${rc}" == "x0" ]]; then
-		echo "ERROR: gk-deploy ${args} succeeded "\
-			"(output: \"${OUT}\")"
+	if [[ ${rc} == 0 ]]; then
+		echo "ERROR: script succeeded"
 		return 1
 	fi
 
-	if [[ "x${rc}" != "x1" ]]; then
-		echo "ERROR: gk-deploy ${args} gave ${rc}, " \
-			"expected 1 (output: \"${OUT}\")"
+	if [[ ${rc} != 1 ]]; then
+		echo "ERROR: script returned ${rc}, expected 1"
 		return 1
 	fi
 
 	if [[ "${OUT}" != *"${expected_out}"* ]]; then
-		echo "ERROR: got output '${OUT}', expected '${expected_out}'"
+		echo "ERROR: expected \"${expected_out}\" in output"
 		return 1
 	fi
 
