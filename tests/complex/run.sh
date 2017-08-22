@@ -2,7 +2,7 @@
 
 # shellcheck disable=SC2034
 TESTNAME=""
-TEST_DIR="$(realpath "$(dirname "${0}")")"
+TEST_DIR="$(dirname "${0}")"
 
 source "${TEST_DIR}/lib.sh"
 
