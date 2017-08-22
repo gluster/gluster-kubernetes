@@ -80,21 +80,9 @@ test_cli_unknown () {
 }
 
 test_namespace_invalid () {
-	local cli=""
-	local args="-y -n invalid"
-	local expected_out="Using OpenShift CLI.
-Namespace 'invalid' not found."
-
-	if [[ "x${#}" != "x0" ]]; then
-		cli="${1}"
-		if [[ "x${cli}" == "xkubectl" ]]; then
-			expected_out="Using Kubernetes CLI.
-Namespace 'invalid' not found."
-		elif [[ "x${cli}" != "xoc" ]]; then
-			expected_out="Unknown CLI '${cli}'."
-		fi
-		args="${args} -c ${cli}"
-	fi
+	local cli="${1}"
+	local args="-y -c ${1} -n invalid"
+	local expected_out="Namespace 'invalid' not found"
 
 	# shellcheck disable=SC2086
 	OUT=$("${GK_DEPLOY}" ${args} "${TOPOLOGY}")
@@ -115,7 +103,7 @@ Namespace 'invalid' not found."
 		return 1
 	fi
 
-	if [[ "${OUT}" != "${expected_out}" ]]; then
+	if [[ "${OUT}" != *"${expected_out}"* ]]; then
 		echo "ERROR: got output '${OUT}', expected '${expected_out}'"
 		return 1
 	fi
@@ -149,16 +137,12 @@ testit "test cli unknown" \
 	test_cli_unknown /usr/bin/true \
 	|| ((failed++))
 
-testit "test namespace invalid" \
-	test_namespace_invalid \
+testit "test namespace invalid oc" \
+	test_namespace_invalid oc \
 	|| ((failed++))
 
 testit "test namespace invalid kubectl" \
 	test_namespace_invalid kubectl \
-	|| ((failed++))
-
-testit "test namespace invalid unknown-cli" \
-	test_namespace_invalid unknown-cli \
 	|| ((failed++))
 
 testok "${0}" "${failed}"
