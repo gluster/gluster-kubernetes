@@ -1,8 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 
 MACHINES=(${@:-$(vagrant status | grep running | awk '{print $1}')})
 
-vagrant sandbox rollback "${MACHINES[@]}"
+vagrant sandbox rollback "${MACHINES[@]}" || exit 1
 
 for m in ${MACHINES[*]}; do
   echo "[${m}] Restarting services..."
