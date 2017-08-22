@@ -15,7 +15,7 @@
 # limitations under the License.
 
 PROG="$(basename "${0}")"
-SCRIPT_DIR="$(dirname "${0}")"
+SCRIPT_DIR="$(cd "$(dirname "${0}")" && pwd)"
 TOPOLOGY='topology.json'
 LOG_FILE=''
 VERBOSE=0
