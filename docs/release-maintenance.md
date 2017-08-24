@@ -7,8 +7,8 @@ gluster-kubernetes project.
 
 The project will only support and actively maintain two branches, `master` and
 the latest release branch. The latest release branch will always be reachable
-by two HEADs, either `<VERSION>-stable` or just `stable`. Requests for support
-of older branches may be considered on a case-by-case basis, but users will be
+by two HEADs, `<VERSION>-latest` and `stable`. Requests for support of older
+branches may be considered on a case-by-case basis, but users will be 
 encouraged to use newer versions where possible.
 
 ## Version Numbering
@@ -45,9 +45,9 @@ new release is made, the `stable` branch will be moved to follow the new
 release branch.
 
 Each MAJOR and MINOR release will get its own branch, forked from `master`.
-Each release branch name will be of the form `<version>-latest`, e.g.
+Each release branch name will be of the form `<VERSION>-latest`, e.g.
 `1.0-latest`. PATCH releases to those versions will be made in those branches,
-and will be marked by tags of the form `v<version>`, e.g. `v1.0.0`. PATCH
+and will be marked by tags of the form `v<VERSION>`, e.g. `v1.0.0`. PATCH
 releases may contain more than one commit, depending on the whimsy of the
 release engineers. :)
 
