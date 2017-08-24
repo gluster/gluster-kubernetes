@@ -36,7 +36,7 @@ EXISTS_BLOCK=0
 EXISTS_OBJECT=0
 EXECUTOR="kubernetes"
 FSTAB="/var/lib/heketi/fstab"
-SSH_KEYFILE="/dev/null"
+SSH_KEYFILE=""
 SSH_USER="root"
 SSH_SUDO="false"
 SSH_PORT="22"
@@ -86,10 +86,10 @@ Options:
               or removal.
 
   -s, --ssh-keyfile KEYFILE
-              Path to an SSH private key. This key is required for heketi when
-              communicating with GlusterFS services not in pods. Specifying
-              this parameter switched heketi to use SSH directly instead of
-              Kubernetes APIs.
+              Path to an SSH private key. This key is required when heketi is
+              communicating with GlusterFS services outside of Kubernetes.
+              Specifying this parameter switches heketi to use SSH directly
+              instead of Kubernetes APIs.
 
   --ssh-user USER
               User to use for SSH commands to GlusterFS nodes. Non-root users
@@ -826,7 +826,10 @@ if [[ ${EXISTS_DEPLOY_HEKETI} -eq 0 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
   #The FSTAB variable may contain slashes as path separators, so use '#' as the expression delimiter instead
   sed -e "s/\${HEKETI_EXECUTOR}/${EXECUTOR}/" -e "s#\${HEKETI_FSTAB}#${FSTAB}#" -e "s/\${SSH_PORT}/${SSH_PORT}/" -e "s/\${SSH_USER}/${SSH_USER}/" -e "s/\${SSH_SUDO}/${SSH_SUDO}/" \
       -e "s/\${BLOCK_HOST_CREATE}/${BLOCK_HOST_CREATE}/" -e "s/\${BLOCK_HOST_SIZE}/${BLOCK_HOST_SIZE}/" "${SCRIPT_DIR}/heketi.json.template" > heketi.json
-  eval_output "${CLI} create secret generic heketi-config-secret --from-file=private_key=${SSH_KEYFILE} --from-file=./heketi.json --from-file=topology.json=${TOPOLOGY}"
+  if [[ "x${SSH_KEYFILE}" != "x" ]]; then
+    SSH_KEYFILE="--from-file=private_key=${SSH_KEYFILE}"
+  fi
+  eval_output "${CLI} create secret generic heketi-config-secret ${SSH_KEYFILE} --from-file=./heketi.json --from-file=topology.json=${TOPOLOGY}"
   eval_output "${CLI} label --overwrite secret heketi-config-secret glusterfs=heketi-config-secret heketi=config-secret"
   rm -f heketi.json
   if [[ "${CLI}" == *oc\ * ]]; then
