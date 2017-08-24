@@ -745,7 +745,7 @@ if [[ ${EXISTS_DEPLOY_HEKETI} -eq 1 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
   fi
 
   if [[ $("${heketi_cli}" volume list 2>&1) != *heketidbstorage* ]]; then
-    eval_output "${heketi_cli} setup-openshift-heketi-storage 2>&1"
+    eval_output "${heketi_cli} setup-openshift-heketi-storage --listfile=/tmp/heketi-storage.json 2>&1"
     if [[ ${?} != 0 ]]; then
       output "Failed on setup openshift heketi storage"
       output "This may indicate that the storage must be wiped and the GlusterFS nodes must be reset."
@@ -756,7 +756,7 @@ if [[ ${EXISTS_DEPLOY_HEKETI} -eq 1 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
     exit 1
   fi
 
-  eval_output "${CLI} exec -it ${heketi_pod} -- cat heketi-storage.json | ${CLI} create -f - 2>&1"
+  eval_output "${CLI} exec -it ${heketi_pod} -- cat /tmp/heketi-storage.json | ${CLI} create -f - 2>&1"
   if [[ ${?} != 0 ]]; then
     output "Failed on creating heketi storage resources."
     exit 1
