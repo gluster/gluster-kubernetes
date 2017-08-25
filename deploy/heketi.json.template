@@ -26,7 +26,12 @@
 		"_db_comment": "Database file name",
 		"db" : "/var/lib/heketi/heketi.db",
 
+		"kubeexec" : {
+			"rebalance_on_expansion": true
+		},
+
 		"sshexec" : {
+			"rebalance_on_expansion": true,
 			"keyfile" : "/etc/heketi/private_key",
 			"port" : "${SSH_PORT}",
 			"user" : "${SSH_USER}",
