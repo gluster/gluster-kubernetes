@@ -122,6 +122,24 @@ copy_deploy() {
 	scp -qr -F "${SSH_CONFIG}" "${TOPOLOGY_FILE}" "${node}:deploy/topology.json" || end_test -e "SCP topology to ${node} failed"
 }
 
+install_gluster() {
+	scp -q -F "${SSH_CONFIG}" "${VAGRANT_HOME:-${HOME}/.vagrant.d}/insecure_private_key" master:/vagrant/ || end_test -e "SCP private key to master failed"
+	ssh -qn -F "${SSH_CONFIG}" master "sudo chmod 600 /vagrant/insecure_private_key" || end_test -e "Failed to change permissions on private key"
+	(
+	MACHINES=$(vagrant status | grep running | grep node | awk '{print $1}')
+	for m in ${MACHINES[*]}; do
+		echo "[${m}] Installing GlusterFS..."
+		while read -r line; do
+			echo -e "\r[${m}] ${line}"
+			if [[ "${line}" == "FAIL" ]]; then
+				exit 1
+			fi
+		done <<< "$(vagrant ssh "${m}" -c "sudo yum install -y glusterfs glusterfs-server glusterfs-geo-replication; sudo systemctl enable glusterd; sudo systemctl start glusterd" -- -qn 1>/dev/null 2>&1 || echo "FAIL" && echo "OK")" &
+	done
+	wait
+	) || end_test -e "GlusterFS installation failed"
+}
+
 pull_docker_image() {
 	cd "${VAGRANT_DIR}" || exit 1
 

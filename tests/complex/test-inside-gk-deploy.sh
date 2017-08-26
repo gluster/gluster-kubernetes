@@ -4,6 +4,8 @@
 
 BLOCK=( --no-block )
 OBJ=( --no-object )
+GLUSTER=( -g )
+SSH=0
 
 while [[ "x${1}" != "x" ]]; do
 	if [[ "${1}" == "block" ]]; then
@@ -13,12 +15,16 @@ while [[ "x${1}" != "x" ]]; do
 		OBJ=( --object-account account --object-user user --object-password password )
 	fi
 	shift
+	if [[ "${1}" == "ssh" ]]; then
+		GLUSTER=( --ssh-keyfile /vagrant/insecure_private_key --ssh-user vagrant )
+		SSH=1
+	fi
 done
 
 cd ~/deploy || exit 1
 
 # shellcheck disable=SC2086
-./gk-deploy -v -y -g -n default ${BLOCK[*]} ${OBJ[*]}
+./gk-deploy -v -y -n default ${GLUSTER[*]} ${BLOCK[*]} ${OBJ[*]}
 
 if [[ $? -ne 0 ]]; then
 	echo "ERROR: gk-deploy failed"
@@ -38,7 +44,7 @@ if (( num_heketi_pods != 1 )); then
 	exit 1
 fi
 
-if (( num_gluster_pods != 3 )); then
+if (( SSH == 0 )) && (( num_gluster_pods != 3 )); then
 	echo "ERROR: unexpected number of gluster pods: " \
 		"${num_gluster_pods} - " \
 		"expected 3"

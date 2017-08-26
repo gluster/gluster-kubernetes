@@ -22,4 +22,8 @@ rollback_vagrant
 
 run "${TEST_DIR}/run-full.sh"
 
+rollback_vagrant
+
+run "${TEST_DIR}/run-ssh.sh"
+
 run "${TEST_DIR}/test-teardown.sh"
