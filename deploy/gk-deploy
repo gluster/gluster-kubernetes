@@ -253,7 +253,7 @@ abort() {
       eval_output "${CLI} delete dc,route,template --selector=\"gluster-s3\" 2>&1"
     fi
   fi
-  if [[ ${GLUSTER} -eq 1 ]]; then
+  if [[ ${GLUSTER} -eq 1 ]] && [[ "${EXECUTOR}" == "kubernetes" ]]; then
     while read -r node; do
       debug "Removing label from '${node}' as a GlusterFS node."
       eval_output "${CLI} label nodes \"${node}\" storagenode- 2>&1"
@@ -722,13 +722,15 @@ fi
 
 output "Checking for pre-existing resources..."
 
-output -n "  GlusterFS pods ... "
-check pods "glusterfs=pod" 2 2>&1
-if [[ $? -eq 0 ]]; then
-  EXISTS_GLUSTERFS=1
-  output "found."
-else
-  output "not found."
+if [[ ${GLUSTERFS} -eq 1 ]] && [[ "${EXECUTOR}" == "kubernetes" ]]; then
+  output -n "  GlusterFS pods ... "
+  check pods "glusterfs=pod" 2 2>&1
+  if [[ $? -eq 0 ]]; then
+    EXISTS_GLUSTERFS=1
+    output "found."
+  else
+    output "not found."
+  fi
 fi
 
 output -n "  deploy-heketi pod ... "
@@ -790,7 +792,7 @@ if [[ ${EXISTS_HEKETI} -eq 0 ]]; then
   output "OK"
 fi
 
-if [[ ${GLUSTER} -eq 1 ]] && [[ ${EXISTS_GLUSTERFS} -eq 0 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
+if [[ ${GLUSTER} -eq 1 ]] && [[ "${EXECUTOR}" == "kubernetes" ]] && [[ ${EXISTS_GLUSTERFS} -eq 0 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
   if [[ -z ${DAEMONSET_LABEL} ]]; then
     DAEMONSET_LABEL=glusterfs
   fi
