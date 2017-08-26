@@ -431,10 +431,10 @@ while [[ $# -ge 1 ]]; do
         ;;
         -ssh-user)
         SSH_USER=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
         if [[ "${SSH_USER}" != "root" ]]; then
           SSH_SUDO="true"
         fi
-        if [[ $? -eq 2 ]]; then shift; fi
         keypos=$keylen
         ;;
         -ssh-port)
