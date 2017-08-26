@@ -703,19 +703,22 @@ if [[ ${ABORT} -eq 1 ]]; then
 fi
 
 if [[ "${EXECUTOR}" == "ssh" ]]; then
+  if [[ "${SSH_SUDO}" == "true" ]]; then
+    sudocmd="sudo "
+  else
+    sudocmd=""
+  fi
   while read -r node; do
-    debug "Checking glusterd status on '${node}'."
-    if [[ "${SSH_SUDO}" == "true" ]]; then
-      sudocmd="sudo "
-    else
-      sudocmd=""
-    fi
+    output -n "Checking glusterd status on '${node}' ... "
     # shellcheck disable=SC2029
     # I want this parsed client-side
-    ssh "${SSH_USER}@${node}" -q -i "${SSH_KEYFILE}" -C "${sudocmd}gluster volume status" >/dev/null 2>&1
+    out=$(ssh -qn -o StrictHostKeyChecking=no "${SSH_USER}@${node}" -i "${SSH_KEYFILE}" -C "${sudocmd}gluster volume info" 1>/dev/null 2>&1)
     if [[ ${?} -ne 0 ]]; then
       output "Can't access glusterd on '${node}'"
+      output "${out}"
       exit 1
+    else
+      output "OK"
     fi
   done <<< "$(echo -e "${NODES}")"
 fi
