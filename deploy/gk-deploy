@@ -298,7 +298,7 @@ check() {
       break
     fi
     sleep 2
-    res=$(${CLI} get "${resource}" --no-headers --show-all "${select}" 2> /dev/null)
+    res=$(${CLI} get "${resource}" --no-headers --show-all "${select}" 2>/dev/null)
     if [[ ${s} -ne 0 ]] && [[ ${VERBOSE} -eq 1 ]]; then
       reslines=$(echo "$res" | wc -l)
       ((reslines+=1))
