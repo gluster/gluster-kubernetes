@@ -298,7 +298,7 @@ check() {
       break
     fi
     sleep 2
-    res=$(${CLI} get "${resource}" --no-headers --show-all "${select}" 2>&1)
+    res=$(${CLI} get "${resource}" --no-headers --show-all "${select}" 2>/dev/null)
     if [[ ${s} -ne 0 ]] && [[ ${VERBOSE} -eq 1 ]]; then
       reslines=$(echo "$res" | wc -l)
       ((reslines+=1))
@@ -725,7 +725,7 @@ if [[ ${EXISTS_DEPLOY_HEKETI} -eq 1 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
     debug "OK"
   fi
 
-  heketi_pod=$(${CLI} get pod --no-headers --show-all --selector="deploy-heketi" 2>&1 | awk '{print $1}')
+  heketi_pod=$(${CLI} get pod --no-headers --show-all --selector="deploy-heketi" | awk '{print $1}')
   heketi_cli="${CLI} exec -i ${heketi_pod} -- heketi-cli -s http://localhost:8080 --user admin --secret '${ADMIN_KEY}'"
 
   load_temp=$(mktemp)
