@@ -65,7 +65,6 @@ objects:
     labels:
       name: glusters3
     annotations:
-      openshift.io/scc: privileged
       description: Defines how to deploy gluster s3 object storage
   spec:
     replicas: 1
