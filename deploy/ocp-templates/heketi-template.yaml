@@ -116,4 +116,4 @@ parameters:
 - name: HEKETI_EXECUTOR
   displayName: heketi executor type
   description: Set the executor type, kubernetes or ssh
-  value: kubrenetes
+  value: kubernetes
