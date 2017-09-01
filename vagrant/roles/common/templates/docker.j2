@@ -7,5 +7,5 @@ fi
 ADD_REGISTRY='--add-registry {{ custom_registry }}'
 {% endif %}
 {% if custom_registry_insecure | default(true) -%}
-INSECURE_REGISTRY='--insecure-registry {{ custom_registry }}'
+INSECURE_REGISTRY='--insecure-registry {{ custom_registry }}{% if custom_registry_gcr | default(false) %} --insecure-registry gcr.io{% endif %}'
 {% endif %}

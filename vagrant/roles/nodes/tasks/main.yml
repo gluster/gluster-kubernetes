@@ -16,6 +16,11 @@
 - name: Open ports 49152-49251 (GlusterFS bricks)
   firewalld: port=49152-49251/tcp zone=trusted permanent=true state=enabled immediate=true
 
+- include: gcr_proxy.yml
+  when:
+  - custom_registry is defined
+  - custom_registry_gcr | default(false)
+
 - name: Pull GlusterFS Docker image
   command: docker pull gluster/gluster-centos:latest
   register: task_result

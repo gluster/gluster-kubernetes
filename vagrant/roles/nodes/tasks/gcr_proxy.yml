@@ -1,0 +1,5 @@
+---
+- lineinfile:
+    path: /etc/hosts
+    state: "{{ gcr_proxy_state | default('present') }}"
+    line: "{{ vagrant_master }} gcr.io"

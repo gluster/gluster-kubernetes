@@ -1,0 +1,58 @@
+---
+- name: install ansible-docker depencendies
+  yum:
+    name: "{{ item }}"
+    state: present
+    disable_gpg_check: yes
+  with_items:
+  - docker-python
+
+- name: check for nginx-slim image
+  uri:
+    url: "http://{{ custom_registry }}/v2/google_containers/nginx-slim/manifests/{{ gcr_proxy_nginx }}"
+    status_code: "200,404"
+  register: nginx_exists
+
+- name: pull nginx-slim image (custom)
+  docker_image:
+    repository: "{{ custom_registry }}"
+    name: google_containers/nginx-slim
+    tag: "{{ gcr_proxy_nginx }}"
+  when:
+  - nginx_exists.status == "200"
+
+- name: pull nginx-slim image (gcr.io)
+  docker_image:
+    repository: gcr.io
+    name: google_containers/nginx-slim
+    tag: "{{ gcr_proxy_nginx }}"
+  when:
+  - nginx_exists.status == "404"
+
+- name: push nginx-slim image
+  docker_image:
+    repository: "{{ custom_registry }}"
+    name: google_containers/nginx-slim
+    tag: "{{ gcr_proxy_nginx }}"
+    push: yes
+  when:
+  - nginx_exists.status == "404"
+
+- name: copy nginx.conf
+  template: src=nginx.conf.j2 dest=/vagrant/nginx.conf force=yes mode=0644
+
+- name: start proxy container
+  docker_container:
+    name: gcr_proxy
+    image: "google_containers/nginx-slim:{{ gcr_proxy_nginx }}"
+    ports:
+    - "80:80"
+    state: started
+    restart_policy: always
+    volumes:
+    - /vagrant/nginx.conf:/etc/nginx/nginx.conf:ro
+
+- lineinfile:
+    path: /etc/hosts
+    state: "{{ gcr_proxy_state | default('present') }}"
+    line: "{{ vagrant_master }} gcr.io"

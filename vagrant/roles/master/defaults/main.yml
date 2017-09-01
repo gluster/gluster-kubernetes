@@ -1,0 +1,4 @@
+---
+custom_registry_add: false
+custom_registry_gcr: false
+gcr_proxy_nginx: 0.8
