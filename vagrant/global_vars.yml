@@ -35,7 +35,7 @@ install_pkgs:
 #   Valid values are 'present' and 'absent'. (default 'present')
 # * gcr_proxy_nginx: The version of nginx-slim to use for the gcr.io proxy.
 #   (default '0.8')
-#custom_registry: 192.168.121.1:5000
+#custom_registry: 192.168.10.1:5000
 #custom_registry_insecure: false
 #custom_registry_add: false
 #custom_registry_gcr: true
