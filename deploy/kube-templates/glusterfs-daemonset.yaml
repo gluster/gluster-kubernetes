@@ -23,6 +23,9 @@ spec:
       - image: gluster/gluster-centos:latest
         imagePullPolicy: IfNotPresent
         name: glusterfs
+        env:
+        - name: GB_GLFS_LRU_COUNT
+          value: "${GB_GLFS_LRU_COUNT}"
         resources:
           requests:
             memory: 100Mi
@@ -104,3 +107,8 @@ spec:
       - name: glusterfs-ssl
         hostPath:
           path: "/etc/ssl"
+parameters:
+- name: GB_GLFS_LRU_COUNT
+  displayName: Maximum number of block hosting volumes
+  description: This value is to set maximum number of block hosting volumes.
+  value: 15
