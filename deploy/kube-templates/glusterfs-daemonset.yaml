@@ -23,6 +23,9 @@ spec:
       - image: gluster/gluster-centos:latest
         imagePullPolicy: IfNotPresent
         name: glusterfs
+        env:
+        - name: TCMU_LOG_DIR
+          value: "${TCMU_LOG_DIR}"
         resources:
           requests:
             memory: 100Mi
@@ -104,3 +107,8 @@ spec:
       - name: glusterfs-ssl
         hostPath:
           path: "/etc/ssl"
+parameters:
+- name: TCMU_LOG_DIR
+  displayName: Tcmu runner log directory
+  description: This value is to set tcmu runner log directory
+  value: /var/log/glusterfs/gluster-block
