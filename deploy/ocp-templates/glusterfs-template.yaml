@@ -38,7 +38,7 @@ objects:
           name: glusterfs
           env:
           - name: TCMU_LOG_DIR
-            value: "${TCMU_LOG_DIR}"
+            value: "/var/log/glusterfs/gluster-block"
           resources:
             requests:
               memory: 100Mi
@@ -131,8 +131,3 @@ parameters:
   displayName: Daemonset Storage Node Label
   description: This is the value that will be used for the storagenode label in the daemonset node selector.
   value: glusterfs
-- name: TCMU_LOG_DIR
-  displayName: Tcmu runner log directory
-  description: This value is to set tcmu runner log directory
-  value: /var/log/glusterfs/gluster-block
-  required: true

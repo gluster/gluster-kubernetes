@@ -23,6 +23,9 @@ spec:
       - image: gluster/gluster-centos:latest
         imagePullPolicy: IfNotPresent
         name: glusterfs
+        env:
+        - name: TCMU_LOG_DIR
+          value: "/var/log/glusterfs/gluster-block"
         resources:
           requests:
             memory: 100Mi
