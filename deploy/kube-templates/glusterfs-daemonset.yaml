@@ -23,6 +23,9 @@ spec:
       - image: gluster/gluster-centos:latest
         imagePullPolicy: IfNotPresent
         name: glusterfs
+        env:
+        - name: GB_GLFS_LRU_COUNT
+          value: 15
         resources:
           requests:
             memory: 100Mi
