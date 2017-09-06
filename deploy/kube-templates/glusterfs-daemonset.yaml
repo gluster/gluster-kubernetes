@@ -25,7 +25,7 @@ spec:
         name: glusterfs
         env:
         - name: GB_GLFS_LRU_COUNT
-          value: 15
+          value: "15"
         - name: TCMU_LOGDIR
           value: "/var/log/glusterfs/gluster-block"
         resources:
