@@ -20,12 +20,12 @@ spec:
         storagenode: glusterfs
       hostNetwork: true
       containers:
-      - image: gluster/gluster-centos:latest
+      - image: grebois/gluster-centos:latest
         imagePullPolicy: IfNotPresent
         name: glusterfs
         env:
         - name: GB_GLFS_LRU_COUNT
-          value: 15
+          value: "15"
         - name: TCMU_LOG_DIR
           value: "/var/log/glusterfs/gluster-block"
         resources:
