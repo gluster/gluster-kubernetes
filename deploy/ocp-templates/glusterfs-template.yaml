@@ -39,8 +39,8 @@ objects:
           env:
           - name: GB_GLFS_LRU_COUNT
             value: "${GB_GLFS_LRU_COUNT}"
-          - name: TCMU_LOG_DIR
-            value: "${TCMU_LOG_DIR}"
+          - name: TCMU_LOGDIR
+            value: "${TCMU_LOGDIR}"
           resources:
             requests:
               memory: 100Mi
@@ -138,7 +138,7 @@ parameters:
   description: This value is to set maximum number of block hosting volumes.
   value: "15"
   required: true
-- name: TCMU_LOG_DIR
+- name: TCMU_LOGDIR
   displayName: Tcmu runner log directory
   description: This value is to set tcmu runner log directory
   value: "/var/log/glusterfs/gluster-block"
