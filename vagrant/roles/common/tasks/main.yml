@@ -1,0 +1,112 @@
+- name: restart network
+  systemd:
+    state: restarted
+    service: network
+  when: ansible_eth1.ipv4 is not defined
+
+- name: refresh inventory
+  setup:
+  when: ansible_eth1.ipv4 is not defined
+
+- name: build hosts file
+  lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_eth1.ipv4.address }} {{item}}" state=present
+  when: hostvars[item].ansible_eth1.ipv4.address is defined
+  with_items: "{{ groups['all'] }}"
+
+- name: disable selinux
+  selinux: state=disabled
+
+- name: disable of selinux - now
+  command: setenforce 0
+  ignore_errors: yes
+
+- name: Does cache exist?
+  local_action: stat path="{{ vagrant_home }}/cache/{{ ansible_distribution }}/{{ ansible_distribution_version }}/yum.tgz"
+  become: false
+  register: cache_exists
+
+- name: Keep yum cache
+  shell: yum-config-manager --setopt 'keepcache=1' --save > /dev/null
+  when:
+  - vagrant_cache
+
+- name: Copy cache from host
+  unarchive:
+    src: "{{ vagrant_home }}/cache/{{ ansible_distribution }}/{{ ansible_distribution_version }}/yum.tgz"
+    dest: "/var/cache/"
+  when:
+  - cache_exists.stat.exists == True
+  - vagrant_cache
+
+- name: install centos and epel repos
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - epel-release
+  - centos-release-gluster
+
+- name: setup kubernetes repo
+  yum_repository:
+    name: kubernetes
+    description: Kubernetes
+    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+    enabled: yes
+
+- name: install base packages
+  yum:
+    name: "{{ item }}"
+    state: present
+    disable_gpg_check: yes
+    update_cache: yes
+  with_items: "{{ install_pkgs }}"
+
+- name: Ensure net.bridge.bridge-nf-call-iptables is set. See kubeadm
+  copy: src=k8s.conf owner=root group=root dest=/etc/sysctl.d/k8s.conf
+
+#- name: save iptables
+#  command: service iptables save
+
+- name: configure dm_snapshot module
+  copy: src=dm_snapshot.conf owner=root group=root mode=644 dest=/etc/modules-load.d
+
+- name: Ensure firewalld.service
+  service: name=firewalld state=started enabled=yes
+
+- name: firewall trust eth1
+  firewalld: zone=trusted interface=eth1 permanent=true state=enabled immediate=true
+
+- name: firewall trust weave
+  firewalld: zone=trusted interface=weave permanent=true state=enabled immediate=true
+
+- name: firewall trust 172.42.42.0/24
+  firewalld: source=172.42.42.0/24 zone=trusted permanent=true state=enabled immediate=true
+
+# 10.32.0.0/12 is the default pod CIDR for Weave Net
+# you will need to update this if you are using a different
+# network provider, or a different CIDR for whatever reason
+- name: firewall trust weave net CIDR
+  firewalld: source=10.32.0.0/12 zone=trusted permanent=true state=enabled immediate=true
+
+- name: firewall trust port 10250
+  firewalld: port=10250/tcp zone=trusted permanent=true state=enabled immediate=true
+
+- name: firewall trust port 6443
+  firewalld: port=6443/tcp zone=trusted permanent=true state=enabled immediate=true
+
+- name: firewall trust port 9898
+  firewalld: port=9898/tcp zone=trusted permanent=true state=enabled immediate=true
+
+- name: install fixed kubelet-kubeadm config file
+  copy: src=10-kubeadm.conf dest=/etc/systemd/system/kubelet.service.d/ owner=root group=root mode=644 backup=yes
+
+- name: copy docker conf
+  template: src=docker.j2 dest=/etc/sysconfig/docker force=yes mode=0644
+  when: custom_registry is defined
+
+- name: enable kube services
+  service: name={{ item }} state=restarted enabled=yes daemon_reload=yes
+  with_items:
+    - docker
+    - kubelet
+    - ntpd

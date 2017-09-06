@@ -1,0 +1,39 @@
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: heketi-deployment
+  labels:
+    app: heketi
+  annotations:
+    description: Defines how to deploy Heketi
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: heketi
+      labels:
+        app: heketi
+    spec:
+      hostNetwork: true
+      containers:
+      - name: heketi
+        image: heketi/heketi:dev
+        imagePullPolicy: IfNotPresent
+        volumeMounts:
+        - name: keys
+          mountPath: /usr/share/keys
+        - name: config
+          mountPath: /etc/heketi
+        - name: db
+          mountPath: /var/lib/heketi
+      volumes:
+        - name: keys
+          secret:
+            secretName: ssh-key-secret
+        - name: config
+          configMap:
+            name: heketi-config
+        - name: db
+          glusterfs:
+            endpoints: glusterfs-cluster
+            path: MyHeketi

@@ -1,0 +1,14 @@
+sudo: true
+
+addons:
+  apt:
+    sources:
+    - sourceline: 'deb http://archive.ubuntu.com/ubuntu trusty-backports main restricted universe multiverse'
+    packages:
+    - shellcheck
+
+before_install:
+- sudo pip install yamllint
+
+script:
+- make test

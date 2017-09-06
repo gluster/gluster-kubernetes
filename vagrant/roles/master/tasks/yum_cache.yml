@@ -1,0 +1,13 @@
+---
+- name: Archive yum cache
+  archive:
+    path: "/var/cache/yum"
+    dest: "/tmp/yum.tgz"
+  when: vagrant_cache
+
+- name: Copy yum cache to host
+  fetch:
+    src: "/tmp/yum.tgz"
+    dest: "{{ vagrant_home }}/cache/{{ ansible_distribution }}/{{ ansible_distribution_version }}/"
+    flat: true
+  when: vagrant_cache

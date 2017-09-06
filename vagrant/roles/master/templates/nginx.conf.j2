@@ -1,0 +1,17 @@
+events {
+    worker_connections 1024;
+}
+http {
+  upstream my_gcr {
+    server {{ custom_registry }};
+  }
+  server {
+    listen *:80;
+    location / {
+      proxy_http_version 1.1;
+      proxy_buffering off;
+      proxy_set_header Proxy "";
+      proxy_pass http://my_gcr;
+    }
+  }
+}

@@ -1,0 +1,115 @@
+---
+kind: Template
+apiVersion: v1
+metadata:
+  name: deploy-heketi
+  labels:
+    glusterfs: heketi-template
+    deploy-heketi: template
+  annotations:
+    description: Bootstrap Heketi installation
+    tags: glusterfs,heketi,installation
+objects:
+- kind: Service
+  apiVersion: v1
+  metadata:
+    name: deploy-heketi
+    labels:
+      glusterfs: heketi-service
+      deploy-heketi: service
+    annotations:
+      description: Exposes Heketi service
+  spec:
+    ports:
+    - name: deploy-heketi
+      port: 8080
+      targetPort: 8080
+    selector:
+      deploy-heketi: pod
+- kind: Route
+  apiVersion: v1
+  metadata:
+    name: deploy-heketi
+    labels:
+      glusterfs: heketi-route
+      deploy-heketi: route
+  spec:
+    to:
+      kind: Service
+      name: deploy-heketi
+- kind: DeploymentConfig
+  apiVersion: v1
+  metadata:
+    name: deploy-heketi
+    labels:
+      glusterfs: heketi-dc
+      deploy-heketi: dc
+    annotations:
+      description: Defines how to deploy Heketi
+  spec:
+    replicas: 1
+    selector:
+      deploy-heketi: pod
+    triggers:
+    - type: ConfigChange
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        name: deploy-heketi
+        labels:
+          glusterfs: heketi-pod
+          deploy-heketi: pod
+      spec:
+        serviceAccountName: heketi-service-account
+        containers:
+        - name: deploy-heketi
+          image: heketi/heketi:dev
+          env:
+          - name: HEKETI_USER_KEY
+            value: ${HEKETI_USER_KEY}
+          - name: HEKETI_ADMIN_KEY
+            value: ${HEKETI_ADMIN_KEY}
+          - name: HEKETI_EXECUTOR
+            value: ${HEKETI_EXECUTOR}
+          - name: HEKETI_FSTAB
+            value: /var/lib/heketi/fstab
+          - name: HEKETI_SNAPSHOT_LIMIT
+            value: '14'
+          - name: HEKETI_KUBE_GLUSTER_DAEMONSET
+            value: "y"
+          ports:
+          - containerPort: 8080
+          volumeMounts:
+          - name: db
+            mountPath: /var/lib/heketi
+          - name: config
+            mountPath: /etc/heketi
+          readinessProbe:
+            timeoutSeconds: 3
+            initialDelaySeconds: 3
+            httpGet:
+              path: /hello
+              port: 8080
+          livenessProbe:
+            timeoutSeconds: 3
+            initialDelaySeconds: 30
+            httpGet:
+              path: /hello
+              port: 8080
+        volumes:
+        - name: db
+        - name: config
+          secret:
+            secretName: heketi-config-secret
+parameters:
+- name: HEKETI_USER_KEY
+  displayName: Heketi User Secret
+  description: Set secret for those creating volumes as type _user_
+- name: HEKETI_ADMIN_KEY
+  displayName: Heketi Administrator Secret
+  description: Set secret for administration of the Heketi service as user _admin_
+- name: HEKETI_EXECUTOR
+  displayName: heketi executor type
+  description: Set the executor type, kubernetes or ssh
+  value: kubernetes

@@ -1,0 +1,8 @@
+*~
+*.sw?
+*.retry
+*/.vagrant/**
+topology.json
+heketi-storage.json
+ssh-config
+heketi.json

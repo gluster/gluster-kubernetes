@@ -1,0 +1,11 @@
+OPTIONS=' --selinux-enabled  --log-driver=journald'
+if [ -z "${DOCKER_CERT_PATH}" ]; then
+    DOCKER_CERT_PATH=/etc/docker
+fi
+
+{% if custom_registry_add | default(true) -%}
+ADD_REGISTRY='--add-registry {{ custom_registry }}'
+{% endif %}
+{% if custom_registry_insecure | default(true) -%}
+INSECURE_REGISTRY='--insecure-registry {{ custom_registry }}{% if custom_registry_gcr | default(false) %} --insecure-registry gcr.io{% endif %}'
+{% endif %}

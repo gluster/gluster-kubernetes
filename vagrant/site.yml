@@ -1,0 +1,43 @@
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: Make sure cache directory exists
+      file:
+        path: "{{ vagrant_home }}/cache/{{ ansible_distribution }}/{{ ansible_distribution_version }}/"
+        state: directory
+      when: vagrant_cache
+
+- hosts: all
+  become: yes
+  become_method: sudo
+  vars_files:
+    - "global_vars.yml"
+  roles:
+    - common
+
+- hosts: master
+  become: yes
+  become_method: sudo
+  vars_files:
+    - "global_vars.yml"
+  roles:
+    - master
+
+- hosts: nodes
+  become: yes
+  become_method: sudo
+  vars_files:
+    - "global_vars.yml"
+  roles:
+    - nodes
+
+- hosts: master
+  become: yes
+  become_method: sudo
+  vars_files:
+    - "global_vars.yml"
+  tasks:
+    - include_role:
+        name: master
+        tasks_from: yum_cache.yml
+      when: vagrant_cache

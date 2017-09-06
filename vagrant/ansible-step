@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# This little helper can be used to step through the
+# ansible provisioning for debugging purposes.
+# It can optionally take as an argument the name of
+# the task with which to start stepping.
+#
+# E.g call it as
+#
+#   ./ansible-step
+#
+# or
+#
+#   ./ansible-step "kubeadm init"
+
+START=""
+
+if [[ $# -ge 1 ]]; then
+	START="--start-at-task=\"$*\""
+fi
+
+cmd="ansible-playbook --inventory=.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory -v --step ${START} site.yml"
+
+export ANSIBLE_HOST_KEY_CHECKING=False
+eval "$cmd"
