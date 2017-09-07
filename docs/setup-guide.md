@@ -88,7 +88,7 @@ note when running the script:
  itself. You can specify a different location as the first non-option
  argument on the command-line.
 
- * By default it expects to have acess to Kubernetes template files in a
+ * By default it expects to have access to Kubernetes template files in a
  subdirectory called `kube-templates`. Specify their location otherwise
  with `-t`.
 
