@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ "${@}" == *"get "* ]]; then
+if [[ "${*}" == *"get "* ]]; then
 	while [[ "${1}" != "get" ]]; do
 		shift
 	done
@@ -14,7 +14,7 @@ if [[ "${@}" == *"get "* ]]; then
 	if [[ "${restype}" == namespace* ]] && [[ "${select}" == "invalid" ]]; then
 		echo "Error"
 	fi
-elif [[ "${@}" == *" config get-contexts" ]]; then
+elif [[ "${*}" == *" config get-contexts" ]]; then
 	if [[ "${0}" == *oc* ]]; then
 		echo "* two three four storage"
 	fi
