@@ -47,7 +47,7 @@ spec:
         - name: HEKETI_EXECUTOR
           value: ${HEKETI_EXECUTOR}
         - name: HEKETI_FSTAB
-          value: "/var/lib/heketi/fstab"
+          value: ${HEKETI_FSTAB}
         - name: HEKETI_SNAPSHOT_LIMIT
           value: '14'
         - name: HEKETI_KUBE_GLUSTER_DAEMONSET
