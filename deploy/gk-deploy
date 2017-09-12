@@ -753,7 +753,8 @@ if [[ ${GLUSTER} -eq 1 ]] && [[ ${EXISTS_GLUSTERFS} -eq 0 ]] && [[ ${EXISTS_HEKE
 fi
 
 if [[ ${EXISTS_DEPLOY_HEKETI} -eq 0 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
-  sed -e "s/\${HEKETI_EXECUTOR}/${EXECUTOR}/" -e "s/\${HEKETI_FSTAB}/${FSTAB}/" -e "s/\${SSH_PORT}/${SSH_PORT}/" -e "s/\${SSH_USER}/${SSH_USER}/" -e "s/\${SSH_SUDO}/${SSH_SUDO}/" "${SCRIPT_DIR}/heketi.json.template" > heketi.json
+  #The FSTAB variable may contain slashes as path separators, so use '#' as the expression delimiter instead
+  sed -e "s/\${HEKETI_EXECUTOR}/${EXECUTOR}/" -e "s#\${HEKETI_FSTAB}#${FSTAB}#" -e "s/\${SSH_PORT}/${SSH_PORT}/" -e "s/\${SSH_USER}/${SSH_USER}/" -e "s/\${SSH_SUDO}/${SSH_SUDO}/" "${SCRIPT_DIR}/heketi.json.template" > heketi.json
   eval_output "${CLI} create secret generic heketi-config-secret --from-file=private_key=${SSH_KEYFILE} --from-file=./heketi.json --from-file=topology.json=${TOPOLOGY}"
   eval_output "${CLI} label --overwrite secret heketi-config-secret glusterfs=heketi-config-secret heketi=config-secret"
   rm -f heketi.json
