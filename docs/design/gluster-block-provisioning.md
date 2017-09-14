@@ -79,7 +79,7 @@ to gluster for this new functionality are:
 
 * A new external (out-of-tree) kubernetes provisioner ```glusterblock```,
   to be exposed via a ```StorageClass```.
-* Gluster's RestFUL service interface Heketi
+* Gluster's RESTful service interface Heketi
   with a new ```blockvolume``` set of subcommands to control the
   creation of block volumes.
 * A new gluster tool ```gluster-block```, consisting of daemon component
@@ -122,7 +122,7 @@ container. It's code (currently WIP as of 2017-05-19) is located in the
 <https://github.com/kubernetes-incubator/external-storage>.
 
 The provisioner is mainly a simple translation engine that turns PVC requests
-into requests for heketi via heketi's RestFUL API, and wraps the resulting
+into requests for heketi via heketi's RESTful API, and wraps the resulting
 volume information into a PV.
 
 The provisioner is configured via a StorageClass which can look like this:
