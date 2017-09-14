@@ -192,6 +192,7 @@ type BlockVolumeCreateRequest struct {
         Clusters   []string  `json:"clusters,omitempty"`
         Name       string    `json:"name"`
         Hacount    int       `json:"hacount,omitempty"`
+        Auth       bool      `json:"auth,omitempty"
 }
 ```
 
@@ -202,9 +203,10 @@ This is the basic info about a block volume.
 ```
 BlockVolume struct {
         Hosts     []string `json:"hosts"`
-        Hacount   int `json:"hacount"`
-        Iqn       string `json:"iqn"`
-        Lun       int `json:"lun"`
+        Iqn       string   `json:"iqn"`
+        Lun       int      `json:"lun"`
+        Username  string   `json:"username"`
+        Password  string   `json:"password"`
 }
 
 ```
