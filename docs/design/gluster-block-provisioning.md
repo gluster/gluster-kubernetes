@@ -175,8 +175,8 @@ In the future, ```BlockVolumeExpand``` might get added.
 
 ### Note About The State Of The Implementation
 
-As of 2017-05-19, a WIP API and overall skeleton implementation is available in
-<https://github.com/obnoxxx/heketi/tree/block-wip>.
+As of 2017-06-23, a PR with the implementation is available
+at <https://github.com/heketi/heketi/pull/793>.
 
 
 ### Details about the requests
