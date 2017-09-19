@@ -1,9 +1,0 @@
-apiVersion: storage.k8s.io/v1beta1
-kind: StorageClass
-metadata:
-  name: s3storageclass
-provisioner: kubernetes.io/glusterfs
-parameters:
-  resturl: "http://heketi-storage-project.cloudapps.mystorage.com"
-  restuser: "test"
-  restuserkey: "testme"
