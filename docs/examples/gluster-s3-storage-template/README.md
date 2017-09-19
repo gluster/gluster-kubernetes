@@ -2,111 +2,132 @@
 
 ## Prerequisites
 
-  OpenShift setup is up with master and nodes ready.
+OpenShift setup is up with master and nodes ready.
 
-  cns-deploy tool is ran and heketi service is ready
-
-
-
+cns-deploy tool is ran and heketi service is ready.
 
 ## First create a storageclass
 
-Create a GlusterFS StorageClass as below, replacing the `rest` parameters with your configuration:
+We need to create a storageclass which provides access to glusterfs provisioner.
+
+Before creating storageclass, secret needs to be created and labelled. Please note, this step is optional.
+
+Create the secret:
+
+Replace `NAMESPACE` and `ADMIN_KEY` parameters with your configuration.
 
 ```
-oc create -f ./gluster-s3-storageclass.yaml
+oc create secret generic heketi-${NAMESPACE}-admin-secret --from-literal=key=${ADMIN_KEY} --type=kubernetes.io/glusterfs
+```
+
+Label the secret:
+
+Replace `NAMESPACE` parameter with your configuration.
+
+```
+oc label --overwrite secret heketi-${NAMESPACE}-admin-secret glusterfs=s3-heketi-${NAMESPACE}-admin-secret gluster-s3=heketi-${NAMESPACE}-admin-secret
+```
+
+Create a GlusterFS StorageClass as below, replacing the `HEKETI_URL` and `NAMESPACE` parameters with your configuration.
+Also, provide `STORAGE_CLASS` to give a storage class name.
+
+```
+sed  -e 's/${HEKETI_URL}/heketi-store-project1.cloudapps.mystorage.com/g'  -e 's/${STORAGE_CLASS}/gluster-s3-store/g'      -e  's/${NAMESPACE}/store-project1/g'   deploy/ocp-templates/gluster-s3-storageclass.yaml | oc create -f -
 ```
 
 Available at 
-[gluster-s3-storageclass.yaml](./gluster-s3-storageclass.yaml)
+[gluster-s3-storageclass.yaml](../../../deploy/ocp-templates/gluster-s3-storageclass.yaml)
+
+## Create PVC
+
+Now, create PVC using the storage class. Replace `STORAGE_CLASS` with the above created one.
+Adjust `VOLUME_CAPACITY` as per your needs.
+
+```
+sed -e 's/${VOLUME_CAPACITY}/2Gi/g'  -e  's/${STORAGE_CLASS}/gluster-s3-store/g'  deploy/ocp-templates/gluster-s3-pvcs.yaml | oc create -f -
+persistentvolumeclaim "gluster-s3-claim" created
+```
+
+Available at
+[gluster-s3-pvcs.yaml](../../../deploy/ocp-templates/gluster-s3-pvcs.yaml)
 
 ## Start glusters3 service using template
 
-```
-oc new-app gluster-s3-template.yaml  --param=S3_ACCOUNT=testvolume  --param=S3_USER=adminuser --param=S3_PASSWORD=itsmine --param=VOLUME_CAPACITY=2Gi
-```
+Launch S3 storage service.
 
-Note: adjust parameters according to your needs.
-
-
-If you wish to make use of a GlusterFS StorageClass other than `s3storageclass`, add another parameter of the form:
-
+Set S3_ACCOUNT name, S3_USER name, S3_PASSWORD.
+PVC and META_PVC are obtained from above step.
 
 ```
---param=STORAGE_CLASS=<your storage class name>
+oc new-app  deploy/ocp-templates/gluster-s3-template.yaml \
+--param=S3_ACCOUNT=testvolume  --param=S3_USER=adminuser \
+--param=S3_PASSWORD=itsmine --param=PVC=gluster-s3-claim \
+--param=META_PVC=gluster-s3-meta-claim
 ```
-
-
 
 Available at:
-[gluster-s3-template.yaml](./gluster-s3-template.yaml)
+[gluster-s3-template.yaml](../../../deploy/ocp-templates/gluster-s3-template.yaml)
 
 ### For example:
 
-
 ```
-[root@master template]# oc new-app glusters3template.json  --param=S3_ACCOUNT=testvolume  --param=S3_USER=adminuser --param=S3_PASSWORD=itsmine --param=VOLUME_CAPACITY=2Gi
---> Deploying template "storage-project/glusters3template" for "glusters3template.json" to project storage-project
+ oc new-app  deploy/ocp-templates/gluster-s3-template.yaml \
+--param=S3_ACCOUNT=testvolume  --param=S3_USER=adminuser \
+--param=S3_PASSWORD=itsmine --param=PVC=gluster-s3-claim \
+--param=META_PVC=gluster-s3-meta-claim
+--> Deploying template "store-project1/gluster-s3" for "deploy/ocp-templates/gluster-s3-template.yaml" to project store-project1
 
-     glusters3template
+     gluster-s3
      ---------
      Gluster s3 service template
 
 
      * With parameters:
-        * S3 account=testvolume
-        * S3 user=adminuser
-        * S3 user authentication=itsmine
-        * Volume capacity=2Gi
+        * S3 Account Name=testvolume
+        * S3 User=adminuser
+        * S3 User Password=itsmine
+        * Primary GlusterFS-backed PVC=gluster-s3-claim
+        * Metadata GlusterFS-backed PVC=gluster-s3-meta-claim
 
 --> Creating resources ...
-    service "glusters3service" created
-    route "glusters3object" created
-    persistentvolumeclaim "glusterfs-s3-claim" created
-    persistentvolumeclaim "glusterfs-s3-claim-meta" created
-    deploymentconfig "glusters3" created
+    service "gluster-s3-service" created
+    route "gluster-s3-route" created
+    deploymentconfig "gluster-s3-dc" created
 --> Success
     Run 'oc status' to view your app.
 ```
 
-
 ```
-[root@master template]# oc get pods -o wide 
+# oc get pods -o wide 
 NAME                             READY     STATUS    RESTARTS   AGE       IP             NODE
 glusterfs-1nmdp                  1/1       Running   0          4d        10.70.42.234   node3
 glusterfs-5k7dk                  1/1       Running   0          4d        10.70.42.4     node2
 glusterfs-85qds                  1/1       Running   0          4d        10.70.42.5     node1
-glusters3                        1/1       Running   0          4m        10.130.0.29    node3
+gluster-s3                       1/1       Running   0          4m        10.130.0.29    node3
 heketi-1-m8817                   1/1       Running   0          4d        10.130.0.19    node3
 storage-project-router-1-2816m   1/1       Running   0          4d        10.70.42.234   node3
 ```
 
 ```
-[root@master template]# oc get svc
-NAME                                     CLUSTER-IP       EXTERNAL-IP   PORT(S)                   AGE
-glusterfs-cluster                        172.30.99.166    <none>        1/TCP                     5d
-glusterfs-dynamic-glusterfs-claim        172.30.45.160    <none>        1/TCP                     15m
-glusterfs-dynamic-glusterfs-claim-meta   172.30.131.93    <none>        1/TCP                     15m
-glusters3service                         172.30.167.137   <none>        8080/TCP                  16m
-heketi                                   172.30.94.14     <none>        8080/TCP                  5d
-heketi-storage-endpoints                 172.30.255.156   <none>        1/TCP                     5d
-storage-project-router                   172.30.203.52    <none>        80/TCP,443/TCP,1936/TCP   6d
+# oc get service gluster-s3-service
+NAME                 CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+gluster-s3-service   172.30.121.75   <none>        8080/TCP   1m
+
 ```
 
 ```
-[root@master template]# oc get routes 
-NAME              HOST/PORT                                                            PATH      SERVICES           PORT      TERMINATION   WILDCARD
-glusters3object   glusters3object-storage-project.cloudapps.mystorage.com ... 1 more             glusters3service   <all>                   None
-heketi            heketi-storage-project.cloudapps.mystorage.com ... 1 more                      heketi             <all>                   None
+# oc get route gluster-s3-route
+NAME               HOST/PORT                                                             PATH      SERVICES             PORT      TERMINATION   WILDCARD
+gluster-s3-route   gluster-s3-route-storage-project.cloudapps.mystorage.com ... 1 more             gluster-s3-service   <all>                   None
+
 ```
 
 # Testing
 
 
-
 ### Get url of glusters3object route which exposes the s3 object storage interface
 ```
-s3_storage_url=$(oc get routes   | grep glusters3object  | awk '{print $2}')
+s3_storage_url=$(oc get routes   | grep "gluster.*s3"  | awk '{print $2}')
 ```
 
 We will be using this url for accessing s3 object storage.
