@@ -95,6 +95,9 @@ PVC and META_PVC are persistentvolumeclaim(s) obtained from above step.
 --> Success
     Run 'oc status' to view your app.
 ```
+### 3. Verify gluster-s3 resources
+
+Use the following commands to verify the deployment was succesful.
 
 ```
 # oc get pods -o wide
