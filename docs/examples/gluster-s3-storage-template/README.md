@@ -2,25 +2,32 @@
 
 ## Prerequisites
 
-OpenShift setup is up with master and nodes ready.
+* OpenShift setup is up with master and nodes ready.
 
-cns-deploy tool is ran and heketi service is ready.
+* cns-deploy tool has been run and heketi service is ready.
 
-## First create a storageclass
+## Deployment
 
-We need to create a storageclass which provides access to glusterfs provisioner.
+### 1. Provide the backend store
 
-Before creating storageclass, secret needs to be created and labelled. Please note, this step is optional.
+The gluster-s3 service requires there be at least two GlusterFS volumes
+available for its use, one to store the object data and another for the
+object meta-data. In this example, we will create a new StorageClass to
+dynamically provision these two volumes on our pre-existing GlusterFS cluster.
 
-Create the secret:
+#### Create a StorageClass
 
-Replace `NAMESPACE` and `ADMIN_KEY` parameters with your configuration.
+In our example, we have set up heketi to require a secret key for the admin user. A StorageClass created to use such a heketi instance needs a Secret that contains the admin key. This Secret is not needed if heketi is not configured to use an admin key.
+
+ Replace `NAMESPACE` and `ADMIN_KEY` parameters with your configuration.
+Here, `NAMESPACE` is the project and `ADMIN_KEY` is used for authorization to access Heketi service.
 
 ```
 oc create secret generic heketi-${NAMESPACE}-admin-secret --from-literal=key=${ADMIN_KEY} --type=kubernetes.io/glusterfs
 ```
 
-Label the secret:
+As an optional step, the Secret can be labelled. This is useful to be able to select the secret as part of a general query like `oc get
+--selector=glusterfs` and allows the secret to be removed programatically by the `gk-deploy` tool.
 
 Replace `NAMESPACE` parameter with your configuration.
 
@@ -30,43 +37,35 @@ oc label --overwrite secret heketi-${NAMESPACE}-admin-secret glusterfs=s3-heketi
 
 Create a GlusterFS StorageClass as below, replacing the `HEKETI_URL` and `NAMESPACE` parameters with your configuration.
 Also, provide `STORAGE_CLASS` to give a storage class name.
+`HEKETI_URL` is the REST url to access GlusterFs cluster.
+`NAMESPACE` is the project.
+`STORAGE_CLASS` is the StorageClass name provided by admin.
 
 ```
 sed  -e 's/${HEKETI_URL}/heketi-store-project1.cloudapps.mystorage.com/g'  -e 's/${STORAGE_CLASS}/gluster-s3-store/g'      -e  's/${NAMESPACE}/store-project1/g'   deploy/ocp-templates/gluster-s3-storageclass.yaml | oc create -f -
 ```
 
-Available at 
+Available at
 [gluster-s3-storageclass.yaml](../../../deploy/ocp-templates/gluster-s3-storageclass.yaml)
 
-## Create PVC
+#### Create backend PVCs
 
-Now, create PVC using the storage class. Replace `STORAGE_CLASS` with the above created one.
-Adjust `VOLUME_CAPACITY` as per your needs.
+Now, create PVCs using the StorageClass. Replace `STORAGE_CLASS` with the above created one and adjust `VOLUME_CAPACITY` as per your needs.
 
 ```
 sed -e 's/${VOLUME_CAPACITY}/2Gi/g'  -e  's/${STORAGE_CLASS}/gluster-s3-store/g'  deploy/ocp-templates/gluster-s3-pvcs.yaml | oc create -f -
 persistentvolumeclaim "gluster-s3-claim" created
+persistentvolumeclaim "gluster-s3-meta-claim" created
 ```
 
 Available at
 [gluster-s3-pvcs.yaml](../../../deploy/ocp-templates/gluster-s3-pvcs.yaml)
 
-## Start glusters3 service using template
+### 2. Start glusters3 service
 
 Launch S3 storage service.
-
-Set S3_ACCOUNT name, S3_USER name, S3_PASSWORD.
-PVC and META_PVC are obtained from above step.
-
-```
-oc new-app  deploy/ocp-templates/gluster-s3-template.yaml \
---param=S3_ACCOUNT=testvolume  --param=S3_USER=adminuser \
---param=S3_PASSWORD=itsmine --param=PVC=gluster-s3-claim \
---param=META_PVC=gluster-s3-meta-claim
-```
-
-Available at:
-[gluster-s3-template.yaml](../../../deploy/ocp-templates/gluster-s3-template.yaml)
+Set S3_ACCOUNT name, S3_USER name, S3_PASSWORD according to the user wish. S3_ACCOUNT is the S3 account which will be created and associated with GlusterFS volume. S3_USER is the user created to access the above account and S3_PASSWORD is for Authorization of the S3 user.  
+PVC and META_PVC are persistentvolumeclaim(s) obtained from above step.
 
 ### For example:
 
@@ -98,7 +97,7 @@ Available at:
 ```
 
 ```
-# oc get pods -o wide 
+# oc get pods -o wide
 NAME                             READY     STATUS    RESTARTS   AGE       IP             NODE
 glusterfs-1nmdp                  1/1       Running   0          4d        10.70.42.234   node3
 glusterfs-5k7dk                  1/1       Running   0          4d        10.70.42.4     node2
@@ -121,6 +120,8 @@ NAME               HOST/PORT                                                    
 gluster-s3-route   gluster-s3-route-storage-project.cloudapps.mystorage.com ... 1 more             gluster-s3-service   <all>                   None
 
 ```
+Available at:
+[gluster-s3-template.yaml](../../../deploy/ocp-templates/gluster-s3-template.yaml)
 
 # Testing
 
@@ -136,7 +137,7 @@ We will be using this url for accessing s3 object storage.
 ### s3curl.pl for testing
 Download s3curl from here [s3curl](https://aws.amazon.com/code/128)
 
-We are going to make use of s3curl.pl for verification. 
+We are going to make use of s3curl.pl for verification.
 
 s3curl.pl requires the presence of `Digest::HMAC_SHA1` and `Digest::MD5`.
 On Red Hat-based OSes, you can install the `perl-Digest-HMAC` package to get this.
@@ -175,7 +176,7 @@ s3curl: exec curl -H Date: Fri, 30 Jun 2017 05:19:41 +0000 -H Authorization: AWS
 > Date: Fri, 30 Jun 2017 05:19:41 +0000
 > Authorization: AWS testvolume:adminuser:5xMXB7uyz51dUcephS6g1dVFwCM=
 > Expect: 100-continue
-> 
+>
 < HTTP/1.1 200 OK
 < Content-Type: text/html; charset=UTF-8
 < Location: bucket1
@@ -184,7 +185,7 @@ s3curl: exec curl -H Date: Fri, 30 Jun 2017 05:19:41 +0000 -H Authorization: AWS
 < Date: Fri, 30 Jun 2017 05:19:41 GMT
 < Set-Cookie: fad43e2ce02bfea85cd465cc937029f2=0551e8024aa5cd2c9b0791109252676d; path=/; HttpOnly
 < Cache-control: private
-< 
+<
 * Connection #0 to host glusters3object-storage-project.cloudapps.mystorage.com left intact
 ```
 
@@ -199,7 +200,7 @@ echo \"Hello Gluster from OpenShift - for S3 access demo\" > my_object.jpg
 s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine" --put  my_object.jpg  -- -k -v -s http://$s3_storage_url/bucket1/my_object.jpg
 ```
 
-### Verify listing objects in the container 
+### Verify listing objects in the container
 ```
 s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine"  -- -k -v -s http://$s3_storage_url/bucket1/
 ```
@@ -219,7 +220,7 @@ cat test_object.jpg
 s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine" --delete -- http://$s3_storage_url/bucket1/my_object.jpg
 ```
 
-### Verify listing of objects 
+### Verify listing of objects
 ```
 s3curl.pl --debug --id "testvolume:adminuser" --key "itsmine"  -- -k -v -s http://$s3_storage_url/bucket1/
 ```
