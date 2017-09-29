@@ -569,13 +569,21 @@ import json
 import argparse
 
 file = open('${TOPOLOGY}', 'r')
-topo = json.load(file)
+try:
+  topo = json.load(file)
+except ValueError as e:
+  print("Invalid json format in : %s Error: %s" % (file, e))
+  sys.exit(1)
 
 for cluster in topo['clusters']:
   for node in cluster['nodes']:
     print(str(node['node']['hostnames']['manage'][0]))
 END
 )
+  if [[ $NODES == "Invalid json format"* ]]; then
+    echo -e "$NODES \nFix json format and rerun"
+    exit 1
+  fi
 fi
 
 if [[ "x${CLI}" == "x" ]]; then
