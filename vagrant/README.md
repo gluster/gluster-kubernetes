@@ -13,7 +13,7 @@ $ vagrant ssh master
 Works in Vagrant/Ansible on Linux with libvirt/KVM or on Mac OS X on Virtualbox
 
 ## Versions
-Currently it uses Kubernetes v1.6.1
+Currently it uses Kubernetes v1.7.8
 
 ## Features
 

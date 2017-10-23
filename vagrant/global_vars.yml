@@ -1,5 +1,5 @@
 ---
-kubernetes_version: 1.6.1
+kubernetes_version: 1.7.8
 kubernetes_token: abcdef.1234567890abcdef
 install_pkgs:
 - wget
@@ -12,9 +12,9 @@ install_pkgs:
 - iptables-utils
 - iptables-services
 - docker
-- kubeadm
-- kubelet
-- kubectl
+- kubeadm-1.7.8
+- kubelet-1.7.8
+- kubectl-1.7.8
 - ntp
 # The following variables control the use and configuration of a custom docker
 # registry:
