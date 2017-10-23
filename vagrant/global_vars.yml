@@ -12,9 +12,9 @@ install_pkgs:
 - iptables-utils
 - iptables-services
 - docker
-- kubeadm-1.7.8
-- kubelet-1.7.8
-- kubectl-1.7.8
+- kubeadm-{{ kubernetes_version }}
+- kubelet-{{ kubernetes_version }}
+- kubectl-{{ kubernetes_version }}
 - ntp
 # The following variables control the use and configuration of a custom docker
 # registry:
