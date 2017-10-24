@@ -24,7 +24,12 @@ StorageClass parameters.
 
 #### Dynamic provisioner in Kubernetes 1.4 ####
 
-Identify the Gluster Endpoints that are needed to pass in as a parameter into the StorageClass (heketi-storage-endpoints):
+***NOTE***: Endpoints define the GlusterFS cluster, for version 1.4.X this is
+a required parameter for the StorageClass. For versions later than 1.4.X skip
+this step.
+
+Identify the Gluster Storage Endpoint to be passed in as a parameter to
+the StorageClass (heketi-storage-endpoints):
 
 ```
 kubectl get endpoints
@@ -34,13 +39,12 @@ heketi-storage-endpoints   192.168.10.100:1,192.168.10.101:1,192.168.10.102:1   
 kubernetes                 192.168.10.90:6443                                   23h
 ```
 
-***NOTE***: Endpoints define the GlusterFS cluster, for version 1.4.X this is a required parameter for the StorageClass.
-
 #### Dynamic provisioner in Kubernetes >= 1.5 ####
 
-Starting with Kubernetes 1.5, a manual Endpoint is no longer necessary for the
-GlusterFS dynamic provisioner. When the dynamic provisioner creates a volume
-it will also automatically create the Endpoint.
+Starting with Kubernetes 1.5 a manual Endpoint is no longer necessary for the
+GlusterFS dynamic provisioner. In Kubernetes 1.6 and later manually specifying
+an endpoint will cause the provisioning to fail. When the dynamic provisioner
+creates a volume it will also automatically create the Endpoint.
 
 There are other StorageClass parameters (e.g. cluster, GID) which were added
 to the Gluster dynamic provisioner in Kubernetes. Please refer to
@@ -53,6 +57,8 @@ for more details on these parameters.
 manage and enable Persistent Storage in Kubernetes.  Below is an example of a _Storage Class_ that will request
 5GB of on-demand storage to be used with our _HelloWorld_ application.
 
+
+##### For Kubernetes 1.4:
 ```
 apiVersion: storage.k8s.io/v1beta1
 kind: StorageClass
@@ -61,6 +67,19 @@ metadata:
 provisioner: kubernetes.io/glusterfs  <2>
 parameters:
   endpoint: "heketi-storage-endpoints"  <3>
+  resturl: "http://10.42.0.0:8080"  <4>
+  restuser: "joe"  <5>
+  restuserkey: "My Secret Life"  <6>
+```
+
+##### For Kubernetes 1.5 and later:
+```
+apiVersion: storage.k8s.io/v1beta1
+kind: StorageClass
+metadata:
+  name: gluster-heketi  <1>
+provisioner: kubernetes.io/glusterfs  <2>
+parameters:
   resturl: "http://10.42.0.0:8080"  <4>
   restuser: "joe"  <5>
   restuserkey: "My Secret Life"  <6>
