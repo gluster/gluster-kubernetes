@@ -197,7 +197,7 @@ heketi-3017632314-yyngh            1/1       Running   0          1d        10.4
 Now we will exec into the container and create an index.html file
 
 ```
-kubectl exec -ti gluster-pod1 /bin/sh
+kubectl exec -ti nginx-pod1 /bin/sh
 $ cd /usr/share/nginx/html
 $ echo 'Hello World from GlusterFS!!!' > index.html
 $ ls
