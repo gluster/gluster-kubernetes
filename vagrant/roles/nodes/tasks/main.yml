@@ -55,6 +55,10 @@
       group: root
     when: not kubelet.stat.exists
 
+  - name: wait for kubelet to create kubernetes.conf file
+    wait_for:
+      path: /etc/kubernetes/kubelet.conf
+
   - name: create root kube config on node
     copy:
       src: /etc/kubernetes/kubelet.conf

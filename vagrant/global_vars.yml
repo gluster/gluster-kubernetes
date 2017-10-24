@@ -1,6 +1,8 @@
 ---
-kubernetes_version: 1.7.8
+# Specify either "latest" or a version such as "1.7.10"
+kubernetes_version: latest
 kubernetes_token: abcdef.1234567890abcdef
+kubernetes_version_tag: "{% if kubernetes_version != 'latest' %}-{{ kubernetes_version }}{% endif %}"
 install_pkgs:
 - wget
 - screen
@@ -12,9 +14,9 @@ install_pkgs:
 - iptables-utils
 - iptables-services
 - docker
-- kubeadm-{{ kubernetes_version }}
-- kubelet-{{ kubernetes_version }}
-- kubectl-{{ kubernetes_version }}
+- kubeadm{{ kubernetes_version_tag }}
+- kubelet{{ kubernetes_version_tag }}
+- kubectl{{ kubernetes_version_tag }}
 - ntp
 # The following variables control the use and configuration of a custom docker
 # registry:

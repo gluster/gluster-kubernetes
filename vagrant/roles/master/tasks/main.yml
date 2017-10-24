@@ -31,7 +31,7 @@
 
 - block:
   - name: kubeadm init
-    command: kubeadm init --skip-preflight-checks --token={{ kubernetes_token }} --kubernetes-version=v{{ kubernetes_version }}  --apiserver-advertise-address={{ ansible_eth1.ipv4.address }}
+    command: kubeadm init --skip-preflight-checks --token={{ kubernetes_token }} --kubernetes-version=v{{ kube_ver.stdout }}  --apiserver-advertise-address={{ ansible_eth1.ipv4.address }}
 
   - name: create root kube dir
     file:
@@ -67,8 +67,9 @@
 - name: create weave network
   command: kubectl apply -f https://git.io/weave-kube-1.6
 
+# jsonpath tested with kubeadm 1.6, 1.7, 1.8 
 - name: get dns service address
-  shell: kubectl get services --all-namespaces | grep kube-dns | awk "{print \$3}"
+  command: kubectl get services --all-namespaces -ojsonpath='{.items[?(@.metadata.name=="kube-dns")].spec.clusterIP}'
   register: kubednsaddress
 
 - name: wait for dns to be ready
