@@ -46,6 +46,11 @@ following pre-requisites on your machine:
 
 To spin up the cluster, simply run `./up.sh` in the `vagrant/` directory.
 
+***NOTE***: If you plan to run ./up.sh more than once the vagrant setup supports
+caching packages and container images. Please read the
+[vagrant directory README](./vagrant/README.md)
+for more information on how to configure and use the caching support.
+
 Next, copy the `deploy/` directory to the master node of the cluster.
 
 You will have to provide your own topology file. A sample topology file is
