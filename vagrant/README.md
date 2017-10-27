@@ -68,3 +68,36 @@ Now Docker will pull gcr.io images and custom images from your custom registry,
 and check your custom registry before pulling from Docker Hub. You will want to
 periodically set `custom_registry_add=false` and `custom_registry_gcr=false` to
 pull updated images and then cache them with `docker-cache.sh`.
+
+**CUSTOM YUM REPOS:** As an alternative or complementary tool to the rpm caching
+feature mentioned above, the `custom_yum_repos` variable can be enabled to
+supply custom yum repos to the VMs. These custom repos can be used to cache
+packages across multiple projects or inject custom RPMs into the VMs.
+
+To configure it, uncomment or copy the `custom_yum_repos` variable in
+`global_vars.yml`. Supply key-value pairs, where the key is the name of the
+yum repository and the value is the repository's url. Example:
+  ```
+  custom_yum_repos:
+    kubernetes_el7: http://mypkgs/path/to/repo1
+    epel_el7: http://mypkgs/path/to/repo2
+    gluster_el7: http://mypkgs/another/repo/path/repo3
+  ```
+
+
+**CUSTOM HOST ALIASES:** If you want or need to use a name for the yum
+repository hosts or custom docker registry that does not resolve normally,
+you can define a `custom_host_aliases` in `global_vars.yml`. This value takes
+a list of items where each item is a mapping with the keys `addr`, an ip
+address, and `names`, a list of host names. Example:
+   ```
+   custom_host_aliases:
+     - addr: 192.168.122.164
+       names:
+         - myserver
+         - myserver.localdomain
+     - addr: 192.168.122.166
+       names:
+         - foo
+         - foo.example.org
+   ```
