@@ -19,7 +19,7 @@ install_pkgs:
 - kubectl{{ kubernetes_version_tag }}
 - ntp
 # The following variables control the use and configuration of a custom docker
-# registry:
+# registry and/or custom rpm repositories:
 # * custom_registry: Specifies and enables a custom registry (default none)
 # * custom_registry_insecure: Marks the custom registry as insecure. This is
 #   typically the case if you're running a local registry on your host machine
@@ -37,9 +37,26 @@ install_pkgs:
 #   Valid values are 'present' and 'absent'. (default 'present')
 # * gcr_proxy_nginx: The version of nginx-slim to use for the gcr.io proxy.
 #   (default '0.8')
+# * custom_yum_repos: Define custom yum repos as mapping of repo names
+#   (short strings) to repo urls. One or more repo must be specified if this
+#   option is enabled. Using this option will disable the normal user of
+#   the centos epel, centos gluster, and google kubernetes repos.
+# * custom_host_alias: If the custom_yum_repos refer to a hostname that
+#   cannot be resolved normally a custom_host_alias can be used to add a
+#   specific entry to /etc/hosts.
 #custom_registry: 192.168.10.1:5000
 #custom_registry_insecure: false
 #custom_registry_add: false
 #custom_registry_gcr: true
 #gcr_proxy_state: absent
 #gcr_proxy_nginx: 0.23
+#custom_yum_repos:
+#  kubernetes_el7: http://pulp/pulp/repos/yum/repos/kubernetes-el7-x86_64/
+#  epel_el7: http://pulp/pulp/repos/fedora-epel/7/x86_64/
+#  gluster_el7: http://pulp/pulp/repos/centos/7/storage/x86_64/gluster-3.12/
+#custom_host_alias:
+#  addr: 192.168.122.164
+#  names:
+#    - pulp
+#    - pulp.localdomain
+#    - rpms.example.com
