@@ -38,20 +38,44 @@
   - cache_exists.stat.exists == True
   - vagrant_cache
 
-- name: install centos and epel repos
-  yum:
-    name: "{{ item }}"
-    state: present
-  with_items:
-  - epel-release
-  - centos-release-gluster
+- name: customize hosts file
+  lineinfile: dest=/etc/hosts line="{{ item.addr }} {{ item.names | join(\" \") }}"
+  when: custom_host_aliases is defined
+  with_items: "{{ custom_host_aliases | default(omit) }}"
 
-- name: setup kubernetes repo
-  yum_repository:
-    name: kubernetes
-    description: Kubernetes
-    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
-    enabled: yes
+- block:
+  # setup standard repos
+  - name: install centos and epel repos
+    yum:
+      name: "{{ item }}"
+      state: present
+    with_items:
+    - epel-release
+    - centos-release-gluster
+
+  - name: setup kubernetes repo
+    yum_repository:
+      name: kubernetes
+      description: Kubernetes
+      baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+      enabled: yes
+  when: custom_repos is not defined
+
+- block:
+  - name: setup custom yum repos
+    yum_repository:
+      name: "{{ item.key }}"
+      description: "Custom-Repo-{{ item.key }}"
+      baseurl: "{{ item.value }}"
+      enabled: yes
+    with_dict: "{{ custom_yum_repos }}"
+
+  - name: disable yum fastestmirror plugin
+    lineinfile:
+      path: /etc/yum/pluginconf.d/fastestmirror.conf
+      regexp: "^enabled="
+      line: enabled=0
+  when: custom_yum_repos is defined
 
 - name: install base packages
   yum:
