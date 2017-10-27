@@ -4,6 +4,7 @@
 NODES = 3
 DISKS = 3
 CACHE = false
+LIBVIRT_DISK_CACHE = "default"
 
 Vagrant.configure("2") do |config|
     config.ssh.insert_key = false
@@ -26,6 +27,7 @@ Vagrant.configure("2") do |config|
         master.vm.provider :libvirt do |lv|
             lv.memory = 1024
             lv.cpus = 2
+            lv.volume_cache = LIBVIRT_DISK_CACHE
         end
 
         # View the documentation for the provider you're using for more
@@ -74,6 +76,7 @@ Vagrant.configure("2") do |config|
                     lv.storage :file, :device => "vd#{driverletters[d]}", :path => "atomic-disk-#{i}-#{d}.disk", :size => '1024G'
                     lv.memory = 1024
                     lv.cpus =2
+                    lv.volume_cache = LIBVIRT_DISK_CACHE
                 end
             end
         end
