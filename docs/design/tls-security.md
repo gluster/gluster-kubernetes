@@ -98,7 +98,7 @@ should be started immediately as is the behavior today.
 
 ### External Gluster configuration
 For Gluster servers that run outside of the containerized environment, the
-administrator is responsible for manually generating and installing the key,
+administrator is responsible for generating and installing the key,
 pem, ca, and secure-access files. This is no different than in a traditional
 deployment of Gluster.
 
