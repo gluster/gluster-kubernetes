@@ -294,7 +294,7 @@ assign() {
 #   The following resource types have unique conditional states:
 #
 #   * Pods
-#     - default: state reports '1/1'
+#     - default: state reports the desired number of containers are ready, eg. '1/1'.
 #     - Completed: state reports 'Completed', used for jobs
 #   * PersistentVolumeClaims
 #     - default: state reports 'Bound'
@@ -354,7 +354,9 @@ check() {
           ;;
           *)
           status=$(echo "${line}" | awk '{print $2}')
-          if [[ "${status}" != "1/1" ]]; then
+          pods_ready=$(cut -d '/' -f 1 <<< "${status}")
+          pods_desired=$(cut -d '/' -f 2 <<< "${status}")
+          if [[ "${pods_ready}" != "${pods_desired}" ]]; then
             rc=1
           fi
           ;;
