@@ -353,10 +353,10 @@ check() {
           fi
           ;;
           *)
-          status=$(echo "${line}" | awk '{print $2}')
+          status=$(echo "${line}" | grep -o "[[:digit:]]\+/[[:digit:]]\+")
           pods_ready=$(cut -d '/' -f 1 <<< "${status}")
           pods_desired=$(cut -d '/' -f 2 <<< "${status}")
-          if [[ "${pods_ready}" != "${pods_desired}" ]]; then
+          if [[ "${pods_ready}" != "${pods_desired}" ]] || [[ "${status}" == "" ]]; then
             rc=1
           fi
           ;;
