@@ -1,4 +1,7 @@
 test:
 	$(MAKE) -C tests test
 
-.PHONY: test
+complex-tests:
+	$(MAKE) -C tests/complex test
+
+.PHONY: test complex-tests
