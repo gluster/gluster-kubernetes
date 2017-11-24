@@ -8,8 +8,6 @@ source "${TEST_DIR}/lib.sh"
 
 run -e "${TEST_DIR}/test-setup.sh"
 
-run -e "${TEST_DIR}/test-gk-deploy.sh"
-
-run "${TEST_DIR}/test-dynamic-provisioning.sh"
+run -e "${TEST_DIR}/run-basic.sh"
 
 run "${TEST_DIR}/test-teardown.sh"
