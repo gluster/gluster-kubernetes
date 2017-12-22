@@ -32,6 +32,10 @@ requirements:
  * Each node requires that the `mount.glusterfs` command is available. Under
   all Red Hat-based OSes this command is provided by the `glusterfs-fuse`
   package.
+  
+  * GlusterFS client version installed on nodes should be as close as possible
+   to the version of the server. To get installed versions run
+   `glusterfs --version` or `kubectl exec <pod> -- glusterfs --version`.
 
 If you are not able to deploy a hyper-converged GlusterFS cluster, you must
 have one running somewhere that the Kubernetes nodes can access. The above
