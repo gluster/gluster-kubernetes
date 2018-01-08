@@ -798,11 +798,15 @@ if [[ ${EXISTS_DEPLOY_HEKETI} -eq 1 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
     heketi_service=$(${CLI} describe svc/deploy-heketi | grep "Endpoints:" | awk '{print $2}')
   done
 
+  heketi_pod=$(${CLI} get pod --no-headers --show-all --selector="deploy-heketi" | awk '{print $1}')
+
   if [[ "${CLI}" == *oc\ * ]]; then
     heketi_service=$(${CLI} describe routes/deploy-heketi | grep "Requested Host:" | awk '{print $3}')
+    hello=$(curl "http://${heketi_service}/hello" 2>/dev/null)
+   else
+    hello=$(${CLI} exec -i "${heketi_pod}" -- curl "http://${heketi_service}/hello" 2>/dev/null)
   fi
 
-  hello=$(curl "http://${heketi_service}/hello" 2>/dev/null)
   if [[ "${hello}" != "Hello from Heketi" ]]; then
     output "Failed to communicate with deploy-heketi service."
     if [[ "${CLI}" == *oc\ * ]]; then
@@ -813,7 +817,6 @@ if [[ ${EXISTS_DEPLOY_HEKETI} -eq 1 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
     debug "OK"
   fi
 
-  heketi_pod=$(${CLI} get pod --no-headers --show-all --selector="deploy-heketi" | awk '{print $1}')
   heketi_cli="${CLI} exec -i ${heketi_pod} -- heketi-cli -s http://localhost:8080 --user admin --secret '${ADMIN_KEY}'"
 
   load_temp=$(mktemp)
