@@ -64,6 +64,13 @@
       group: vagrant
   when: not kubelet.stat.exists
 
+- name: wait for k8s to be ready
+  wait_for:
+    host: localhost
+    port: 6443
+    state: started
+    timeout: 60
+
 - name: create weave network
   command: kubectl apply -f https://git.io/weave-kube-1.6
 
