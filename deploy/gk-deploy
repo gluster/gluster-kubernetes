@@ -42,6 +42,7 @@ SSH_PORT="22"
 ADMIN_KEY=""
 USER_KEY=""
 DAEMONSET_LABEL=""
+SINGLE_NODE=0
 DEPLOY_OBJECT=1
 OBJ_ACCOUNT=""
 OBJ_USER=""
@@ -53,7 +54,7 @@ usage() {
   echo -e "USAGE: ${PROG} [-ghvy] [-c CLI] [-t <TEMPLATES>] [-n NAMESPACE] [-w <SECONDS>]
        [-s <KEYFILE>] [--ssh-user <USER>] [--ssh-port <PORT>]
        [--admin-key <ADMIN_KEY>] [--user-key <USER_KEY>] [-l <LOG_FILE>]
-       [--daemonset-label <DAEMONSET_LABEL> ] [--no-object]
+       [--daemonset-label <DAEMONSET_LABEL> ] [--single-node] [--no-object]
        [--object-account <ACCOUNT>] [--object-user <USER>]
        [--object-password <PASSWORD>] [--object-sc <STORAGE_CLASS>]
        [--object-capacity <CAPACITY>] [-l <LOG_FILE>] [--abort] [<TOPOLOGY>]\n"
@@ -120,6 +121,10 @@ Options:
               Controls the value of the label set on nodes which will host pods
               from the GlusterFS daemonset. This allows for multiple GlusterFS
               daemonsets to run in the same cluster. Default is 'glusterfs'.
+
+  --single-node
+              Deploy as few pods as needed, no redundancy for the heketi
+              database storage volume.
 
   --no-object
               Don't deploy a gluster-s3 container. Default is to deploy.
@@ -456,6 +461,10 @@ while [[ $# -ge 1 ]]; do
         -daemonset-label*)
         DAEMONSET_LABEL=$(assign "${key:${keypos}}" "${2}")
         if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
+        -single-node)
+        SINGLE_NODE=1
         keypos=$keylen
         ;;
         -no-object)
@@ -833,7 +842,11 @@ if [[ ${EXISTS_DEPLOY_HEKETI} -eq 1 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
   fi
 
   if [[ $("${heketi_cli}" volume list 2>&1) != *heketidbstorage* ]]; then
-    eval_output "${heketi_cli} setup-openshift-heketi-storage --listfile=/tmp/heketi-storage.json 2>&1"
+    durability=''
+    if [ ${SINGLE_NODE} -eq 1 ] ; then
+      durability='--durability=none'
+    fi
+    eval_output "${heketi_cli} setup-openshift-heketi-storage --listfile=/tmp/heketi-storage.json ${durability} 2>&1"
     if [[ ${?} != 0 ]]; then
       output "Failed on setup openshift heketi storage"
       output "This may indicate that the storage must be wiped and the GlusterFS nodes must be reset."
