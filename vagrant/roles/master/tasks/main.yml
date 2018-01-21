@@ -71,8 +71,12 @@
     state: started
     timeout: 60
 
+- name: get k8s server and client versions
+  command: kubectl version
+  register: kubectl_version
+
 - name: create weave network
-  command: kubectl apply -f https://git.io/weave-kube-1.6
+  command: kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version={{ kubectl_version.stdout | b64encode }}"
 
 # jsonpath tested with kubeadm 1.6, 1.7, 1.8 
 - name: get dns service address
