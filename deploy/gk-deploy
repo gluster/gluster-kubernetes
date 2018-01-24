@@ -845,6 +845,12 @@ if [[ ${EXISTS_DEPLOY_HEKETI} -eq 1 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
     durability=''
     if [ ${SINGLE_NODE} -eq 1 ] ; then
       durability='--durability=none'
+      eval_output "${heketi_cli} setup-openshift-heketi-storage --help ${durability} 2>&1"
+      if [[ ${?} != 0 ]]; then
+        output "Not able to setup openshift heketi storage with ${durability}"
+        output "This indicates that the heketi running in the pod does not support single-node deployments."
+        exit 1
+      fi
     fi
     eval_output "${heketi_cli} setup-openshift-heketi-storage --listfile=/tmp/heketi-storage.json ${durability} 2>&1"
     if [[ ${?} != 0 ]]; then
