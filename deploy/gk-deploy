@@ -219,6 +219,7 @@ abort() {
   debug "Removing heketi resources."
   eval_output "${CLI} delete all,svc,jobs,deploy,secret --selector=\"deploy-heketi\" 2>&1"
   eval_output "${CLI} delete all,svc,deploy,secret,sa,clusterrolebinding --selector=\"heketi\" 2>&1"
+  eval_output "${CLI} delete svc heketi-storage-endpoints 2>&1"
   if [[ "${CLI}" == *oc\ * ]]; then
     eval_output "${CLI} delete dc,route,template --selector=\"deploy-heketi\" 2>&1"
     eval_output "${CLI} delete dc,route,template --selector=\"heketi\" 2>&1"
