@@ -68,7 +68,7 @@ spec:
             - systemctl status glusterd.service
           periodSeconds: 25
           successThreshold: 1
-          failureThreshold: 15
+          failureThreshold: 50
         livenessProbe:
           timeoutSeconds: 3
           initialDelaySeconds: 40
@@ -79,7 +79,7 @@ spec:
             - systemctl status glusterd.service
           periodSeconds: 25
           successThreshold: 1
-          failureThreshold: 15
+          failureThreshold: 50
       volumes:
       - name: glusterfs-heketi
         hostPath:
