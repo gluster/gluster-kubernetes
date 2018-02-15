@@ -35,7 +35,8 @@ requirements:
       2. dm_mirror
       3. dm_thin_pool
      
-   For kernel modules, `lsmod | grep <name>` will show you if a given module is present, and `modprobe <name>` will load a given module.
+      For kernel modules, `lsmod | grep <name>` will show you if a given module is present, and `modprobe <name>` will load 
+      a given  module.
 
  * Each node requires that the `mount.glusterfs` command is available. Under
   all Red Hat-based OSes this command is provided by the `glusterfs-fuse`
