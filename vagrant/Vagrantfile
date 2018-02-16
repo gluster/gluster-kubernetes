@@ -13,6 +13,12 @@ Vagrant.configure("2") do |config|
     # Override
     config.vm.provider :libvirt do |v,override|
         override.vm.synced_folder '.', '/home/vagrant/sync', disabled: true
+
+        # change cpu mode to passthrough as workaround, refer bugs:
+        #https://bugzilla.redhat.com/show_bug.cgi?id=1467599
+        #https://bugzilla.redhat.com/show_bug.cgi?id=1386223#c10
+        #vagrant-libvirt/vagrant-libvirt#667
+        v.cpu_mode = 'host-passthrough'
     end
 
     # Make kube master
