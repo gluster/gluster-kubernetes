@@ -41,11 +41,11 @@ Create a GlusterFS StorageClass as below:
 * `STORAGE_CLASS` is the new StorageClass name provided by admin.
 
 ```
-sed  -e 's/${HEKETI_URL}/heketi-store-project1.cloudapps.mystorage.com/g'  -e 's/${STORAGE_CLASS}/gluster-s3-store/g' -e 's/${NAMESPACE}/store-project1/g' deploy/ocp-templates/gluster-s3-storageclass.yaml | oc create -f -
+sed  -e 's/${HEKETI_URL}/heketi-store-project1.cloudapps.mystorage.com/g'  -e 's/${STORAGE_CLASS}/gluster-s3-store/g' -e 's/${NAMESPACE}/store-project1/g' deploy/openshift-templates/gluster-s3-storageclass.yaml | oc create -f -
 ```
 
 Available at
-[gluster-s3-storageclass.yaml](../../../deploy/ocp-templates/gluster-s3-storageclass.yaml)
+[gluster-s3-storageclass.yaml](../../../deploy/openshift-templates/gluster-s3-storageclass.yaml)
 
 #### Create backend PVCs
 
@@ -54,13 +54,13 @@ Now, create PVCs using the StorageClass.
 * Adjust `VOLUME_CAPACITY` as per your needs in GBs.
 
 ```
-sed -e 's/${VOLUME_CAPACITY}/2Gi/g'  -e  's/${STORAGE_CLASS}/gluster-s3-store/g'  deploy/ocp-templates/gluster-s3-pvcs.yaml | oc create -f -
+sed -e 's/${VOLUME_CAPACITY}/2Gi/g'  -e  's/${STORAGE_CLASS}/gluster-s3-store/g'  deploy/openshift-templates/gluster-s3-pvcs.yaml | oc create -f -
 persistentvolumeclaim "gluster-s3-claim" created
 persistentvolumeclaim "gluster-s3-meta-claim" created
 ```
 
 Available at
-[gluster-s3-pvcs.yaml](../../../deploy/ocp-templates/gluster-s3-pvcs.yaml)
+[gluster-s3-pvcs.yaml](../../../deploy/openshift-templates/gluster-s3-pvcs.yaml)
 
 ### 2. Start gluster-s3 service
 
@@ -70,11 +70,11 @@ Launch S3 storage service. Set `S3_ACCOUNT` name, `S3_USER` name, `S3_PASSWORD` 
 ### For example:
 
 ```
- oc new-app  deploy/ocp-templates/gluster-s3-template.yaml \
+ oc new-app  deploy/openshift-templates/gluster-s3-template.yaml \
 --param=S3_ACCOUNT=testvolume  --param=S3_USER=adminuser \
 --param=S3_PASSWORD=itsmine --param=PVC=gluster-s3-claim \
 --param=META_PVC=gluster-s3-meta-claim
---> Deploying template "store-project1/gluster-s3" for "deploy/ocp-templates/gluster-s3-template.yaml" to project store-project1
+--> Deploying template "store-project1/gluster-s3" for "deploy/openshift-templates/gluster-s3-template.yaml" to project store-project1
 
      gluster-s3
      ---------
@@ -97,7 +97,7 @@ Launch S3 storage service. Set `S3_ACCOUNT` name, `S3_USER` name, `S3_PASSWORD` 
 ```
 
 Available at:
-[gluster-s3-template.yaml](../../../deploy/ocp-templates/gluster-s3-template.yaml)
+[gluster-s3-template.yaml](../../../deploy/openshift-templates/gluster-s3-template.yaml)
 
 
 ### 3. Verify gluster-s3 resources
