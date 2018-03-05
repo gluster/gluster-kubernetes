@@ -52,6 +52,8 @@ spec:
           value: '14'
         - name: HEKETI_KUBE_GLUSTER_DAEMONSET
           value: "y"
+        - name: HEKETI_IGNORE_STALE_OPERATIONS
+          value: "true"
         ports:
         - containerPort: 8080
         volumeMounts:

@@ -78,6 +78,8 @@ objects:
             value: '14'
           - name: HEKETI_KUBE_GLUSTER_DAEMONSET
             value: "y"
+          - name: HEKETI_IGNORE_STALE_OPERATIONS
+            value: "true"
           ports:
           - containerPort: 8080
           volumeMounts:
@@ -117,3 +119,6 @@ parameters:
   displayName: heketi fstab path
   description: Set the fstab path, file that is populated with bricks that heketi creates
   value: /var/lib/heketi/fstab
+- name: HEKETI_IGNORE_STALE_OPERATIONS
+  displayName: Whether to ignore stale operations at startup
+  description: This allows to control whether heketi should start up when there are stale pending operation entries present in the database. Setting this to true lets heketi ignore existing pending operations at startup. Setting it to false causes heketi to refuse to start if pending operations are found in the database.
