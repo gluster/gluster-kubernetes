@@ -46,7 +46,7 @@ following pre-requisites on your machine:
 
 To spin up the cluster, simply run `./up.sh` in the `vagrant/` directory.
 
-***NOTE***: If you plan to run ./up.sh more than once the vagrant setup supports
+**NOTE**: If you plan to run ./up.sh more than once the vagrant setup supports
 caching packages and container images. Please read the
 [vagrant directory README](./vagrant/README.md)
 for more information on how to configure and use the caching support.
@@ -91,7 +91,7 @@ node1     Ready     22h
 node2     Ready     22h
 ```
 
-***NOTE***: To see the version of Kubernetes (which will change based on
+**NOTE**: To see the version of Kubernetes (which will change based on
 latest official releases) simply do `kubectl version`. This will help in
 troubleshooting.
 
