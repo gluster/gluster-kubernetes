@@ -78,6 +78,8 @@ objects:
             value: '14'
           - name: HEKETI_KUBE_GLUSTER_DAEMONSET
             value: "y"
+          - name: HEKETI_IGNORE_STALE_OPERATIONS
+            value: False
           ports:
           - containerPort: 8080
           volumeMounts:
@@ -117,3 +119,6 @@ parameters:
   displayName: heketi fstab path
   description: Set the fstab path, file that is populated with bricks that heketi creates
   value: /var/lib/heketi/fstab
+- name: HEKETI_IGNORE_STALE_OPERATIONS
+  displayName: Heketi ignore stale operations
+  description: Whether to ignore the stale pending operations db entries in the database
