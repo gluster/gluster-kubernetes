@@ -55,6 +55,9 @@ spec:
         - name: glusterfs-ssl
           mountPath: "/etc/ssl"
           readOnly: true
+        - name: kernel-modules
+          mountPath: "/usr/lib/modules"
+          readOnly: true
         securityContext:
           capabilities: {}
           privileged: true
@@ -109,3 +112,6 @@ spec:
       - name: glusterfs-ssl
         hostPath:
           path: "/etc/ssl"
+      - name: kernel-modules
+        hostPath:
+          path: "/usr/lib/modules"
