@@ -68,6 +68,9 @@ objects:
           - name: glusterfs-ssl
             mountPath: "/etc/ssl"
             readOnly: true
+          - name: kernel-modules
+            mountPath: "/usr/lib/modules"
+            readOnly: true
           securityContext:
             capabilities: {}
             privileged: true
@@ -124,6 +127,9 @@ objects:
         - name: glusterfs-ssl
           hostPath:
             path: "/etc/ssl"
+        - name: kernel-modules
+          hostPath:
+            path: "/usr/lib/modules"
         restartPolicy: Always
         terminationGracePeriodSeconds: 30
         dnsPolicy: ClusterFirst
