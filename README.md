@@ -1,5 +1,7 @@
 # gluster-kubernetes
 
+[![Build Status](https://ci.centos.org/buildStatus/icon?job=gluster_kubernetes)](https://ci.centos.org/job/gluster_kubernetes)
+
 ## GlusterFS Native Storage Service for Kubernetes
 
 **gluster-kubernetes** is a project to provide Kubernetes administrators a
