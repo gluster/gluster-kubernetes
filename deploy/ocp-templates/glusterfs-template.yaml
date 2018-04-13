@@ -71,6 +71,9 @@ objects:
           - name: kernel-modules
             mountPath: "/usr/lib/modules"
             readOnly: true
+          - name: glusterfs-target
+            mountPath: "/etc/target"
+            readOnly: true
           securityContext:
             capabilities: {}
             privileged: true
@@ -130,6 +133,9 @@ objects:
         - name: kernel-modules
           hostPath:
             path: "/usr/lib/modules"
+        - name: glusterfs-target
+          hostPath:
+            path: "/etc/target"
         restartPolicy: Always
         terminationGracePeriodSeconds: 30
         dnsPolicy: ClusterFirst
