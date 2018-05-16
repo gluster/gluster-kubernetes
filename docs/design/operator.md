@@ -33,7 +33,7 @@ helping further integrate persistent storage into the Kubernetes experience.
 ## Configurations
 
 The Gluster operator will be capable of managing a number of configurations of
-Gluster clusters. Gluster's flexibility allows it to run in many typs of
+Gluster clusters. Gluster's flexibility allows it to run in many types of
 environments and the operator will aim to preserve that flexibility as much as
 possible.
 
@@ -77,15 +77,7 @@ possible to allow for as minimal a configuration as possible.
 
 **Target Configurations:** Hosted, Managed
 
-### Import
-
-The Gluster operator will be able to import an existing Gluster cluster at any
-stage of initialization. The operator's desired configuration for the cluster
-will need to be compatible with the state of the cluster at the time of import.
-
-**Target Configurations:** External, Hosted, Managed
-
-#### Cluster Upgrade
+### Upgrade
 
 The Gluster operator will be able to execute a rolling upgrade of any hosted or
 managed Gluster cluster. It will trigger an upgrade one node at a time, waiting
@@ -94,10 +86,10 @@ files before triggering a subsequent node.
 
 **Target Configurations:** Hosted, Managed
 
-### Monitoring
+### Event Monitoring
 
-To provide event-driven features, the Gluster operator will monitor various
-aspects of the clusters it will automate.
+The Gluster operator will watch for events on various aspects of the clusters it
+will automate.
 
 #### Storage Capacity
 
@@ -174,27 +166,20 @@ In response to the health monitoring events above, the Gluster operator will
 take any number of corrective actions to recover from a situation that could
 result in potential data loss.
 
-#### Brick Replacement
-
-If a volume reports a failing brick, the Gluster operator will try to create a
-new brick and use it as a replacement for the failing one.
-
-**Target Configurations:** External, Hosted, Managed
-
 #### Device Replacement
 
 If a node reports a failing device, the Gluster operator will try to provision a
-new device and attach it to the node to replace the failing device. It would
-then recreate any bricks on the failing device and trigger a brick replacement
-for any affected volumes.
+new device and attach it to the affected node to replace the failing device. It
+would then wait for any affected volumes to be reconciled before removing the
+failing device from it's node.
 
 **Target Configurations:** Managed
 
 #### Node Replacement
 
 If a node becomes inaccessible, the Gluster operator will try to deploy a new
-Gluster node with new storage devices attached. It would then recreate any
-bricks from the missing node and trigger a brick replacement for any affected
-volumes.
+Gluster node with new storage devices attached. It would then wait for any
+affected volumes to be reconciled before removing the failing node from the
+cluster.
 
 **Target Configurations:** Managed
