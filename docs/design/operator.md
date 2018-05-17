@@ -57,6 +57,36 @@ containers and their storage devices are managed by the operator. These
 deployments are designed for cloud environments where storage devices can be
 provisioned programmatically.
 
+## State Definitions
+
+The Gluster operator will maintain a set of desired state information for every
+cluster it automates. This information will be compared against a given
+cluster's current state and that comparison will be used to inform the operator
+which, if any, corrective actions need to be taken.
+
+Broadly speaking, the operator will maintain the following state parameters for
+a given cluster:
+
+* **Name:** An identifier that is unique to the namespace of the cluster.
+* **Deployed:** Whether or not the cluster has finished initial deployment.
+* **Healthy:** Whether or not all nodes are healthy.
+* **Heals:** Whether or not the cluster has pending heals.
+* **Nodes:** A list of node definitions.
+
+The operator will also maintain the following state parameters for a given node:
+
+* **Name:** An identifier that is unique to the namespace of the node.
+* **Healthy:** Whether or not all processes are running correctly.
+* **Replicas:** How many replicas of this node definition to deploy.
+* **Devices:** A list of device definitions.
+
+Finally, the operator will maintain the following state parameters for a given
+device:
+
+* **Name:** An identifier that is unique across the entire cluster.
+* **Provision:** Whether or not to provision the PersistentVolume backing the
+  device.
+
 ## Features
 
 Since the Gluster operator will support a variety of deployment configurations,
@@ -75,9 +105,9 @@ configuration parameters. This configuration will allow for extensive
 customization if desired but will assume sane defaults for as many parameters as
 possible to allow for as minimal a configuration as possible.
 
-**Target Configurations:** Hosted, Managed
+**Target Configurations:** External, Hosted, Managed
 
-### Upgrade
+### Cluster Upgrade
 
 The Gluster operator will be able to execute a rolling upgrade of any hosted or
 managed Gluster cluster. It will trigger an upgrade one node at a time, waiting
@@ -139,7 +169,7 @@ inaccessible.
 
 ### Cluster Management
 
-In response to the monitoring events above, the Gluster operator will take any
+In response to the monitoring events above, the Gluster operator will take a
 number of corrective management actions.
 
 #### Storage Scaling
@@ -150,21 +180,6 @@ devices attached. The number of additional nodes to be deployed will be
 configurable.
 
 **Target Configurations:** Managed
-
-#### Cluster Scaling
-
-In the event that the overall cluster reports a critical volume density level,
-the operator will deploy a new cluster of Gluster nodes to receive volume
-creation requests. The number of additional nodes to be deployed will be
-configurable.
-
-**Target Configurations:** Managed
-
-### Disaster Recovery
-
-In response to the health monitoring events above, the Gluster operator will
-take any number of corrective actions to recover from a situation that could
-result in potential data loss.
 
 #### Device Replacement
 
