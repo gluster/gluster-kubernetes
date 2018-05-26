@@ -1,4 +1,4 @@
-# Gluster Operator 1.0 Design
+# Gluster Operator 0.1 Design
 
 ## Introduction
 
@@ -19,8 +19,8 @@ not be strictly limited by the extents of current-day technologies but should
 not dismiss the costs of waiting for and executing forward development in those
 technologies.
 
-In addition, this document only specifies the desired functionality for
-declaring a 1.0 release. Further enhancements and feature roadmaps will be
+In addition, this document only specifies the minimum functionality required for
+declaring a 0.1 release. Further enhancements and feature roadmaps will be
 captured elsewhere.
 
 ### Motivation
@@ -144,26 +144,25 @@ corrective action to take place before cluster nodes lag or crash.
 
 #### Device Health
 
-The Gluster operator will monitor the health of all devices in an automated
-Gluster cluster. It will report a "Warning" when a device reports failing health
-and will report a "Critical" problem when a device becomes inaccessible. Support
-for this feature may vary form one device type to another.
+The Gluster operator will monitor the health of all devices in an Gluster
+cluster. It will report a "Warning" when a device reports failing health and
+will report a "Critical" problem when a device becomes inaccessible. Support for
+this feature may vary form one device type to another.
 
 **Target Configurations:** External, Hosted, Managed
 
 #### Volume Health
 
-The Gluster operator will monitor the health of all volumes in an automated
-Gluster cluster. It will report a "Warning" when a volume reports failing bricks
-and will report a "Critical" problem when a volume becomes inaccessible.
+The Gluster operator will monitor the health of all volumes in an Gluster
+cluster. It will report a "Warning" when a volume reports failing bricks and
+will report a "Critical" problem when a volume becomes inaccessible.
 
 **Target Configurations:** External, Hosted, Managed
 
 #### Node Health
 
-The Gluster operator will monitor the health of all nodes in an automated
-Gluster cluster. It will report a "Critical" problem when a node becomes
-inaccessible.
+The Gluster operator will monitor the health of all nodes in an Gluster cluster.
+It will report a "Critical" problem when a node becomes inaccessible.
 
 **Target Configurations:** External, Hosted, Managed
 
