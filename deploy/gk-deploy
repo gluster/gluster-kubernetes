@@ -984,7 +984,7 @@ fi
 if [[ ${CREATE_DYNAMIC_SC} -eq 1 ]]; then
   if [[ "x${USER_KEY}" != "x" ]]; then
     # REST API Security is enabled - Append "restuser" and "restuserkey" to the StorageClass yaml
-cat <<EOF >> ${TEMPLATES}/gluster-dynamic-storageclass.yaml
+cat <<EOF >> "${TEMPLATES}"/gluster-dynamic-storageclass.yaml
   restuser: "admin"
   restuserkey: "${ADMIN_KEY}"
 EOF
