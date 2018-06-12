@@ -49,8 +49,7 @@ OBJ_USER=""
 OBJ_PASSWORD=""
 OBJ_STORAGE_CLASS="glusterfs-for-s3"
 OBJ_CAPACITY="2Gi"
-CREATE_DYNAMIC_SC=0
-DYNAMIC_STORAGE_CLASS="glusterfs-storage"
+STORAGE_CLASS="glusterfs"
 
 usage() {
   echo -e "USAGE: ${PROG} [-ghvy] [-c CLI] [-t <TEMPLATES>] [-n NAMESPACE] [-w <SECONDS>]
@@ -59,8 +58,8 @@ usage() {
        [--daemonset-label <DAEMONSET_LABEL> ] [--single-node] [--no-object]
        [--object-account <ACCOUNT>] [--object-user <USER>]
        [--object-password <PASSWORD>] [--object-sc <STORAGE_CLASS>]
-       [--object-capacity <CAPACITY>] [--create-dynamic-sc]
-       [--dynamic-sc <DYNAMIC_STORAGE_CLASS>] [-l <LOG_FILE>] [--abort] [<TOPOLOGY>]\n"
+       [--object-capacity <CAPACITY>] [--storage-class <STORAGE_CLASS>]
+       [-l <LOG_FILE>] [--abort] [<TOPOLOGY>]\n"
 }
 
 help_exit() {
@@ -147,11 +146,10 @@ Options:
               The total capacity of the GlusterFS volume which will store the
               object data. Default is '${OBJ_CAPACITY}'.
 
-  --create-dynamic-sc
-              Create a dynamicly provisioning StorageClass. Default is not to create.
-
-  --dynamic-sc DYNAMIC_STORAGE_CLASS
-              The metadata name of the StorageClass to create. Default is '${DYNAMIC_STORAGE_CLASS}'.
+  --storage-class STORAGE_CLASS
+              Create a dynamicly provisioned StorageClass.
+              Default is to create a new StorageClass called '${STORAGE_CLASS}'
+              if no STORAGE_CLASS name is provided.
 
   -y, --yes
               Skip the pre-requisites prompt.
@@ -506,12 +504,8 @@ while [[ $# -ge 1 ]]; do
         if [[ $? -eq 2 ]]; then shift; fi
         keypos=$keylen
         ;;
-        -create-dynamic-sc)
-        CREATE_DYNAMIC_SC=1
-        keypos=$keylen
-        ;;
-        -dynamic-sc*)
-        DYNAMIC_STORAGE_CLASS=$(assign "${key:${keypos}}" "${2}")
+        -storage-class*)
+        STORAGE_CLASS=$(assign "${key:${keypos}}" "${2}")
         if [[ $? -eq 2 ]]; then shift; fi
         keypos=$keylen
         ;;
@@ -963,7 +957,7 @@ use it from within the heketi pod:
   # ${CLI} exec -i ${heketi_pod} -- heketi-cli -s http://localhost:8080 --user admin --secret '<ADMIN_KEY>' cluster list"
 
 
-if [[ ${CREATE_DYNAMIC_SC} -eq 0 ]]; then
+if [[ "x${STORAGE_CLASS}" != "x" ]]; then
 output "For dynamic provisioning, create a StorageClass similar to this:
 ---
 apiVersion: storage.k8s.io/v1beta1
@@ -981,16 +975,16 @@ fi
   output ""
 fi
 
-if [[ ${CREATE_DYNAMIC_SC} -eq 1 ]]; then
-  if [[ "x${USER_KEY}" != "x" ]]; then
+if [[ "x${STORAGE_CLASS}" != "x" ]]; then
+  if [[ "x${ADMIN_KEY}" != "x" ]]; then
     # REST API Security is enabled - Append "restuser" and "restuserkey" to the StorageClass yaml
-cat <<EOF >> "${TEMPLATES}"/gluster-dynamic-storageclass.yaml
+cat <<EOF >> "${TEMPLATES}"/gluster-storageclass.yaml
   restuser: "admin"
   restuserkey: "${ADMIN_KEY}"
 EOF
-    eval_output "sed -e 's/\\\${STORAGE_CLASS}/${DYNAMIC_STORAGE_CLASS}/' -e 's/\\\${HEKETI_URL}/${heketi_service}/' -e 's/\\\${NAMESPACE}/${NAMESPACE}/' ${TEMPLATES}/gluster-dynamic-storageclass.yaml | ${CLI} create -f - 2>&1"
+    eval_output "sed -e 's/\\\${STORAGE_CLASS}/${STORAGE_CLASS}/' -e 's/\\\${HEKETI_URL}/${heketi_service}/' -e 's/\\\${NAMESPACE}/${NAMESPACE}/' ${TEMPLATES}/gluster-storageclass.yaml | ${CLI} create -f - 2>&1"
   else
-    eval_output "sed -e 's/\\\${STORAGE_CLASS}/${DYNAMIC_STORAGE_CLASS}/' -e 's/\\\${HEKETI_URL}/${heketi_service}/' -e 's/\\\${NAMESPACE}/${NAMESPACE}/' ${TEMPLATES}/gluster-dynamic-storageclass.yaml | ${CLI} create -f - 2>&1"
+    eval_output "sed -e 's/\\\${STORAGE_CLASS}/${STORAGE_CLASS}/' -e 's/\\\${HEKETI_URL}/${heketi_service}/' -e 's/\\\${NAMESPACE}/${NAMESPACE}/' ${TEMPLATES}/gluster-storageclass.yaml | ${CLI} create -f - 2>&1"
   fi
 fi
 
