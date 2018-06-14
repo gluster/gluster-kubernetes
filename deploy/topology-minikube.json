@@ -1,0 +1,24 @@
+{
+  "clusters": [
+    {
+      "nodes": [
+        {
+          "node": {
+            "hostnames": {
+              "manage": [
+                "minikube"
+              ],
+              "storage": [
+                "172.17.0.1"
+              ]
+            },
+            "zone": 1
+          },
+          "devices": [
+            "/dev/loop1"
+          ]
+        }
+      ]
+    }
+  ]
+}
