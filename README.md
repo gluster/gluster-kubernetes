@@ -78,6 +78,8 @@ $ vagrant ssh master
 [vagrant@master]$ mv topology.json.sample topology.json
 ```
 
+*If not running in the provided vagrant, make sure to edit the topology.json node, zone, device names to match you're kubernetes cluster.* 
+
 The following commands are meant to be run with administrative privileges
 (e.g. `sudo su` beforehand).
 
