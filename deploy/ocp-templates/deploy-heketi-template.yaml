@@ -65,6 +65,7 @@ objects:
         containers:
         - name: deploy-heketi
           image: heketi/heketi:dev
+          imagePullPolicy: IfNotPresent
           env:
           - name: HEKETI_USER_KEY
             value: ${HEKETI_USER_KEY}
