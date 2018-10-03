@@ -37,6 +37,10 @@ objects:
           imagePullPolicy: IfNotPresent
           name: glusterfs
           env:
+          # set GLUSTER_BLOCKD_STATUS_PROBE_ENABLE to "1" so the
+          # readiness/liveness probe validate gluster-blockd as well
+          - name: GLUSTER_BLOCKD_STATUS_PROBE_ENABLE
+            value: "1"
           - name: GB_GLFS_LRU_COUNT
             value: "${GB_GLFS_LRU_COUNT}"
           - name: TCMU_LOGDIR
