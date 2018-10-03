@@ -1,21 +1,4 @@
 ---
-kind: Service
-apiVersion: v1
-metadata:
-  name: deploy-heketi
-  labels:
-    glusterfs: heketi-service
-    deploy-heketi: service
-  annotations:
-    description: Exposes Heketi Service
-spec:
-  selector:
-    deploy-heketi: pod
-  ports:
-  - name: deploy-heketi
-    port: 8080
-    targetPort: 8080
----
 kind: Deployment
 apiVersion: extensions/v1beta1
 metadata:
@@ -78,3 +61,20 @@ spec:
       - name: config
         secret:
           secretName: heketi-config-secret
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: deploy-heketi
+  labels:
+    glusterfs: heketi-service
+    deploy-heketi: service
+  annotations:
+    description: Exposes Heketi Service
+spec:
+  selector:
+    deploy-heketi: pod
+  ports:
+  - name: deploy-heketi
+    port: 8080
+    targetPort: 8080
