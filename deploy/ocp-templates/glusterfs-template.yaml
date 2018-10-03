@@ -37,6 +37,8 @@ objects:
           imagePullPolicy: IfNotPresent
           name: glusterfs
           env:
+          - name: GLUSTER_BLOCKD_STATUS_PROBE_ENABLE
+            value: "${GLUSTER_BLOCKD_STATUS_PROBE_ENABLE}"
           - name: GB_GLFS_LRU_COUNT
             value: "${GB_GLFS_LRU_COUNT}"
           - name: TCMU_LOGDIR
@@ -139,6 +141,11 @@ parameters:
   displayName: Daemonset Storage Node Label
   description: This is the value that will be used for the storagenode label in the daemonset node selector.
   value: glusterfs
+- name: GLUSTER_BLOCKD_STATUS_PROBE_ENABLE
+  displayName: Enable readiness/liveness probe for gluster-blockd
+  description: Setting the value to "1" enables the readiness/liveness probe for gluster-blockd.
+  value: "1"
+  required: false
 - name: GB_GLFS_LRU_COUNT
   displayName: Maximum number of block hosting volumes
   description: This value is to set maximum number of block hosting volumes.
