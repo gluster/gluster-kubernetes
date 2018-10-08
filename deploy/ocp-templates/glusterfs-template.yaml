@@ -83,7 +83,7 @@ objects:
               command:
               - "/bin/bash"
               - "-c"
-            - "if command -v /usr/local/bin/status-probe.sh; then /usr/local/bin/status-probe.sh readiness; else systemctl status glusterd.service; fi"
+              - "if command -v /usr/local/bin/status-probe.sh; then /usr/local/bin/status-probe.sh readiness; else systemctl status glusterd.service; fi"
             periodSeconds: 25
             successThreshold: 1
             failureThreshold: 50
@@ -94,7 +94,7 @@ objects:
               command:
               - "/bin/bash"
               - "-c"
-            - "if command -v /usr/local/bin/status-probe.sh; then /usr/local/bin/status-probe.sh liveness; else systemctl status glusterd.service; fi"
+              - "if command -v /usr/local/bin/status-probe.sh; then /usr/local/bin/status-probe.sh liveness; else systemctl status glusterd.service; fi"
             periodSeconds: 25
             successThreshold: 1
             failureThreshold: 50
