@@ -62,6 +62,8 @@ spec:
         - name: kernel-modules
           mountPath: "/usr/lib/modules"
           readOnly: true
+        - name: gluster-block
+          mountPath: "/var/lib/gluster-block"
         securityContext:
           capabilities: {}
           privileged: true
@@ -119,3 +121,6 @@ spec:
       - name: kernel-modules
         hostPath:
           path: "/usr/lib/modules"
+      - name: gluster-block
+        hostPath:
+          path: "/var/lib/gluster-block"
