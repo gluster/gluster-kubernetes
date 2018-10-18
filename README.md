@@ -1,6 +1,6 @@
 # gluster-kubernetes
 
-[![Build Status](https://ci.centos.org/buildStatus/icon?job=gluster_kubernetes)](https://ci.centos.org/job/gluster_kubernetes)
+[![Build Status](https://travis-ci.org/gluster/gluster-kubernetes.svg?branch=master)](https://travis-ci.org/gluster/gluster-kubernetes)
 
 ## GlusterFS Native Storage Service for Kubernetes
 
