@@ -56,6 +56,10 @@ spec:
           mountPath: "/mnt/host-dev"
         - name: glusterfs-misc
           mountPath: "/var/lib/misc/glusterfsd"
+        - name: glusterfs-block-sys-class
+          mountPath: "/sys/class"
+        - name: glusterfs-block-sys-module
+          mountPath: "/sys/module"
         - name: glusterfs-cgroup
           mountPath: "/sys/fs/cgroup"
           readOnly: true
@@ -113,6 +117,12 @@ spec:
       - name: glusterfs-misc
         hostPath:
           path: "/var/lib/misc/glusterfsd"
+      - name: glusterfs-block-sys-class
+        hostPath:
+          path: "/sys/class"
+      - name: glusterfs-block-sys-module
+        hostPath:
+          path: "/sys/module"
       - name: glusterfs-cgroup
         hostPath:
           path: "/sys/fs/cgroup"
