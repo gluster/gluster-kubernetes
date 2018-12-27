@@ -24,6 +24,9 @@ spec:
         imagePullPolicy: IfNotPresent
         name: glusterfs
         env:
+        # alternative for /dev volumeMount to enable access to *all* devices
+        - name: HOST_DEV_DIR
+          value: "/mnt/host-dev"
         # set GLUSTER_BLOCKD_STATUS_PROBE_ENABLE to "1" so the
         # readiness/liveness probe validate gluster-blockd as well
         - name: GLUSTER_BLOCKD_STATUS_PROBE_ENABLE
@@ -49,10 +52,8 @@ spec:
           mountPath: "/var/log/glusterfs"
         - name: glusterfs-config
           mountPath: "/var/lib/glusterd"
-        - name: glusterfs-dev-disk
-          mountPath: "/dev/disk"
-        - name: glusterfs-dev-mapper
-          mountPath: "/dev/mapper"
+        - name: glusterfs-host-dev
+          mountPath: "/mnt/host-dev"
         - name: glusterfs-misc
           mountPath: "/var/lib/misc/glusterfsd"
         - name: glusterfs-cgroup
@@ -106,12 +107,9 @@ spec:
       - name: glusterfs-config
         hostPath:
           path: "/var/lib/glusterd"
-      - name: glusterfs-dev-disk
+      - name: glusterfs-host-dev
         hostPath:
-          path: "/dev/disk"
-      - name: glusterfs-dev-mapper
-        hostPath:
-          path: "/dev/mapper"
+          path: "/dev"
       - name: glusterfs-misc
         hostPath:
           path: "/var/lib/misc/glusterfsd"
