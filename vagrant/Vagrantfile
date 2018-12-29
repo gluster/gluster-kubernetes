@@ -9,6 +9,7 @@ LIBVIRT_DISK_CACHE = "default"
 Vagrant.configure("2") do |config|
     config.ssh.insert_key = false
     config.vm.box = "centos/7"
+    config.vm.box_url = "https://app.vagrantup.com/centos/7"
 
     # Override
     config.vm.provider :libvirt do |v,override|
