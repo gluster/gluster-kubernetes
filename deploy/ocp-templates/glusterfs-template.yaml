@@ -79,6 +79,8 @@ objects:
           - name: kernel-modules
             mountPath: "/usr/lib/modules"
             readOnly: true
+          - name: gluster-block
+            mountPath: "/var/lib/gluster-block"
           securityContext:
             capabilities: {}
             privileged: true
@@ -144,6 +146,9 @@ objects:
         - name: kernel-modules
           hostPath:
             path: "/usr/lib/modules"
+        - name: gluster-block
+          hostPath:
+            path: "/var/lib/gluster-block"
         restartPolicy: Always
         terminationGracePeriodSeconds: 30
         dnsPolicy: ClusterFirst
