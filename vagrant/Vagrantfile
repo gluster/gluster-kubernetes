@@ -44,7 +44,7 @@ Vagrant.configure("2") do |config|
             ansible.limit = "all"
             ansible.playbook = "site.yml"
             ansible.groups = {
-                "master" => ["master"],
+                "masters" => ["master"],
                 "nodes" => (0..NODES-1).map {|j| "node#{j}"},
             }
             ansible.extra_vars = {

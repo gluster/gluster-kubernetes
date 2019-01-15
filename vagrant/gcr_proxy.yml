@@ -1,4 +1,4 @@
-- hosts: master
+- hosts: masters
   become: yes
   become_method: sudo
   vars_files:
