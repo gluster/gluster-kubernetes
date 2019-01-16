@@ -67,7 +67,7 @@ spec:
           mountPath: "/etc/ssl"
           readOnly: true
         - name: kernel-modules
-          mountPath: "/usr/lib/modules"
+          mountPath: "/lib/modules"
           readOnly: true
         securityContext:
           capabilities: {}
@@ -131,4 +131,4 @@ spec:
           path: "/etc/ssl"
       - name: kernel-modules
         hostPath:
-          path: "/usr/lib/modules"
+          path: "/lib/modules"
