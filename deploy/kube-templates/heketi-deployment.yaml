@@ -54,6 +54,8 @@ spec:
           value: "y"
         - name: HEKETI_IGNORE_STALE_OPERATIONS
           value: "true"
+        - name: HEKETI_DEBUG_UMOUNT_FAILURES
+          value: "true"
         ports:
         - containerPort: 8080
         volumeMounts:
