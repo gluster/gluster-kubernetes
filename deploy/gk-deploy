@@ -933,7 +933,7 @@ print(show_all_opt)
 """
 )
 
-heketi_pod=$(${CLI} get pod --no-headers${SHOW_ALL_OPT}--selector="heketi" | awk '{print $1}')
+heketi_pod=$(${CLI} get pod --no-headers"${SHOW_ALL_OPT}"--selector="heketi" | awk '{print $1}')
 
 if [[ "${CLI}" == *oc\ * ]]; then
   heketi_service=$(${CLI} describe routes/heketi | grep "Requested Host:" | awk '{print $3}')
