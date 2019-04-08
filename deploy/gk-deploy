@@ -925,15 +925,15 @@ try:
 except ValueError as e:
   print(\"Invalid json format in : %s Error: %s\" % (file, e))
   sys.exit(1)
-show_all_opt = \" \"
+show_all_opt = \"\"
 if version['clientVersion']['major'] < \"2\":
   if version['clientVersion']['minor'] < \"14\":
-    show_all_opt += \"--show-all \"
+    show_all_opt += \"--show-all\"
 print(show_all_opt)
 """
 )
 
-heketi_pod=$(${CLI} get pod --no-headers"${SHOW_ALL_OPT}"--selector="heketi" | awk '{print $1}')
+heketi_pod=$(${CLI} get pod --no-headers "${SHOW_ALL_OPT}" --selector="heketi" | awk '{print $1}')
 
 if [[ "${CLI}" == *oc\ * ]]; then
   heketi_service=$(${CLI} describe routes/heketi | grep "Requested Host:" | awk '{print $3}')
