@@ -27,6 +27,8 @@ TEMPLATES=""
 NAMESPACE=""
 WAIT=300
 ABORT=0
+LOAD_BALANCED=0
+SERVICE_TYPE=ClusterIP
 NODES=""
 SKIP_PREREQ=0
 EXISTS_GLUSTERFS=0
@@ -57,7 +59,7 @@ usage() {
        [--daemonset-label <DAEMONSET_LABEL> ] [--single-node] [--no-object]
        [--object-account <ACCOUNT>] [--object-user <USER>]
        [--object-password <PASSWORD>] [--object-sc <STORAGE_CLASS>]
-       [--object-capacity <CAPACITY>] [-l <LOG_FILE>] [--abort] [<TOPOLOGY>]\n"
+       [--object-capacity <CAPACITY>] [--load-balanced] [-l <LOG_FILE>] [--abort] [<TOPOLOGY>]\n"
 }
 
 help_exit() {
@@ -143,6 +145,10 @@ Options:
   --object-capacity CAPACITY
               The total capacity of the GlusterFS volume which will store the
               object data. Default is '${OBJ_CAPACITY}'.
+
+  --load-balanced
+              Produce a Kubernetes Service of type LoadBalancer (to be used in
+	      GKE or environments where you want access from outside Kubernetes.
 
   -y, --yes
               Skip the pre-requisites prompt.
@@ -501,6 +507,11 @@ while [[ $# -ge 1 ]]; do
         ABORT=1
         keypos=$keylen
         ;;
+        -load-balanced*)
+        LOAD_BALANCED=1
+	SERVICE_TYPE=LoadBalancer
+        keypos=$keylen
+        ;;
         h*|-help)
         help_exit
         ;;
@@ -565,6 +576,25 @@ Do you wish to proceed with deployment?
   read -rp "[Y]es, [N]o? [Default: Y]: " ynopt
   case $ynopt in
     N*|n*)
+    exit
+    ;;
+  esac
+fi
+
+if [[ "x${USER_KEY}" == "x" ]] && [[ "${LOAD_BALANCED}" == "1" ]]; then
+  echo "
+LoadBalancer service is selected, but no authentication creedntials have been
+provided. It is generally a good idea to add authentication to a (public)
+load balanced available Heketi API.
+
+Do you wish to proceed installing without credentials?"
+
+  read -rp "[Y]es, [N]o? [Default: N]: " ynopt
+  case $ynopt in
+    Y*|y*)
+    echo ""
+    ;;
+    *)
     exit
     ;;
   esac
@@ -890,7 +920,7 @@ if [[ ${EXISTS_HEKETI} -eq 0 ]]; then
   if [[ "${CLI}" == *oc\ * ]]; then
     eval_output "${CLI} process ${OC_PROCESS_VAL_SWITCH} HEKETI_EXECUTOR=${EXECUTOR} ${OC_PROCESS_VAL_SWITCH} HEKETI_FSTAB=${FSTAB} ${OC_PROCESS_VAL_SWITCH} HEKETI_ADMIN_KEY=${ADMIN_KEY} ${OC_PROCESS_VAL_SWITCH} HEKETI_USER_KEY=${USER_KEY} heketi | ${CLI} create -f - 2>&1"
   else
-    eval_output "sed -e 's/\\\${HEKETI_EXECUTOR}/${EXECUTOR}/' -e 's#\\\${HEKETI_FSTAB}#${FSTAB}#' -e 's/\\\${HEKETI_ADMIN_KEY}/${ADMIN_KEY}/' -e 's/\\\${HEKETI_USER_KEY}/${USER_KEY}/' ${TEMPLATES}/heketi-deployment.yaml | ${CLI} create -f - 2>&1"
+    eval_output "sed -e 's/\\\${HEKETI_EXECUTOR}/${EXECUTOR}/' -e 's#\\\${HEKETI_FSTAB}#${FSTAB}#' -e 's/\\\${HEKETI_ADMIN_KEY}/${ADMIN_KEY}/' -e 's/\\\${HEKETI_USER_KEY}/${USER_KEY}/' -e 's/\\\${SERVICE_TYPE}/${SERVICE_TYPE}/' ${TEMPLATES}/heketi-deployment.yaml | ${CLI} create -f - 2>&1"
   fi
 
   output -n "Waiting for heketi pod to start ... "
@@ -913,7 +943,15 @@ while [[ "x${heketi_service}" == "x" ]] || [[ "${heketi_service}" == "<none>" ]]
   fi
   sleep 1
   ((s+=1))
-  heketi_service=$(${CLI} describe svc/heketi | grep "Endpoints:" | awk '{print $2}')
+  if [[ ${LOAD_BALANCED} -eq 1 ]]; then
+    heketi_lb_address=$(${CLI} describe svc/heketi | awk '/^LoadBalancer Ingress:/{print $NF}')
+    if [ "x${heketi_lb_address}" != "x" ]; then
+      heketi_port=$(${CLI} describe svc/heketi | awk '/^Port:/{print $NF}' | cut -d/ -f1)
+      heketi_service=${heketi_lb_address}:${heketi_port}
+    fi
+  else
+    heketi_service=$(${CLI} describe svc/deploy-heketi | grep "Endpoints:" | awk '{print $2}')
+  fi
 done
 
 heketi_pod=$(${CLI} get pod --no-headers --show-all --selector="heketi" | awk '{print $1}')
