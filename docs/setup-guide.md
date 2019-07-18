@@ -40,8 +40,12 @@ requirements:
 
  * Each node requires that the `mount.glusterfs` command is available. Under
   all Red Hat-based OSes this command is provided by the `glusterfs-fuse`
-  package.
-  
+  package. On Ubuntu, use the gluster PPA instead of the default repo:
+  ```
+  $ add-apt-repository ppa:gluster/glusterfs-3.12
+  $ apt-get update
+  $ apt-get install glusterfs-client
+  ```
   * GlusterFS client version installed on nodes should be as close as possible
    to the version of the server. To get installed versions run
    `glusterfs --version` or `kubectl exec <pod> -- glusterfs --version`.
