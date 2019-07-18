@@ -36,7 +36,13 @@
 			"port" : "${SSH_PORT}",
 			"user" : "${SSH_USER}",
 			"sudo" : ${SSH_SUDO}
-		}
+		},
+
+		"_auto_create_block_hosting_volume": "Creates Block Hosting volumes automatically if not found or exsisting volume exhausted",
+		"auto_create_block_hosting_volume": ${BLOCK_HOST_CREATE},
+
+		"_block_hosting_volume_size": "New block hosting volume will be created in size mentioned, This is considered only if auto-create is enabled.",
+		"block_hosting_volume_size": ${BLOCK_HOST_SIZE}
 	},
 
 	"backup_db_to_kube_secret": false

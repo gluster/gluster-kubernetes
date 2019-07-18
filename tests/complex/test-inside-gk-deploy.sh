@@ -2,19 +2,29 @@
 
 # test gk-deploy
 
+BLOCK=( --no-block )
 OBJ=( --no-object )
+GLUSTER=( -g )
+SSH=0
 
 while [[ "x${1}" != "x" ]]; do
+	if [[ "${1}" == "block" ]]; then
+		BLOCK=( --block-host 10 )
+	fi
 	if [[ "${1}" == obj* ]]; then
 		OBJ=( --object-account account --object-user user --object-password password )
 	fi
 	shift
+	if [[ "${1}" == "ssh" ]]; then
+		GLUSTER=( --ssh-keyfile /vagrant/insecure_private_key --ssh-user vagrant )
+		SSH=1
+	fi
 done
 
 cd ~/deploy || exit 1
 
 # shellcheck disable=SC2086
-./gk-deploy -v -y -g -n default ${OBJ[*]}
+./gk-deploy -v -y -n default ${GLUSTER[*]} ${BLOCK[*]} ${OBJ[*]}
 
 if [[ $? -ne 0 ]]; then
 	echo "ERROR: gk-deploy failed"
@@ -34,11 +44,22 @@ if (( num_heketi_pods != 1 )); then
 	exit 1
 fi
 
-if (( num_gluster_pods != 3 )); then
+if (( SSH == 0 )) && (( num_gluster_pods != 3 )); then
 	echo "ERROR: unexpected number of gluster pods: " \
 		"${num_gluster_pods} - " \
 		"expected 3"
 	exit 1
+fi
+
+if [[ "${BLOCK[*]}" != "--no-block" ]]; then
+	num_block_pods=$(kubectl get pods | grep -s "glusterblock-" | grep -cs "1/1[[:space:]]*Running")
+
+	if (( num_block_pods != 1 )); then
+		echo "ERROR: unexpected number of glusterblock pods: " \
+			"${num_block_pods} - " \
+			"expected 1"
+		exit 1
+	fi
 fi
 
 if [[ "${OBJ[*]}" != "--no-object" ]]; then

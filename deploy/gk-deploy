@@ -32,10 +32,11 @@ SKIP_PREREQ=0
 EXISTS_GLUSTERFS=0
 EXISTS_DEPLOY_HEKETI=0
 EXISTS_HEKETI=0
+EXISTS_BLOCK=0
 EXISTS_OBJECT=0
 EXECUTOR="kubernetes"
 FSTAB="/var/lib/heketi/fstab"
-SSH_KEYFILE="/dev/null"
+SSH_KEYFILE=""
 SSH_USER="root"
 SSH_SUDO="false"
 SSH_PORT="22"
@@ -49,15 +50,21 @@ OBJ_USER=""
 OBJ_PASSWORD=""
 OBJ_STORAGE_CLASS="glusterfs-for-s3"
 OBJ_CAPACITY="2Gi"
+DEPLOY_BLOCK=1
+BLOCK_HOST_CREATE="false"
+BLOCK_HOST_SIZE=0
 
 usage() {
   echo -e "USAGE: ${PROG} [-ghvy] [-c CLI] [-t <TEMPLATES>] [-n NAMESPACE] [-w <SECONDS>]
        [-s <KEYFILE>] [--ssh-user <USER>] [--ssh-port <PORT>]
        [--admin-key <ADMIN_KEY>] [--user-key <USER_KEY>] [-l <LOG_FILE>]
-       [--daemonset-label <DAEMONSET_LABEL> ] [--single-node] [--no-object]
-       [--object-account <ACCOUNT>] [--object-user <USER>]
+       [--daemonset-label <DAEMONSET_LABEL> ] [--single-node]
+       [--no-object] [--object-account <ACCOUNT>] [--object-user <USER>]
+       [--no-object] [--object-account <ACCOUNT>] [--object-user <USER>]
        [--object-password <PASSWORD>] [--object-sc <STORAGE_CLASS>]
-       [--object-capacity <CAPACITY>] [-l <LOG_FILE>] [--abort] [<TOPOLOGY>]\n"
+       [--object-capacity <CAPACITY>]
+       [--no-block] [--block-host <SIZE>]
+       [-l <LOG_FILE>] [--abort] [<TOPOLOGY>]\n"
 }
 
 help_exit() {
@@ -79,10 +86,10 @@ Options:
               or removal.
 
   -s, --ssh-keyfile KEYFILE
-              Path to an SSH private key. This key is required for heketi when
-              communicating with GlusterFS services not in pods. Specifying
-              this parameter switched heketi to use SSH directly instead of
-              Kubernetes APIs.
+              Path to an SSH private key. This key is required when heketi is
+              communicating with GlusterFS services outside of Kubernetes.
+              Specifying this parameter switches heketi to use SSH directly
+              instead of Kubernetes APIs.
 
   --ssh-user USER
               User to use for SSH commands to GlusterFS nodes. Non-root users
@@ -143,6 +150,14 @@ Options:
   --object-capacity CAPACITY
               The total capacity of the GlusterFS volume which will store the
               object data. Default is '${OBJ_CAPACITY}'.
+
+  --no-block
+              Don't deploy a gluster-block container. Default is to deploy.
+
+  --block-host SIZE
+              Specify the size (in GB) of the GlusterFS volumes which will be
+              automatically created to host gluster-block volumes. Default is
+              to not automatically create host volumes for gluster-block.
 
   -y, --yes
               Skip the pre-requisites prompt.
@@ -224,6 +239,13 @@ abort() {
     eval_output "${CLI} delete dc,route,template --selector=\"deploy-heketi\" 2>&1"
     eval_output "${CLI} delete dc,route,template --selector=\"heketi\" 2>&1"
   fi
+  if [[ ${DEPLOY_BLOCK} -eq 1 ]]; then
+    debug "Removing glusterblock resources."
+    eval_output "${CLI} delete all,deploy,sa,clusterrole,clusterrolebinding --selector=\"glusterblock\" 2>&1"
+    if [[ "${CLI}" == *oc\ * ]]; then
+      eval_output "${CLI} delete dc --selector=\"glusterblock\" 2>&1"
+    fi
+  fi
   if [[ ${DEPLOY_OBJECT} -eq 1 ]]; then
     debug "Removing gluster-s3 resources."
     eval_output "${CLI} delete all,svc,deploy,secret,sc --selector=\"gluster-s3\" 2>&1"
@@ -231,7 +253,7 @@ abort() {
       eval_output "${CLI} delete dc,route,template --selector=\"gluster-s3\" 2>&1"
     fi
   fi
-  if [[ ${GLUSTER} -eq 1 ]]; then
+  if [[ ${GLUSTER} -eq 1 ]] && [[ "${EXECUTOR}" == "kubernetes" ]]; then
     while read -r node; do
       debug "Removing label from '${node}' as a GlusterFS node."
       eval_output "${CLI} label nodes \"${node}\" storagenode- 2>&1"
@@ -409,10 +431,10 @@ while [[ $# -ge 1 ]]; do
         ;;
         -ssh-user)
         SSH_USER=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
         if [[ "${SSH_USER}" != "root" ]]; then
           SSH_SUDO="true"
         fi
-        if [[ $? -eq 2 ]]; then shift; fi
         keypos=$keylen
         ;;
         -ssh-port)
@@ -497,6 +519,15 @@ while [[ $# -ge 1 ]]; do
         if [[ $? -eq 2 ]]; then shift; fi
         keypos=$keylen
         ;;
+        -no-block)
+        DEPLOY_BLOCK=0
+        keypos=$keylen
+        ;;
+        -block-host*)
+        BLOCK_HOST_SIZE=$(assign "${key:${keypos}}" "${2}")
+        if [[ $? -eq 2 ]]; then shift; fi
+        keypos=$keylen
+        ;;
         -abort)
         ABORT=1
         keypos=$keylen
@@ -536,7 +567,10 @@ The client machine that will run this script must have:
 
 Each of the nodes that will host GlusterFS must also have appropriate firewall
 rules for the required GlusterFS ports:
+ * 111   - rpcbind (for glusterblock)
  * 2222  - sshd (if running GlusterFS in a pod)
+ * 3260  - iSCSI targets (for glusterblock)
+ * 24006 - glusterblockd
  * 24007 - GlusterFS Management
  * 24008 - GlusterFS RDMA
  * 49152 to 49251 - Each brick for every volume on the host requires its own
@@ -548,6 +582,8 @@ The following kernel modules must be loaded:
  * dm_snapshot
  * dm_mirror
  * dm_thin_pool
+ * dm_multipath
+ * target_core_user
 
 For systems with SELinux, the following settings need to be considered:
  * virt_sandbox_use_fusefs should be enabled on each node to allow writing to
@@ -672,32 +708,37 @@ if [[ ${ABORT} -eq 1 ]]; then
 fi
 
 if [[ "${EXECUTOR}" == "ssh" ]]; then
+  if [[ "${SSH_SUDO}" == "true" ]]; then
+    sudocmd="sudo "
+  else
+    sudocmd=""
+  fi
   while read -r node; do
-    debug "Checking glusterd status on '${node}'."
-    if [[ "${SSH_SUDO}" == "true" ]]; then
-      sudocmd="sudo "
-    else
-      sudocmd=""
-    fi
+    output -n "Checking glusterd status on '${node}' ... "
     # shellcheck disable=SC2029
     # I want this parsed client-side
-    ssh "${SSH_USER}@${node}" -q -i "${SSH_KEYFILE}" -C "${sudocmd}gluster volume status" >/dev/null 2>&1
+    out=$(ssh -qn -o StrictHostKeyChecking=no "${SSH_USER}@${node}" -i "${SSH_KEYFILE}" -C "${sudocmd}gluster volume info" 1>/dev/null 2>&1)
     if [[ ${?} -ne 0 ]]; then
       output "Can't access glusterd on '${node}'"
+      output "${out}"
       exit 1
+    else
+      output "OK"
     fi
   done <<< "$(echo -e "${NODES}")"
 fi
 
 output "Checking for pre-existing resources..."
 
-output -n "  GlusterFS pods ... "
-check pods "glusterfs=pod" 2 2>&1
-if [[ $? -eq 0 ]]; then
-  EXISTS_GLUSTERFS=1
-  output "found."
-else
-  output "not found."
+if [[ ${GLUSTERFS} -eq 1 ]] && [[ "${EXECUTOR}" == "kubernetes" ]]; then
+  output -n "  GlusterFS pods ... "
+  check pods "glusterfs=pod" 2 2>&1
+  if [[ $? -eq 0 ]]; then
+    EXISTS_GLUSTERFS=1
+    output "found."
+  else
+    output "not found."
+  fi
 fi
 
 output -n "  deploy-heketi pod ... "
@@ -716,6 +757,17 @@ if [[ $? -eq 0 ]]; then
   output "found."
 else
   output "not found."
+fi
+
+if [[ ${DEPLOY_BLOCK} -eq 1 ]]; then
+  output -n "  glusterblock-provisioner pod ... "
+  check pods "glusterfs=block-provisioner-pod" 2 2>&1
+  if [[ $? -eq 0 ]]; then
+    EXISTS_BLOCK=1
+    output "found."
+  else
+    output "not found."
+  fi
 fi
 
 if [[ ${DEPLOY_OBJECT} -eq 1 ]]; then
@@ -748,7 +800,7 @@ if [[ ${EXISTS_HEKETI} -eq 0 ]]; then
   output "OK"
 fi
 
-if [[ ${GLUSTER} -eq 1 ]] && [[ ${EXISTS_GLUSTERFS} -eq 0 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
+if [[ ${GLUSTER} -eq 1 ]] && [[ "${EXECUTOR}" == "kubernetes" ]] && [[ ${EXISTS_GLUSTERFS} -eq 0 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
   if [[ -z ${DAEMONSET_LABEL} ]]; then
     DAEMONSET_LABEL=glusterfs
   fi
@@ -778,9 +830,16 @@ if [[ ${GLUSTER} -eq 1 ]] && [[ ${EXISTS_GLUSTERFS} -eq 0 ]] && [[ ${EXISTS_HEKE
 fi
 
 if [[ ${EXISTS_DEPLOY_HEKETI} -eq 0 ]] && [[ ${EXISTS_HEKETI} -eq 0 ]]; then
+  if [[ ${BLOCK_HOST_SIZE} -gt 0 ]]; then
+    BLOCK_HOST_CREATE="true"
+  fi
   #The FSTAB variable may contain slashes as path separators, so use '#' as the expression delimiter instead
-  sed -e "s/\${HEKETI_EXECUTOR}/${EXECUTOR}/" -e "s#\${HEKETI_FSTAB}#${FSTAB}#" -e "s/\${SSH_PORT}/${SSH_PORT}/" -e "s/\${SSH_USER}/${SSH_USER}/" -e "s/\${SSH_SUDO}/${SSH_SUDO}/" "${SCRIPT_DIR}/heketi.json.template" > heketi.json
-  eval_output "${CLI} create secret generic heketi-config-secret --from-file=private_key=${SSH_KEYFILE} --from-file=./heketi.json --from-file=topology.json=${TOPOLOGY}"
+  sed -e "s/\${HEKETI_EXECUTOR}/${EXECUTOR}/" -e "s#\${HEKETI_FSTAB}#${FSTAB}#" -e "s/\${SSH_PORT}/${SSH_PORT}/" -e "s/\${SSH_USER}/${SSH_USER}/" -e "s/\${SSH_SUDO}/${SSH_SUDO}/" \
+      -e "s/\${BLOCK_HOST_CREATE}/${BLOCK_HOST_CREATE}/" -e "s/\${BLOCK_HOST_SIZE}/${BLOCK_HOST_SIZE}/" "${SCRIPT_DIR}/heketi.json.template" > heketi.json
+  if [[ "x${SSH_KEYFILE}" != "x" ]]; then
+    SSH_KEYFILE="--from-file=private_key=${SSH_KEYFILE}"
+  fi
+  eval_output "${CLI} create secret generic heketi-config-secret ${SSH_KEYFILE} --from-file=./heketi.json --from-file=topology.json=${TOPOLOGY}"
   eval_output "${CLI} label --overwrite secret heketi-config-secret glusterfs=heketi-config-secret heketi=config-secret"
   rm -f heketi.json
   if [[ "${CLI}" == *oc\ * ]]; then
@@ -966,6 +1025,20 @@ parameters:
   output ""
 fi
 
+output "Ready to create and provide GlusterFS volumes."
+
+if [[ ${DEPLOY_BLOCK} -eq 1 ]] && [[ ${EXISTS_BLOCK} -eq 0 ]]; then
+  eval_output "sed -e 's/\\\${NAMESPACE}/${NAMESPACE}/' ${TEMPLATES}/glusterblock-provisioner.yaml | ${CLI} create -f - 2>&1"
+  output -n "Waiting for glusterblock-provisioner pod to start ... "
+  check pods "glusterfs=block-provisioner-pod"
+  if [[ ${?} != 0 ]]; then
+    output "pod not found"
+    exit 1
+  fi
+  output "OK"
+  EXISTS_BLOCK=1
+  output "Ready to create and provide Gluster block volumes."
+fi
 
 if [[ ${DEPLOY_OBJECT} -eq 1 ]] && [[ "${OBJ_ACCOUNT}" != "" ]] && [[ "${OBJ_USER}" != "" ]] && [[ "${OBJ_PASSWORD}" != "" ]] && [[ ${EXISTS_OBJECT} -eq 0 ]]; then
   if [[ "${OBJ_STORAGE_CLASS}" == "glusterfs-for-s3" ]]; then
