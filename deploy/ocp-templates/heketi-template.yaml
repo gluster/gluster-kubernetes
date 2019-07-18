@@ -81,6 +81,8 @@ objects:
             value: "y"
           - name: HEKETI_IGNORE_STALE_OPERATIONS
             value: "true"
+          - name: HEKETI_DEBUG_UMOUNT_FAILURES
+            value: "true"
           ports:
           - containerPort: 8080
           volumeMounts:
@@ -126,3 +128,7 @@ parameters:
 - name: HEKETI_IGNORE_STALE_OPERATIONS
   displayName: Whether to ignore stale operations at startup
   description: This allows to control whether heketi should start up when there are stale pending operation entries present in the database. Setting this to true lets heketi ignore existing pending operations at startup. Setting it to false causes heketi to refuse to start if pending operations are found in the database.
+- name: HEKETI_DEBUG_UMOUNT_FAILURES
+  displayName: Capture more details in case brick unmounting fails
+  description: When unmounting a brick fails, Heketi will not be able to cleanup the Gluster volume completely. The main causes for preventing to unmount a brick, seem to originate from Gluster processes. By enabling this option, the heketi.log will contain the output of 'lsof' to aid with debugging of the Gluster processes and help with identifying any files that may be left open.
+  value: true
