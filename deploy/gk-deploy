@@ -110,12 +110,12 @@ Options:
 
   --admin-key ADMIN_KEY
               Secret string for heketi admin user. heketi admin has access to
-              all APIs and commands. Default is to use no secret.
+              all APIs and commands. This is a required argument.
 
   --user-key USER_KEY
               Secret string for general heketi users. heketi users have access
-              to only Volume APIs. Used in dynamic provisioning. Default is to
-              use no secret.
+              to only Volume APIs. Used in dynamic provisioning. This is a
+              required argument.
 
   --daemonset-label DAEMONSET_LABEL
               Controls the value of the label set on nodes which will host pods
@@ -596,6 +596,11 @@ END
     echo -e "$NODES \nFix json format and rerun"
     exit 1
   fi
+fi
+
+if [[ "x${ADMIN_KEY}" == "x" || "x${USER_KEY}" == "x"  ]]; then
+  output "heketi admin and user keys are required!"
+  exit 1
 fi
 
 if [[ "x${CLI}" == "x" ]]; then
