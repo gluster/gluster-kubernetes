@@ -1,4 +1,4 @@
-- hosts: master
+- hosts: masters
   become: yes
   become_method: sudo
   vars_files:
@@ -7,7 +7,7 @@
     - include_role:
         name: master
         tasks_from: gcr_proxy.yml
-      when: custom_registry_gcr | default(false)
+      when: custom_registry_gcr is default(false)
 
 - hosts: nodes
   become: yes
@@ -18,4 +18,4 @@
     - include_role:
         name: nodes
         tasks_from: gcr_proxy.yml
-      when: custom_registry_gcr | default(false)
+      when: custom_registry_gcr is default(false)

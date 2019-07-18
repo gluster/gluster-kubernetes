@@ -1,4 +1,4 @@
-- include: gcr_proxy.yml
+- include_tasks: gcr_proxy.yml
   when:
   - custom_registry is defined
   - custom_registry_gcr | default(false)
