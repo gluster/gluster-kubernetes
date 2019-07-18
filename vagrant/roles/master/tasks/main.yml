@@ -5,12 +5,11 @@
 
 - name: install s3-curl depencendies
   yum:
-    name: "{{ item }}"
+    name:
+      - perl-Digest-HMAC
+      - unzip
     state: present
     disable_gpg_check: yes
-  with_items:
-  - perl-Digest-HMAC
-  - unzip
 
 - name: get s3curl
   unarchive:

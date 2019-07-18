@@ -1,11 +1,10 @@
 ---
 - name: install ansible-docker depencendies
   yum:
-    name: "{{ item }}"
+    name:
+      - docker-python
     state: present
     disable_gpg_check: yes
-  with_items:
-  - docker-python
 
 - name: check for nginx-slim image
   uri:

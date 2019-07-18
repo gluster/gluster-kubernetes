@@ -47,11 +47,10 @@
   # setup standard repos
   - name: install centos and epel repos
     yum:
-      name: "{{ item }}"
+      name:
+        - epel-release
+        - centos-release-gluster
       state: present
-    with_items:
-    - epel-release
-    - centos-release-gluster
 
   - name: setup kubernetes repo
     yum_repository:
@@ -79,11 +78,10 @@
 
 - name: install base packages
   yum:
-    name: "{{ item }}"
+    name: "{{ install_pkgs }}"
     state: present
     disable_gpg_check: yes
     update_cache: yes
-  with_items: "{{ install_pkgs }}"
 
 - name: Ensure net.bridge.bridge-nf-call-iptables is set. See kubeadm
   copy: src=k8s.conf owner=root group=root dest=/etc/sysctl.d/k8s.conf
