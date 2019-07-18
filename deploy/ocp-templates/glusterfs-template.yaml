@@ -45,11 +45,15 @@ objects:
             value: "${GB_GLFS_LRU_COUNT}"
           - name: TCMU_LOGDIR
             value: "${TCMU_LOGDIR}"
+          - name: GB_LOGDIR
+            value: "/var/log/glusterfs/gluster-block"
           resources:
             requests:
               memory: 100Mi
               cpu: 100m
           volumeMounts:
+          - name: glusterfs-block
+            mountPath: "/etc/target"
           - name: glusterfs-heketi
             mountPath: "/var/lib/heketi"
           - name: glusterfs-run
@@ -106,6 +110,9 @@ objects:
             failureThreshold: 50
           terminationMessagePath: "/var/log/termination.log"
         volumes:
+        - name: glusterfs-block
+          hostPath:
+            path: "/etc/target"
         - name: glusterfs-heketi
           hostPath:
             path: "/var/lib/heketi"

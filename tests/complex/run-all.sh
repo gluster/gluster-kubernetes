@@ -12,6 +12,14 @@ run -e "${TEST_DIR}/run-basic.sh"
 
 rollback_vagrant
 
+run "${TEST_DIR}/run-block.sh"
+
+rollback_vagrant
+
 run "${TEST_DIR}/run-object.sh"
+
+rollback_vagrant
+
+run "${TEST_DIR}/run-full.sh"
 
 run "${TEST_DIR}/test-teardown.sh"

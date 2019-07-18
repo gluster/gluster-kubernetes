@@ -98,6 +98,17 @@
 - name: configure dm_snapshot module
   copy: src=dm_snapshot.conf owner=root group=root mode=644 dest=/etc/modules-load.d
 
+- name: enable kernel modules
+  modprobe:
+    name: "{{ item }}"
+    state: present
+  with_items:
+  - dm_snapshot
+  - dm_mirror
+  - dm_thin_pool
+  - dm_multipath
+  - target_core_user
+
 - name: Ensure firewalld.service
   service: name=firewalld state=started enabled=yes
 
