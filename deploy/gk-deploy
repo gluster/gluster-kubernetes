@@ -920,9 +920,11 @@ while [[ "x${heketi_service}" == "x" ]] || [[ "${heketi_service}" == "<none>" ]]
   ((s+=1))
   heketi_service=$(${CLI} describe svc/heketi | grep "Endpoints:" | awk '{print $2}')
 done
-
-heketi_pod=$(${CLI} get pod --no-headers --show-all --selector="heketi" | awk '{print $1}')
-
+if [[ "${CLI}" =~ ^kubectl ]]; then
+  heketi_pod=$(${CLI} get pod --no-headers --selector="heketi" | awk '{print $1}')
+else 
+  heketi_pod=$(${CLI} get pod --no-headers --show-all --selector="heketi" | awk '{print $1}')
+fi
 if [[ "${CLI}" == *oc\ * ]]; then
   heketi_service=$(${CLI} describe routes/heketi | grep "Requested Host:" | awk '{print $3}')
   hello=$(curl "http://${heketi_service}/hello" 2>/dev/null)
