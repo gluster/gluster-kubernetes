@@ -920,7 +920,7 @@ while [[ "x${heketi_service}" == "x" ]] || [[ "${heketi_service}" == "<none>" ]]
   ((s+=1))
   heketi_service=$(${CLI} describe svc/heketi | grep "Endpoints:" | awk '{print $2}')
 done
-if [[ "${CLI}" == "kubectl" ]]; then
+if [[ "${CLI}" =~ ^kubectl ]]; then
   heketi_pod=$(${CLI} get pod --no-headers --selector="heketi" | awk '{print $1}')
 else 
   heketi_pod=$(${CLI} get pod --no-headers --show-all --selector="heketi" | awk '{print $1}')
