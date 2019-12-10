@@ -21,7 +21,7 @@ items:
   status:
     loadBalancer: {}
 - kind: Deployment
-  apiVersion: extensions/v1beta1
+  apiVersion: apps/v1
   metadata:
     name: gluster-s3-deployment
     labels:
@@ -30,6 +30,9 @@ items:
     annotations:
       description: Defines how to deploy gluster s3 object storage
   spec:
+    selector:
+      matchLabels:
+        glusterfs: s3-pod
     replicas: 1
     template:
       metadata:
