@@ -918,10 +918,10 @@ while [[ "x${heketi_service}" == "x" ]] || [[ "${heketi_service}" == "<none>" ]]
   fi
   sleep 1
   ((s+=1))
-  heketi_service=$(${CLI} describe svc/heketi | grep "Endpoints:" | awk '{print $2}')
+  heketi_service=$(${CLI} describe svc/heketi -n ${NAMESPACE}| grep "Endpoints:" | awk '{print $2}')
 done
 
-heketi_pod=$(${CLI} get pod --no-headers --show-all --selector="heketi" | awk '{print $1}')
+heketi_pod=$(${CLI} get pod --no-headers --all-namespaces --selector="heketi" | awk '{print $2}')
 
 if [[ "${CLI}" == *oc\ * ]]; then
   heketi_service=$(${CLI} describe routes/heketi | grep "Requested Host:" | awk '{print $3}')
