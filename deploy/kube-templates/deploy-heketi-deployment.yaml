@@ -28,8 +28,8 @@ metadata:
 spec:
   selector:
     matchLabels:
-      glusterfs: heketi-deployment
-      deploy-heketi: deployment
+      glusterfs: heketi-pod
+      deploy-heketi: pod
   replicas: 1
   template:
     metadata:
