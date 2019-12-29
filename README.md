@@ -2,6 +2,10 @@
 
 [![Build Status](https://travis-ci.org/gluster/gluster-kubernetes.svg?branch=master)](https://travis-ci.org/gluster/gluster-kubernetes)
 
+## bert.persyn -> Changelog 
+
+* fix ([issue 627](https://github.com/gluster/gluster-kubernetes/issues/627)): adjusted deploy/kube-templates so they work on k8s >= 1.16
+
 ## GlusterFS Native Storage Service for Kubernetes
 
 **gluster-kubernetes** is a project to provide Kubernetes administrators a
