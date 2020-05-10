@@ -754,9 +754,11 @@ if [[ ${GLUSTER} -eq 1 ]] && [[ ${EXISTS_GLUSTERFS} -eq 0 ]] && [[ ${EXISTS_HEKE
   fi
   while read -r node; do
     debug "Marking '${node}' as a GlusterFS node."
+    output "Marking '${node}' as a GlusterFS node."
     eval_output "${CLI} label nodes ${node} storagenode=${DAEMONSET_LABEL} --overwrite 2>&1"
     if [[ ${?} -ne 0 ]]; then
       output "Failed to label node '${node}'"
+      output "${CLI} label nodes ${node} storagenode=${DAEMONSET_LABEL} --overwrite 2>&1"
       exit 1
     fi
   done <<< "$(echo -e "${NODES}")"
@@ -921,7 +923,7 @@ while [[ "x${heketi_service}" == "x" ]] || [[ "${heketi_service}" == "<none>" ]]
   heketi_service=$(${CLI} describe svc/heketi | grep "Endpoints:" | awk '{print $2}')
 done
 
-heketi_pod=$(${CLI} get pod --no-headers --show-all --selector="heketi" | awk '{print $1}')
+heketi_pod=$(${CLI} get pod --no-headers --selector="heketi" | awk '{print $1}')
 
 if [[ "${CLI}" == *oc\ * ]]; then
   heketi_service=$(${CLI} describe routes/heketi | grep "Requested Host:" | awk '{print $3}')
