@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 # Copyright (c) 2016 Red Hat, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-PROG="$(basename "${0}")"
-SCRIPT_DIR="$(cd "$(dirname "${0}")" && pwd)"
+PROG="$(/usr/bin/basename "${0}")"
+SCRIPT_DIR="$(cd "$(/usr/bin/dirname "${0}")" && pwd)"
 TOPOLOGY='topology.json'
 LOG_FILE=''
 VERBOSE=0
@@ -574,7 +574,7 @@ if [[ ! -f ${TOPOLOGY} ]]; then
   echo "Topology File not found!"
   exit 1
 else
-  NODES=$(python - <<END
+  NODES=$(/usr/bin/python - <<END
 # coding: utf8
 import sys
 import json
@@ -604,8 +604,8 @@ if [[ "x${ADMIN_KEY}" == "x" || "x${USER_KEY}" == "x"  ]]; then
 fi
 
 if [[ "x${CLI}" == "x" ]]; then
-  kubectl=$(type kubectl 2>/dev/null | awk '{print $3}')
-  oc=$(type oc 2>/dev/null | awk '{print $3}')
+  kubectl=$(type kubectl 2>/dev/null | /usr/bin/awk '{print $3}')
+  oc=$(type oc 2>/dev/null | /usr/bin/awk '{print $3}')
   if [[ "x${oc}" != "x" ]]; then
     CLI="${oc}"
   elif [[ "x${kubectl}" != "x" ]]; then
