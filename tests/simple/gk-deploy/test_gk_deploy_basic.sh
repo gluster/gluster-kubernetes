@@ -8,6 +8,7 @@ BASE_DIR="${SCRIPT_DIR}/../../.."
 DEPLOY_DIR="${BASE_DIR}/deploy"
 
 GK_DEPLOY="${DEPLOY_DIR}/gk-deploy"
+MANDATORY_OPTS="--admin-key 'key' --user-key 'key'"
 TOPOLOGY="${DEPLOY_DIR}/topology.json.sample"
 
 PATH="${STUBS_DIR}:$PATH"
@@ -18,10 +19,10 @@ source "${INC_DIR}/shell_tests.sh"
 test_missing_topology () {
 	local args=( -y )
 
-	OUT=$("${GK_DEPLOY}" "${args[@]}")
+	OUT=$("${GK_DEPLOY}" "${MANDATORY_OPTS}" "${args[@]}")
 	local rc=${?}
 
-	echo "cmd: '${GK_DEPLOY} ${args[*]}'"
+	echo "cmd: '${GK_DEPLOY} ${MANDATORY_OPTS} ${args[*]}'"
 	echo "output:"
 	echo "${OUT}"
 
@@ -37,10 +38,10 @@ test_cli_not_found () {
 	local args=( -y )
 	local expected_out="Container platform CLI (e.g. kubectl, oc) not found."
 
-	OUT=$(PATH='/doesnotexist' "${GK_DEPLOY}" "${args[@]}" "${TOPOLOGY}")
+	OUT=$(PATH='/doesnotexist' "${GK_DEPLOY}" "${MANDATORY_OPTS}" "${args[@]}" "${TOPOLOGY}")
 	local rc=${?}
 
-	echo "cmd: 'PATH='/doesnotexist' ${GK_DEPLOY} ${args[*]} ${TOPOLOGY}'"
+	echo "cmd: 'PATH='/doesnotexist' ${GK_DEPLOY} ${MANDATORY_OPTS} ${args[*]} ${TOPOLOGY}'"
 	echo "output:"
 	echo "${OUT}"
 
@@ -68,10 +69,10 @@ test_cli_unknown () {
 	local args=( -y -c "${cli}" )
 	local expected_out="Unknown CLI '${cli}'."
 
-	OUT=$("${GK_DEPLOY}" "${args[@]}" "${TOPOLOGY}")
+	OUT=$("${GK_DEPLOY}" "${MANDATORY_OPTS}" "${args[@]}" "${TOPOLOGY}")
 	local rc=${?}
 
-	echo "cmd: '${GK_DEPLOY} ${args[*]} ${TOPOLOGY}'"
+	echo "cmd: '${GK_DEPLOY} ${MANDATORY_OPTS} ${args[*]} ${TOPOLOGY}'"
 	echo "output:"
 	echo "${OUT}"
 
@@ -99,10 +100,10 @@ test_namespace_invalid () {
 	local expected_out="Namespace 'invalid' not found"
 
 	# shellcheck disable=SC2086
-	OUT=$("${GK_DEPLOY}" "${args[@]}" "${TOPOLOGY}")
+	OUT=$("${GK_DEPLOY}" "${MANDATORY_OPTS}" "${args[@]}" "${TOPOLOGY}")
 	local rc=${?}
 
-	echo "cmd: '${GK_DEPLOY} ${args[*]} ${TOPOLOGY}'"
+	echo "cmd: '${GK_DEPLOY} ${MANDATORY_OPTS} ${args[*]} ${TOPOLOGY}'"
 	echo "output:"
 	echo "${OUT}"
 
