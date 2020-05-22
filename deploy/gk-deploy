@@ -938,21 +938,22 @@ if [[ "${hello}" != "Hello from Heketi" ]]; then
   exit 1
 else
   debug "OK"
+  clear
   output "
 heketi is now running and accessible via http://${heketi_service} . To run
 administrative commands you can install 'heketi-cli' and use it as follows:
 
-  # heketi-cli -s http://${heketi_service} --user admin --secret '<ADMIN_KEY>' cluster list
+  # heketi-cli -s http://${heketi_service} --user admin --secret '${ADMIN_KEY}' cluster list
 
 You can find it at https://github.com/heketi/heketi/releases . Alternatively,
 use it from within the heketi pod:
 
-  # ${CLI} exec -i ${heketi_pod} -- heketi-cli -s http://localhost:8080 --user admin --secret '<ADMIN_KEY>' cluster list
+  # ${CLI} exec -i ${heketi_pod} -- heketi-cli -s http://localhost:8080 --user admin --secret '${ADMIN_KEY}' cluster list
 
 For dynamic provisioning, create a StorageClass similar to this:
 
 ---
-apiVersion: storage.k8s.io/v1beta1
+apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: glusterfs-storage
